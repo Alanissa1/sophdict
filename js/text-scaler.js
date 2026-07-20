@@ -4,6 +4,7 @@ window.TextScaler = {
     maxScale: 3.0,
     step: 0.1,
     voices: [],
+    voicesFresh: false,
     addedLocales: [],
     currentVoiceName: '',
     speechRate: 1.0,
@@ -11,7 +12,10 @@ window.TextScaler = {
     loadAllFromCache() {
         try {
             const voices = localStorage.getItem('cached_voices');
-            if (voices) this.voices = JSON.parse(voices);
+            if (voices) {
+                this.voices = JSON.parse(voices);
+                this.voicesFresh = false;
+            }
 
             const added = localStorage.getItem('addedLocales') || localStorage.getItem('cached_added_locales');
             if (added) this.addedLocales = JSON.parse(added);
@@ -46,16 +50,12 @@ window.TextScaler = {
         let retryCount = 0;
         const maxRetries = 10;
         const checkBridge = () => {
-            if (this.voices.length > 0 && retryCount > 0) {
-                // We already have voices (either from cache or previous retry),
-                // but let's do one fresh load if we just connected to bridge
-                this.loadTTSData();
-                return;
-            }
+            const hasBrowserVoices = !!(window.speechSynthesis && window.speechSynthesis.getVoices().length > 0);
+            const hasAndroidTTS = !!window.AndroidTTS;
 
-            if (window.AndroidTTS || (window.speechSynthesis && window.speechSynthesis.getVoices().length > 0)) {
+            if (hasAndroidTTS || hasBrowserVoices) {
                 this.loadTTSData();
-                if (this.voices.length > 0) return; // Success
+                if (this.voicesFresh || hasAndroidTTS) return; // Stop if we got fresh voices or bridge
             }
 
             if (retryCount < maxRetries) {
@@ -65,8 +65,12 @@ window.TextScaler = {
         };
         checkBridge();
 
-        if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
-            window.speechSynthesis.onvoiceschanged = () => this.loadTTSData();
+        if (window.speechSynthesis) {
+            if (window.speechSynthesis.addEventListener) {
+                window.speechSynthesis.addEventListener('voiceschanged', () => this.loadTTSData());
+            } else if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = () => this.loadTTSData();
+            }
         }
 
         // Initial launch pulse
@@ -197,11 +201,21 @@ window.TextScaler = {
                     { name: 'hi-IN', locale: 'hi-IN', display: 'Hindi' }
                 ];
             } else if (browserVoices.length > 0) {
-                this.voices = browserVoices.map(v => ({
-                    name: v.name,
-                    locale: v.lang.replace('_', '-'), // Normalize codes (en_US -> en-US)
-                    display: v.name
-                }));
+                this.voices = browserVoices.map(v => {
+                    let displayName = v.name || `Voice (${v.lang})`;
+                    if (displayName.includes('undefined')) {
+                        displayName = displayName.replace(/undefined/g, '').replace(/\s+/g, ' ').trim();
+                        if (displayName === 'Microsoft Online (Natural) -' || displayName === 'Microsoft Online (Natural)') {
+                            displayName = `Microsoft Natural - ${v.lang}`;
+                        }
+                    }
+                    return {
+                        name: v.name,
+                        locale: v.lang.replace('_', '-'), // Normalize codes (en_US -> en-US)
+                        display: displayName
+                    };
+                });
+                this.voicesFresh = true;
             }
 
             if (this.voices.length > 0) {
@@ -562,22 +576,22 @@ window.TextScaler = {
         const langList = document.getElementById('fullLangList');
         const content = langList.querySelector('.lang-list-content');
 
-        // Check cache first
-        let cached = localStorage.getItem('cached_language_list');
-        if (cached) {
-            content.innerHTML = cached;
-            langList.classList.add('show');
-            return;
+        if (this.voices.length > 0) {
+            this.cacheFullLanguageList();
+        } else {
+            // Fallback to cache ONLY if memory is completely empty
+            let cached = localStorage.getItem('cached_language_list');
+            if (cached) {
+                content.innerHTML = cached;
+            } else {
+                content.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">Loading voices...</div>';
+            }
         }
 
-        if (this.voices.length === 0) {
-            content.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">Loading voices...</div>';
-            langList.classList.add('show');
-            return;
-        }
-
-        this.cacheFullLanguageList();
         langList.classList.add('show');
+
+        // Always try to refresh from browser when opening the selection list
+        this.loadTTSData();
     },
 
     refreshLanguageList() {

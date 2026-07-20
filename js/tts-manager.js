@@ -14,11 +14,14 @@ window.TTSManager = {
 
         // Force loading voices
         this.synth.getVoices();
-        if (this.synth.onvoiceschanged !== undefined) {
-            this.synth.onvoiceschanged = () => {
-                this.voicesLoaded = true;
-                console.log("[TTS] Voices loaded:", this.synth.getVoices().length);
-            };
+        const updateVoices = () => {
+            this.voicesLoaded = true;
+            console.log("[TTS] Voices loaded:", this.synth.getVoices().length);
+        };
+        if (this.synth.addEventListener) {
+            this.synth.addEventListener('voiceschanged', updateVoices);
+        } else if (this.synth.onvoiceschanged !== undefined) {
+            this.synth.onvoiceschanged = updateVoices;
         }
     },
 
