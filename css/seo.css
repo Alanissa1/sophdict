@@ -1,0 +1,40 @@
+/**
+ * SEO & Accessibility Styles
+ */
+
+/* Screen reader only - helpful for providing context to search engines/screen readers without affecting UI */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Improve tap target sizes for mobile SEO (Core Web Vitals) */
+.icon-btn, .home-list-item, .tag {
+    min-width: 32px;
+    min-height: 32px;
+}
+
+/* Ensure images don't cause layout shifts (CLS) */
+.header-logo, .header-logo1, .welcome-logo {
+    aspect-ratio: auto;
+    content-visibility: auto;
+}
+
+/* Print styles for better SEO indexing of content if printable */
+@media print {
+    #appHeader, .search-container, footer, #pinnedPanel, .loading-overlay {
+        display: none !important;
+    }
+    main {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}

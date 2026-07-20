@@ -1,0 +1,52 @@
+.nav-focus {
+    outline: 3px solid #1a73e8 !important;
+    box-shadow: 0 0 10px rgba(26, 115, 232, 0.5);
+}
+
+/* For long lists, use background color instead of border */
+.history-list-item.nav-focus,
+.history-item.nav-focus,
+.lang-item.nav-focus,
+.voice-option.nav-focus,
+.suggestion-item.nav-focus,
+.pinned-item.nav-focus,
+.stat-card.clickable-stat.nav-focus {
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: rgba(26, 115, 232, 0.15) !important;
+}
+
+body.dark-mode .history-list-item.nav-focus,
+body.dark-mode .history-item.nav-focus,
+body.dark-mode .lang-item.nav-focus,
+body.dark-mode .voice-option.nav-focus,
+body.dark-mode .suggestion-item.nav-focus,
+body.dark-mode .pinned-item.nav-focus,
+body.dark-mode .stat-card.clickable-stat.nav-focus {
+    background-color: rgba(138, 180, 248, 0.2) !important;
+}
+
+.nav-focus.nav-inactive {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+#search-input:focus {
+    background: white;
+    box-shadow: 0 1px 6px rgba(32,33,36,.28);
+}
+
+.translate-btn.nav-focus {
+    outline: none !important;
+    box-shadow: none !important;
+    color: rgb(58 99 0) !important;
+    opacity: 1 !important;
+}
+
+.translate-btn.nav-focus svg {
+    fill: rgb(58 99 0) !important;
+}
+
+.translate-btn.nav-focus:hover {
+    box-shadow: 0 0 10px rgba(26, 115, 232, 0.5);
+}

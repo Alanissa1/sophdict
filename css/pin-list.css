@@ -1,0 +1,38 @@
+#pinnedPanel {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 40%;
+    z-index: 2501;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 12px;
+    padding: 15px;
+    display: none;
+    max-height: 70vh;
+    overflow-y: auto;
+    width: 94%;
+    max-width: 500px;
+    border: 1px solid var(--border-color);
+    overscroll-behavior: contain;
+}
+
+.pinned-item {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pinned-item:hover {
+    background: #8080803f;
+}
+
+.untap-pin {
+    color: #ff3b30;
+    font-size: 20px;
+    padding: 0 5px;
+}

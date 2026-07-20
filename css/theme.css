@@ -1,0 +1,332 @@
+/* 1. Dark Mode Color Variables */
+body.dark-mode {
+    --bg-color: #0b0b0b;
+    --card-bg: #1e1e1e;
+    --text-main: #e8eaed;
+    --text-sub: #bdc1c6;
+    --border-color: #3c4043;
+    --header-bg: #1f2937;
+    --primary-color: #88bcff;
+}
+
+/* Logo swap for dark mode */
+body.dark-mode .header-logo,
+body.dark-mode .header-logo1,
+body.dark-mode .welcome-logo,
+body.dark-mode img[src="SophDict.png"] {
+    content: url('../SophDict2.png') !important;
+}
+
+body.dark-mode a {
+    color: #8ab4f8 !important;
+}
+
+/* 2. Icons: Forced to white ONLY in dark mode */
+body.dark-mode #fetch-start-btn.fetch-search-btn svg:not(.ignore-dark-override),
+body.dark-mode #fetch-start-btn.fetch-search-btn svg:not(.ignore-dark-override) path {
+    fill: #fff !important;
+}
+
+body.dark-mode #text-scale-control svg:not(.ignore-dark-override),
+body.dark-mode #text-scale-control svg:not(.ignore-dark-override) path {
+    fill: #fff !important;
+}
+
+
+body.dark-mode svg:not(.ignore-dark-override),
+body.dark-mode svg:not(.ignore-dark-override) path {
+    fill: #bbbbbb; /* Removed !important to allow hover overrides */
+}
+
+body.dark-mode .icon-btn:hover svg,
+body.dark-mode .icon-btn:hover svg path,
+body.dark-mode .icon-btn.nav-focus svg,
+body.dark-mode .icon-btn.nav-focus svg path {
+    fill: #ffffff !important;
+}
+
+body.dark-mode .icon-btn:hover,
+body.dark-mode .icon-btn.nav-focus {
+    fill: #ffffff !important;
+}
+
+/* 3. Heart Icon: Force Red/Pink color (Overrides the white icons rule) */
+body.dark-mode .pin-btn.active svg,
+body.dark-mode #pinnedToggleBtn,
+body.dark-mode #pinnedToggleBtn svg,
+#pinnedToggleBtn svg,
+#pinnedToggleBtn svg path,
+.title-row .pin-btn.active svg,
+.title-row .pin-btn.active svg path,
+.micro-header .pin-btn.active svg,
+.micro-header .pin-btn.active svg path,
+#microPin.active svg,
+#microPin.active svg path {
+    color: #ff4b6b !important;
+    fill: #ff4b6b !important;
+}
+
+/* 3.1. TTS Icon: Dark Mode Styles */
+body.dark-mode .tts-btn svg,
+body.dark-mode .tts-btn svg path,
+body.dark-mode .tts-inline-target svg,
+body.dark-mode .tts-inline-target svg path {
+    fill: #798ea1; /* Removed !important to allow hover overrides */
+}
+
+body.dark-mode .tts-btn:hover svg,
+body.dark-mode .tts-btn:hover svg path,
+body.dark-mode .tts-btn.nav-focus svg,
+body.dark-mode .tts-btn.nav-focus svg path,
+body.dark-mode .tts-btn.speaking svg,
+body.dark-mode .tts-btn.speaking svg path {
+    fill: #ffffff !important;
+}
+
+body.dark-mode .tts-btn:hover,
+body.dark-mode .tts-btn.nav-focus {
+}
+
+/* 4. Search Container: Dark background ONLY in dark mode */
+body.dark-mode .search-container {
+    background: #1e1e1e;
+    color: white;
+    border-color: #3c4043;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .search-container:focus-within {
+    background: var(--bg-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border-color: #8ab4f8;
+}
+
+body.dark-mode .example {
+    color: #999999;
+}
+
+body.dark-mode #wordInput {
+    background: transparent;
+    border-color: #3c4043;
+    color: #e8eaed;
+}
+
+body.dark-mode .context-card {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+}
+
+body.dark-mode .context-type {
+    color: var(--primary-color);
+}
+
+/* 6. Tags: Reversed in dark mode */
+body.dark-mode .tag {
+    color: #99bbe9;
+    border: 1px solid #636363;
+}
+
+body.dark-mode .ant-tag {
+    color: #cb8686;
+}
+
+
+body.dark-mode #microWindow {
+    background: var(--card-bg);
+    color: var(--text-main);
+}
+
+body.dark-mode .micro-title {
+    color: #ffffff !important;
+}
+
+body.dark-mode .micro-header {
+    background: rgb(53 53 53) !important;
+}
+
+/* 7. View Full Button */
+body.dark-mode .view-full-btn {
+    background: #7ba8e3 !important;
+    color: #2d2d2d !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+/* 8. Theme Selection Buttons */
+.theme-options {
+    display: flex;
+    gap: 10px;
+}
+
+.theme-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-main);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.theme-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .theme-btn {
+    border-color: #5f6368;
+    color: #e8eaed;
+}
+
+body.dark-mode .theme-btn.active {
+    background: #8ab4f8;
+    color: #202124;
+}
+
+/* 9. Settings & Panels */
+body.dark-mode #text-scale-control {
+    background-color: black;
+}
+
+body.dark-mode .current-lang-display {
+    background-color: #232323 !important;
+}
+
+body.dark-mode .add-lang-btn:hover {
+    background-color: #252525;
+}
+
+body.dark-mode .scale-btn {
+    background-color: #4083f1;
+}
+
+body.dark-mode #pinnedPanel,
+body.dark-mode #statsPanel {
+    background-color: #1e1e1e !important;
+    color: #e8eaed !important;
+    border: 1px solid #3c4043;
+}
+
+/* 11. Stats Card & Elements */
+body.dark-mode .stat-card {
+    background: #2f2f2f !important;
+}
+
+body.dark-mode .stat-value {
+    color: #4c8fe7 !important;
+}
+
+body.dark-mode .stat-label {
+    color: #a7a7a7 !important;
+}
+
+body.dark-mode .stats-title {
+    color: #687897 !important;
+}
+
+/* 12. History List Items & Contrast Fixes */
+body.dark-mode .history-list-item {
+    background: #252525 !important;
+    border-bottom: 1px solid #3c4043 !important;
+    color: #e8eaed !important;
+}
+
+body.dark-mode .history-word-count {
+    color: #8ab4f8 !important;
+}
+
+body.dark-mode .history-list-item div[style*="color:#888"],
+body.dark-mode .history-list-item div[style*="color:#666"],
+body.dark-mode .clickable-stat div[style*="color:#666"] {
+    color: #a9a9a9 !important; /* Enhanced contrast for small gray text */
+}
+
+/* 13. Stats Icons Dark Mode */
+body.dark-mode .prize-icon-container {
+    border-color: #c79d00 !important;
+}
+
+body.dark-mode .prize-icon-container svg {
+    fill: #775e00 !important;
+}
+
+body.dark-mode .arrow-icon-container {
+    color: #a9a9a9 !important;
+}
+
+body.dark-mode .arrow-icon-container svg {
+    fill: #a9a9a9 !important;
+}
+
+body.dark-mode .remove-history-btn {
+    color: #bdc1c6 !important;
+}
+
+/* 13. Additional Dark Mode Contrast Fixes */
+body.dark-mode .history-word-info,
+body.dark-mode .history-word-info span {
+    color: #ffffff !important;
+}
+
+body.dark-mode .voice-option {
+    color: #e8eaed !important;
+    background: #303134 !important;
+}
+
+body.dark-mode .voice-option:hover,
+body.dark-mode .voice-option.active {
+    background: #3c4043 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .full-lang-list {
+    background: #1e1e1e !important;
+    color: #e8eaed !important;
+}
+
+body.dark-mode .icon-btn:active,
+body.dark-mode .icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    opacity: 1;
+}
+
+
+/* 10. History List & Details */
+body.dark-mode #historyDetailPanel {
+    background-color: #1e1e1e !important;
+    color: #e8eaed !important;
+}
+
+body.dark-mode .history-item {
+    background-color: #252525 !important;
+    color: #e8eaed !important;
+    border-bottom: 1px solid #3c4043;
+}
+
+body.dark-mode .history-item:hover {
+    background-color: #333333 !important;
+}
+
+body.dark-mode .history-header {
+    background-color: #2d3748 !important;
+    color: #ffffff !important;
+}
+
+/* 14. Override inline styles for 'ddd' and body in dark mode */
+body.dark-mode {
+    background-color: var(--bg-color) !important;
+}
+
+body.dark-mode ddd {
+    background-color: var(--card-bg) !important;
+    box-shadow: none !important;
+}
+
+body.dark-mode.home-state main {
+    background: #1e1e1e; /* Match background on home screen */
+}
+
+body.dark-mode .ttdd svg:not(.ignore-dark-override) path{
+fill:unset;
+}

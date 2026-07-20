@@ -1,0 +1,72 @@
+.search-mode-container {
+    display: flex;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 4px;
+    border-radius: 24px;
+    margin-bottom: 20px;
+    width: fit-content;
+}
+
+body.dark-mode .search-mode-container {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mode-btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-sub);
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mode-btn.active {
+    background: var(--bg-color);
+    color: var(--primary-color);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .mode-btn.active {
+    background: var(--primary-color) !important;
+    color: #000 !important;
+    box-shadow: 0 0 15px rgba(136, 188, 255, 0.4) !important;
+    transform: scale(1.05);
+    animation: mode-pulse 0.3s ease-out;
+}
+
+@keyframes mode-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1.05); }
+}
+
+/* On results page (header) */
+#appHeader .search-mode-container {
+    margin-bottom: 0;
+    margin-right: 15px;
+    padding: 2px;
+}
+
+@media (min-width: 600px) {
+    #appHeader .search-mode-container {
+        grid-column: 2;
+        justify-self: center;
+        margin-bottom: 10px;
+        margin-right: 0;
+    }
+
+    /* When results are shown, the search container is also grid-column 2.
+       We want them stacked or side-by-side.
+       Since #appHeader is flex-column by default and grid on desktop,
+       we can use a wrapper or just order them. */
+}
+
+@media (max-width: 600px) {
+    #appHeader .search-mode-container {
+        margin-bottom: 10px;
+    }
+}

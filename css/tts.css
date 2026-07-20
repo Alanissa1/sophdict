@@ -1,0 +1,60 @@
+.tts-btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    color: #6689b79c; /* Restored to light grey */
+}
+
+.title-row .tts-btn svg {
+    width: 1.9em;
+    height: 4em;
+    min-width: 66px;
+    min-height: 66px;
+}
+
+.tts-btn svg {
+    width: 1.7em;
+    height: 1.7em;
+    min-width: 28px;
+    min-height: 28px;
+}
+
+.tts-btn:hover, .tts-btn.nav-focus {
+    outline: none !important;
+    color: var(--primary-color) !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.tts-btn.speaking {
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+/* Speaker animation: Smooth fading ripple */
+.tts-btn.speaking .speaker-wave-small {
+    animation: speaker-wave-fade 1.2s infinite linear;
+}
+
+.tts-btn.speaking .speaker-wave-large {
+    animation: speaker-wave-fade 1.2s infinite linear 0.3s;
+}
+
+@keyframes speaker-wave-fade {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    60% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.tts-inline-target {
+    display: inline-block;
+}
+
+.def-text .tts-btn svg, .example .tts-btn svg{
+    width: 1.7em;
+    height: 1.7em;
+    margin: -20px 0 -20px -3px;
+}

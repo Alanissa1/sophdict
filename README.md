@@ -1,1 +1,1 @@
-# sophdict
+# SophDict

@@ -1,0 +1,27 @@
+{
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/((?!api|js|css|SophDict|Merriam|manifest|robots.txt|index.html|favicon|.*\\.).*)",
+      "destination": "/api/render"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=31536000, stale-while-revalidate=604800, immutable"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,272 @@
+ 	 .word-header {
+    margin: 10px 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 15px;
+}
+
+.word-header .pin-btn svc {
+     display:flex;
+}
+
+
+.title-row {
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    width: 100%;
+}
+
+.word-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pron-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.word-title {
+    font-size: 32px;
+    margin: 0;
+    font-weight: 500;
+}
+
+.pronunciation {
+    color: var(--text-sub);
+    font-size: 18px;
+}
+
+.context-card {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 0;
+    margin-bottom: 15px;
+}
+
+.context-type {
+    font-style: italic;
+    color: #d06000;
+    font-weight: 500;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.sense-block {
+    margin: 0;
+    margin-bottom: 0;
+}
+
+/* .sense-num removed as it is now inline with definition */
+
+.sense-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.definition {
+    margin: 10px 0 0 0;
+    font-size: 17px;
+    position: relative;
+    font-weight: 500;
+    display: flex;
+    align-items: flex-start;
+}
+
+.sense-num {
+    font-weight: 700;
+    flex-shrink: 0;
+    margin: 0 1px 0 21px;
+}
+
+/* Main Numbers (1., 2.) */
+.sn-main {
+    margin-right: 0;
+}
+.sn-main-hidden {
+    pointer-events: none !important;
+    opacity: 0 !important;
+    color: transparent !important;
+    display: inline-block;
+}
+
+/* Letters (a., b.) */
+.sn-letter {
+}
+
+.sn-letter-hidden {
+    pointer-events: none !important;
+    opacity: 0 !important;
+    color: transparent !important;
+    display: inline-block;
+}
+
+/* Sub-numbers ((1), (2)) */
+.sn-sub {
+
+}
+
+.sense-divider {
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text-main);
+}
+
+.def-text {
+    flex-grow: 1;
+    margin: 0 0 1em 0;
+}
+
+.def-content-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.example {
+    color: #6a6a6a;
+    font-size: 16px;
+    font-weight: 400;
+    margin: 0 0 0.8em 0;
+}
+
+.tags-section {
+    margin: 0 0 0 0;
+    display: flex;
+    flex-direction: column;
+    width: 101%;
+    margin: 0 0 1.25em 0;
+    font-weight: 400;
+}
+
+.expandable-wrapper {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.tags-rows-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.expandable-wrapper:not(.expanded) .tags-row:not(:first-child) {
+    display: none;
+}
+
+.expandable-wrapper:not(.expanded) .tags-rows-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.expandable-wrapper:not(.expanded) .tags-row:first-child {
+    display: flex;
+    flex-wrap: wrap;
+    flex-grow: 1;
+}
+
+.tag-expand-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: #8585857d !important;
+    justify-content: center;
+    flex-shrink: 0;
+    position: absolute;
+    left: -45px;
+    bottom: 10px;
+    height: 35px;
+    width: 35px;
+    display: flex;
+    margin: -10px 0 0 0;
+}
+
+.tag-expand-btn svg, .tag-expand-btn svg path {
+    fill: #858585bd !important;
+
+}
+
+.expandable-wrapper:not(.expanded) .tag-expand-btn {
+}
+
+.expandable-wrapper.expanded .tag-expand-btn {
+}
+
+.tags-row {
+    display: flex;
+    flex-wrap: wrap; /* Allows tags to wrap to the next line */
+    align-items: center; /* Better vertical alignment for label and tags */
+    margin: 0.7em 0 0px 0;
+    gap: 0.6em;
+    width: 100%;
+}
+
+.tags-label {
+    color: var(--text-sub);
+    flex-shrink: 0;
+    padding: 0;
+    font-size: 9.5em;
+    font-weight: 400;
+    margin-right: 5px;
+}
+
+
+.synonyms-container, .antonyms-container {
+    display: flex;
+    flex-wrap: wrap;
+    flex-grow: 1;
+}
+
+
+.tag {
+    padding: 0.5em 1em;
+    border-radius: 200px;
+    cursor: pointer;
+    border: 1px solid #c7c7c7;
+    color: #124ea1;
+    outline: none;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tag:hover {
+    border-color: #e4e4e4;
+}
+
+.ant-tag {
+    color: #910c0c;
+}
+
+.ant-tag:hover {
+    border-color: #ccc;
+}
+
+.pin-btn {
+    color: #e3e3e3;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    display: grid;
+}
+
+.pin-btn.active {
+    color: #ff4b6b;
+}
+
+/* Targeted way to make the spacing smaller for definitions and examples */
+.def-text + br, 
+.example + br {
+    display: block;
+    content: "";
+}
