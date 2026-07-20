@@ -74,6 +74,8 @@ self.addEventListener('activate', (event) => {
 
 // Network First strategy for everything except API calls and translation
 self.addEventListener('fetch', (event) => {
+  // Only cache GET requests
+  if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/api/') || event.request.url.includes('translate.googleapis.com')) return;
 
   event.respondWith(

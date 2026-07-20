@@ -201,20 +201,15 @@ window.TextScaler = {
                     { name: 'hi-IN', locale: 'hi-IN', display: 'Hindi' }
                 ];
             } else if (browserVoices.length > 0) {
-                this.voices = browserVoices.map(v => {
-                    let displayName = v.name || `Voice (${v.lang})`;
-                    if (displayName.includes('undefined')) {
-                        displayName = displayName.replace(/undefined/g, '').replace(/\s+/g, ' ').trim();
-                        if (displayName === 'Microsoft Online (Natural) -' || displayName === 'Microsoft Online (Natural)') {
-                            displayName = `Microsoft Natural - ${v.lang}`;
-                        }
-                    }
-                    return {
+                if (window.VoiceFilter) {
+                    this.voices = window.VoiceFilter.filter(browserVoices);
+                } else {
+                    this.voices = browserVoices.map(v => ({
                         name: v.name,
-                        locale: v.lang.replace('_', '-'), // Normalize codes (en_US -> en-US)
-                        display: displayName
-                    };
-                });
+                        locale: v.lang.replace('_', '-'),
+                        display: v.name
+                    }));
+                }
                 this.voicesFresh = true;
             }
 
