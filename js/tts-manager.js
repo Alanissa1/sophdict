@@ -169,6 +169,11 @@ window.TTSManager = {
         document.querySelectorAll('.tts-btn.speaking').forEach(el => el.classList.remove('speaking'));
         this.activeButton = null;
         this.lastText = null;
+        this.audio = null;
+        if (this.androidTimeout) {
+            clearTimeout(this.androidTimeout);
+            this.androidTimeout = null;
+        }
     },
 
     createButton(text, className = "tts-btn") {
