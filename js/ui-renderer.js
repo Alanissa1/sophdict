@@ -1,29 +1,12 @@
-window.UIRenderer = {
-    async render(data, containerId = 'results-container', targetContext = null) {
-        try {
-            const targetContainer = document.getElementById(containerId);
-            if (!targetContainer) return;
-
-            if (data.error) {
-                targetContainer.innerHTML = `<div style="padding:40px; text-align:center;">Word not found</div>`;
-                return;
-            }
-
-            const { word, dictionary, thesaurus } = data;
-            const dictArr = Array.isArray(dictionary) ? dictionary : [];
-            const pronunciation = dictArr[0]?.hwi?.prs?.[0]?.mw || '';
-            const isPinned = await DBManager.isPinned(word);
-
-            if (containerId === 'results-container') {
-                targetContainer.innerHTML = `
+window.UIRenderer={async render(e,t="results-container",r=null){try{const n=document.getElementById(t);if(!n)return;if(e.error)return void(n.innerHTML='<div style="padding:40px; text-align:center;">Word not found</div>');const{word:o,dictionary:i,thesaurus:c}=e,a=Array.isArray(i)?i:[],l=a[0]?.hwi?.prs?.[0]?.mw||"",s=await DBManager.isPinned(o);if("results-container"===t){n.innerHTML=`
                     <div class="word-header">
                         <div class="title-row">
                             <div class="word-info">
                                 <div style="display: flex; align-items: center; gap: 15px;">
                                     <div class="pron-row"></div>
                                     <div style="display: flex; flex-direction: column;">
-                                        <h1 class="word-title">${word}</h1>
-                                        <span class="pronunciation">/${pronunciation}/</span>
+                                        <h1 class="word-title">${o}</h1>
+                                        <span class="pronunciation">/${l}/</span>
                                     </div>
                                 </div>
                             </div>
@@ -31,475 +14,53 @@ window.UIRenderer = {
                         </div>
                     </div>
                     <div id="content-body"></div>
-                `;
-                const pronRow = targetContainer.querySelector('.pron-row');
-                if (pronRow) pronRow.appendChild(TTSManager.createButton(word));
-
-                const pinMain = targetContainer.querySelector('.pin-btn-main');
-                if (pinMain) {
-                    const pinBtn = document.createElement('span');
-                    pinBtn.className = `pin-btn ${isPinned ? 'active' : ''}`;
-                    pinBtn.style.color = isPinned ? '#ff4b6b' : '#8b8b8b';
-                    const heartEmpty = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
-                    const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>`;
-                    pinBtn.innerHTML = isPinned ? heartFilled : heartEmpty;
-                    pinBtn.onclick = async () => {
-                        const active = await PinManager.togglePin(word);
-                        pinBtn.classList.toggle('active', active);
-                        pinBtn.style.color = active ? '#ff4b6b' : '#8b8b8b';
-                        pinBtn.innerHTML = active ? heartFilled : heartEmpty;
-                    };
-                    pinMain.appendChild(pinBtn);
-                }
-
-                const body = document.getElementById('content-body');
-                if (body) {
-                    let html = this.generateHtml(data, 'thesaurus');
-                    html += this.renderWordOrigin(dictionary);
-                    body.innerHTML = html;
-                }
-                // Only scroll to top if we are rendering in the main container
-                if (containerId === 'results-container') {
-                    window.scrollTo({ top: 0, behavior: 'instant' });
-                }
-            } else {
-                // Micro Window - Restructure header directly into micro-header-top
-                const headerTop = document.querySelector('.micro-header-top');
-                if (headerTop) {
-                    headerTop.innerHTML = `
+                `;const e=n.querySelector(".pron-row");e&&e.appendChild(TTSManager.createButton(o));const r=n.querySelector(".pin-btn-main");if(r){const e=document.createElement("span");e.className=`pin-btn ${s?"active":""}`,e.style.color=s?"#ff4b6b":"#8b8b8b";const t='<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>',n='<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>';e.innerHTML=s?n:t,e.onclick=async()=>{const r=await PinManager.togglePin(o);e.classList.toggle("active",r),e.style.color=r?"#ff4b6b":"#8b8b8b",e.innerHTML=r?n:t},r.appendChild(e)}const i=document.getElementById("content-body");if(i){let t=this.generateHtml(e,"thesaurus");t+=this.renderWordOrigin(a),i.innerHTML=t}"results-container"===t&&window.scrollTo({top:0,behavior:"instant"})}else{const d=document.querySelector(".micro-header-top");if(d){d.innerHTML=`
                         <div class="micro-pron-row" style="flex-shrink: 0; display: flex; align-items: center;"></div>
                         <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; overflow-x: auto; overflow-y: hidden;">
                             <div style="display: flex; width: max-content;">
-                                <h2 class="micro-title" style="margin:0; line-height:1.2;">${word}</h2>
+                                <h2 class="micro-title" style="margin:0; line-height:1.2;">${o}</h2>
                             </div>
                             <div style="display: flex; gap: 6px; font-size: 0.9em; width: max-content;">
-                                <span class="micro-pronunciation" style="line-height:1.2;">/${pronunciation}/</span>
+                                <span class="micro-pronunciation" style="line-height:1.2;">/${l}/</span>
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap:10px; flex-shrink: 0; margin-left: 10px;">
                             <div id="microPin"></div>
                         </div>
-                    `;
-                    const pronRow = headerTop.querySelector('.micro-pron-row');
-                    if (pronRow) pronRow.appendChild(TTSManager.createButton(word));
-
-                    const mPin = headerTop.querySelector('#microPin');
-                    if (mPin) {
-                        mPin.className = `pin-btn ${isPinned ? 'active' : ''}`;
-                        mPin.style.color = isPinned ? '#ff4b6b' : '#8b8b8b';
-                        const heartEmpty = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
-                        const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>`;
-                        mPin.innerHTML = isPinned ? heartFilled : heartEmpty;
-                        mPin.onclick = async () => {
-                            const active = await PinManager.togglePin(word);
-                            mPin.classList.toggle('active', active);
-                            mPin.style.color = active ? '#ff4b6b' : '#8b8b8b';
-                            mPin.innerHTML = active ? heartFilled : heartEmpty;
-                        };
-                    }
-                }
-
-                // Hide redundant rows to remove gaps
-                const oldTitleRow = document.querySelector('.micro-title-row');
-                if (oldTitleRow) oldTitleRow.style.display = 'none';
-                const mInfo = document.getElementById('microInfo');
-                if (mInfo) mInfo.style.display = 'none';
-
-                let html = this.generateHtml(data, 'dictionary', targetContext, true);
-                html += `<button id="full-page-btn" class="view-full-btn">View Full Main Page</button>`;
-                targetContainer.innerHTML = html;
-
-                const fullPageBtn = document.getElementById('full-page-btn');
-                if (fullPageBtn) {
-                    fullPageBtn.onclick = () => {
-                        ModalManager.hide();
-                        window.AppSearch(word);
-                    };
-                }
-            }
-
-            this.attachInlineTTS(targetContainer);
-            PreFetcher.addToQueue(this.extractLinks(data));
-        } catch (err) {
-            console.error("[UI] Render Error:", err);
-        }
-    },
-
-    cleanMWText(text) {
-        if (!text) return "";
-        return text
-            .replace(/\{bc\}/g, '')
-            .replace(/\{a_link\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
-            .replace(/\{d_link\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
-            .replace(/\{sx\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
-            .replace(/\{it\}|\{\/it\}|\{wi\}|\{\/wi\}/g, '')
-            .replace(/\{[^}]+\}/g, '')
-            .trim();
-    },
-
-    cleanMWExample(text, headword = null) {
-        if (!text) return "";
-        let cleaned = text
-            .replace(/\{bc\}/g, '')
-            .replace(/\{a_link\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
-            .replace(/\{d_link\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
-            .replace(/\{sx\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
-            .replace(/\{it\}|\{\/it\}/g, '')
-            .replace(/\{wi\}([^}]+)\{\/wi\}/g, '<b>$1</b>');
-
-        if (headword) {
-            const base = headword.replace(/\*/g, '').toLowerCase();
-            const variants = [base];
-            if (base.endsWith('y')) variants.push(base.slice(0, -1) + 'ie');
-            else if (base.endsWith('e')) variants.push(base.slice(0, -1));
-
-            variants.forEach(v => {
-                // Match the variant followed by any characters that are NOT space or period
-                const regex = new RegExp(`(?<!<b>)\\b(${v}[^\\s.]*)\\b(?!<\\/b>)`, 'gi');
-                cleaned = cleaned.replace(regex, '<b>$1</b>');
-            });
-        }
-
-        return cleaned.replace(/\{[^}]+\}/g, '').trim();
-    },
-
-    generateHtml(data, type, targetContext = null, isModal = false) {
-        const { word, thesaurus, dictionary } = data;
-        let html = "";
-
-        if (type === 'thesaurus') {
-            if (Array.isArray(thesaurus) && thesaurus.length > 0) {
-                thesaurus.forEach(entry => {
-                    const entryId = entry.meta?.id.split(':')[0];
-                    if (entryId !== word && !entry.meta?.stems?.includes(word)) return;
-
-                    html += `<div class="context-card"><div class="context-type">${entry.fl}</div>`;
-                    let senseCounter = 1;
-                    entry.def[0].sseq.forEach(sseq => {
-                        sseq.forEach(sen => {
-                            const sData = sen[1];
-                            if (!sData || !sData.dt) return;
-
-                            let def = this.cleanMWText(sData.dt[0][1]);
-                            let vis = sData.dt.find(i => i[0] === 'vis');
-                            let exHtml = vis ? vis[1].map(v => {
-                                const cleanEx = this.cleanMWExample(v.t, word);
-                                return `<div class="example">"${cleanEx}" <span class="tts-inline-target" data-text="${cleanEx.replace(/<\/?b>/g, '')}"></span></div>`;
-                            }).join('') : "";
-
-                            const syns = sData.syn_list?.[0]?.map(s => s.wd) || [];
-                            const ants = sData.ant_list?.[0]?.map(a => a.wd) || [];
-
-                            html += `
+                    `;const e=d.querySelector(".micro-pron-row");e&&e.appendChild(TTSManager.createButton(o));const t=d.querySelector("#microPin");if(t){t.className=`pin-btn ${s?"active":""}`,t.style.color=s?"#ff4b6b":"#8b8b8b";const e='<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>',r='<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>';t.innerHTML=s?r:e,t.onclick=async()=>{const n=await PinManager.togglePin(o);t.classList.toggle("active",n),t.style.color=n?"#ff4b6b":"#8b8b8b",t.innerHTML=n?r:e}}}const m=document.querySelector(".micro-title-row");m&&(m.style.display="none");const p=document.getElementById("microInfo");p&&(p.style.display="none");let u=this.generateHtml(e,"dictionary",r,!0);u+='<button id="full-page-btn" class="view-full-btn">View Full Main Page</button>',n.innerHTML=u;const f=document.getElementById("full-page-btn");f&&(f.onclick=()=>{ModalManager.hide(),window.AppSearch(o)})}this.attachInlineTTS(n),PreFetcher.addToQueue(this.extractLinks(e))}catch(e){console.error("[UI] Render Error:",e)}},cleanMWText(e){return e?e.replace(/\{bc\}/g,"").replace(/\{a_link\|([^}|]+)(?:\|[^}]*)?\}/g,"$1").replace(/\{d_link\|([^}|]+)(?:\|[^}]*)?\}/g,"$1").replace(/\{sx\|([^}|]+)(?:\|[^}]*)?\}/g,"$1").replace(/\{it\}|\{\/it\}|\{wi\}|\{\/wi\}/g,"").replace(/\{[^}]+\}/g,"").trim():""},cleanMWExample(e,t=null){if(!e)return"";const r=/\{wi\}(.*?)\{\/wi\}/g.test(e);let n=e.replace(/\{bc\}/g,"").replace(/\{a_link\|([^}|]+)(?:\|[^}]*)?\}/g,"$1").replace(/\{d_link\|([^}|]+)(?:\|[^}]*)?\}/g,"$1").replace(/\{sx\|([^}|]+)(?:\|[^}]*)?\}/g,"$1").replace(/\{it\}|\{\/it\}/g,"").replace(/\{wi\}(.*?)\{\/wi\}/g,"<b>$1</b>");if(!r&&t){const e=t.replace(/\*/g,"").toLowerCase(),r=[e];e.endsWith("y")?r.push(e.slice(0,-1)+"ie"):e.endsWith("e")&&r.push(e.slice(0,-1)),r.forEach(e=>{const t=new RegExp(`\\b(${e}[a-z]*)\\b`,"gi");n=n.replace(t,"<b>$1</b>")})}return n.replace(/\{[^}]+\}/g,"").trim()},generateHtml(e,t,r=null,n=!1){const{word:o,thesaurus:i,dictionary:c}=e;let a="";if("thesaurus"===t)Array.isArray(i)&&i.length>0?i.forEach(e=>{const t=e.meta?.id.split(":")[0];if(t!==o&&!e.meta?.stems?.includes(o))return;a+=`<div class="context-card"><div class="context-type">${e.fl}</div>`;let r=1;e.def[0].sseq.forEach(e=>{e.forEach(e=>{const t=e[1];if(!t||!t.dt)return;let n=this.cleanMWText(t.dt[0][1]),i=t.dt.find(e=>"vis"===e[0]),c=i?i[1].map(e=>{const t=this.cleanMWExample(e.t,o);return`<div class="example">"${t}" <span class="tts-inline-target" data-text="${t.replace(/<\/?b>/g,"")}"></span></div>`}).join(" fortress"):""a,l=t.syn_list?.[0]?.map(e=>e.wd)||[],s=t.ant_list?.[0]?.map(e=>e.wd)||[];a+=`
                                 <div class="sense-block">
                                     <div class="definition">
-                                        <span class="sense-num">${senseCounter++}.</span>
+                                        <span class="sense-num">${r++}.</span>
                                         <div class="def-content-container">
-                                            <div class="def-text">${def} <span class="tts-inline-target" data-text="${def}"></span></div>
-                                            ${exHtml}
+                                            <div class="def-text">${n} <span class="tts-inline-target" data-text="${n}"></span></div>
+                                            ${c}
                                             <div class="tags-section">
-                                                ${syns.length ? `<div class="tags-row synonyms-container"><span class="tags-label">Similar:</span>${syns.map(s => `<span class="tag syn-tag" data-word="${s}" tabindex="0">${s}</span>`).join('')}</div>` : ''}
-                                                ${ants.length ? `<div class="tags-row antonyms-container"><span class="tags-label">Opposite:</span>${ants.map(a => `<span class="tag ant-tag" data-word="${a}" tabindex="0">${a}</span>`).join('')}</div>` : ''}
+                                                ${l.length?`<div class="tags-row synonyms-container"><span class="tags-label">Similar:</span>${l.map(e=>`<span class="tag syn-tag" data-word="${e}" tabindex="0">${e}</span>`).join("")}</div>`:""}
+                                                ${s.length?`<div class="tags-row antonyms-container"><span class="tags-label">Opposite:</span>${s.map(e=>`<span class="tag ant-tag" data-word="${e}" tabindex="0">${e}</span>`).join("")}</div>`:""}
                                             </div>
                                         </div>
                                     </div>
-                                </div>`;
-                        });
-                    });
-                    html += `</div>`;
-                });
-            } else {
-                html = `<div style="padding:20px; text-align:center; color:var(--text-sub);">Thesaurus data not available for this word.</div>`;
-            }
-        } else if (type === 'dictionary') {
-            if (Array.isArray(dictionary) && dictionary.length > 0) {
-                if (isModal) {
-                    // Filter and Group for Modal
-                    const grouped = {};
-                    dictionary.forEach(e => {
-                        const fl = e.fl || 'other';
-                        if (!grouped[fl]) grouped[fl] = [];
-                        grouped[fl].push(e);
-                    });
-
-                    const sortedKeys = Object.keys(grouped).sort((a, b) => {
-                        if (targetContext) {
-                            if (a === targetContext && b !== targetContext) return -1;
-                            if (a !== targetContext && b === targetContext) return 1;
-                        }
-                        return 0;
-                    });
-
-                    sortedKeys.forEach(fl => {
-                        html += `<div class="context-card"><div class="context-type">${fl}</div>`;
-                        const counter = { val: 1 };
-                        grouped[fl].forEach(e => {
-                            if (e.def && Array.isArray(e.def)) {
-                                e.def.forEach(defObj => {
-                                    if (defObj.sseq && Array.isArray(defObj.sseq)) {
-                                        defObj.sseq.forEach(sseq => {
-                                            sseq.forEach(node => {
-                                                this.processSenseNode(node, (itemHtml) => {
-                                                    html += itemHtml;
-                                                }, counter, word);
-                                            });
-                                        });
-                                    }
-                                });
-                            } else if (e.shortdef) {
-                                e.shortdef.forEach(d => {
-                                    const sn = `${counter.val++}.`;
-                                    html += `
+                                </div>`})}),a+="</div>"}):a='<div style="padding:20px; text-align:center; color:var(--text-sub);">Thesaurus data not available for this word.</div>';else if("dictionary"===t)if(Array.isArray(c)&&c.length>0)if(n){const e={};c.forEach(t=>{const r=t.fl||"other";e[r]||(e[r]=[]),e[r].push(t)}),Object.keys(e).sort((e,t)=>r?e===r&&t!==r?-1:e!==r&&t===r?1:0:0).forEach(t=>{a+=`<div class="context-card"><div class="context-type">${t}</div>`;const r={val:1};e[t].forEach(e=>{e.def&&Array.isArray(e.def)?e.def.forEach(e=>{e.sseq&&Array.isArray(e.sseq)&&e.sseq.forEach(e=>{e.forEach(e=>{this.processSenseNode(e,e=>{a+=e},r,o)})})}):e.shortdef&&e.shortdef.forEach(e=>{const t=`${r.val++}.`;a+=`
                                         <div class="sense-block">
                                             <div class="definition">
-                                                <span class="sense-num">${sn}</span>
+                                                <span class="sense-num">${t}</span>
                                                 <div class="def-content-container">
-                                                    <div class="def-text">${d} <span class="tts-inline-target" data-text="${d}"></span></div>
+                                                    <div class="def-text">${e} <span class="tts-inline-target" data-text="${e}"></span></div>
                                                 </div>
                                             </div>
-                                        </div>`;
-                                });
-                            }
-                        });
-                        html += `</div>`;
-                    });
-                } else {
-                    // Standard Non-Modal Rendering
-                    const sortedDict = [...dictionary].sort((a, b) => {
-                        const flA = (a.fl || '').toLowerCase();
-                        const flB = (b.fl || '').toLowerCase();
-                        if (targetContext) {
-                            if (flA === targetContext && flB !== targetContext) return -1;
-                            if (flA !== targetContext && flB === targetContext) return 1;
-                        }
-                        return 0;
-                    });
-
-                    sortedDict.forEach(e => {
-                        html += `<div class="context-card"><div class="context-type">${e.fl || ''}</div>`;
-                        if (e.def && Array.isArray(e.def)) {
-                            e.def.forEach(defObj => {
-                                if (defObj.sseq && Array.isArray(defObj.sseq)) {
-                                    defObj.sseq.forEach(sseq => {
-                                        sseq.forEach(node => {
-                                            this.processSenseNode(node, (itemHtml) => {
-                                                html += itemHtml;
-                                            }, null, word);
-                                        });
-                                    });
-                                }
-                            });
-                        } else if (e.shortdef) {
-                            e.shortdef.forEach(d => {
-                                html += `<div class="definition"><div class="sense-num"></div><div class="def-text">${d} <span class="tts-inline-target" data-text="${d}"></span></div></div>`;
-                            });
-                        }
-                        html += `</div>`;
-                    });
-                }
-            } else {
-                html = `<div style="padding:20px; text-align:center; color:var(--text-sub);">Dictionary definition not available.</div>`;
-            }
-        }
-        return html;
-    },
-
-    processSenseNode(node, callback, counter = null, word = null) {
-        const type = node[0];
-        const data = node[1];
-
-        if (type === 'sense' || type === 'sdsense') {
-            this.renderSense(data, callback, counter, word);
-        } else if (type === 'pseq' || type === 'bs') {
-            if (Array.isArray(data)) {
-                data.forEach(n => this.processSenseNode(n, callback, counter, word));
-            }
-        }
-    },
-
-    renderSense(sData, callback, counter = null, word = null) {
-        if (!sData || !sData.dt) return;
-
-        let snValue = sData.sn || "";
-        if (!snValue && counter) {
-            snValue = `${counter.val++}.`;
-        } else if (snValue && counter) {
-            // Update counter based on existing sn (try to track the base number)
-            const match = snValue.match(/^(\d+)/);
-            if (match) {
-                counter.val = parseInt(match[1]) + 1;
-            }
-        }
-
-        const snHtml = snValue ? `<span class="sense-num">${snValue}${snValue.endsWith('.') ? '' : '.'}</span>` : `<span class="sense-num"></span>`;
-        const sdHtml = sData.sd ? `<span class="sense-divider">${this.cleanMWText(sData.sd)} </span>` : "";
-
-        let contentHtml = "";
-
-        sData.dt.forEach(node => {
-            const type = node[0];
-            const content = node[1];
-
-            if (type === 'text') {
-                const cleanDef = this.cleanMWText(content);
-                if (cleanDef) {
-                    const prefix = contentHtml === "" ? sdHtml : "";
-                    contentHtml += `<div class="def-text">${prefix}${cleanDef} <span class="tts-inline-target" data-text="${cleanDef}"></span></div>`;
-                }
-            } else if (type === 'vis' && Array.isArray(content)) {
-                content.forEach(v => {
-                    const cleanEx = this.cleanMWExample(v.t, word);
-                    contentHtml += `<div class="example">"${cleanEx}" <span class="tts-inline-target" data-text="${cleanEx.replace(/<\/?b>/g, '')}"></span></div>`;
-                });
-            } else if (type === 'uns' && Array.isArray(content)) {
-                content.forEach(u => {
-                    u.forEach(unode => {
-                        const utype = unode[0];
-                        const udata = unode[1];
-                        if (utype === 'text') {
-                            const cleanDef = this.cleanMWText(udata);
-                            if (cleanDef) {
-                                contentHtml += `<div class="def-text">${cleanDef} <span class="tts-inline-target" data-text="${cleanDef}"></span></div>`;
-                            }
-                        } else if (utype === 'vis' && Array.isArray(udata)) {
-                            udata.forEach(v => {
-                                const cleanEx = this.cleanMWExample(v.t, word);
-                                contentHtml += `<div class="example">"${cleanEx}" <span class="tts-inline-target" data-text="${cleanEx.replace(/<\/?b>/g, '')}"></span></div>`;
-                            });
-                        }
-                    });
-                });
-            }
-        });
-
-        if (contentHtml) {
-            const html = `
+                                        </div>`})}),a+="</div>"})}else[...c].sort((e,t)=>{const n=(e.fl||"").toLowerCase(),o=(t.fl||"").toLowerCase();return r?n===r&&o!==r?-1:n!==r&&o===r?1:0:0}).forEach(e=>{a+=`<div class="context-card"><div class="context-type">${e.fl||""}</div>`,e.def&&Array.isArray(e.def)?e.def.forEach(e=>{e.sseq&&Array.isArray(e.sseq)&&e.sseq.forEach(e=>{e.forEach(e=>{this.processSenseNode(e,e=>{a+=e},null,o)})})}):e.shortdef&&e.shortdef.forEach(e=>{a+=`<div class="definition"><div class="sense-num"></div><div class="def-text">${e} <span class="tts-inline-target" data-text="${e}"></span></div></div>`}),a+="</div>"});else a='<div style="padding:20px; text-align:center; color:var(--text-sub);">Dictionary definition not available.</div>';return a},processSenseNode(e,t,r=null,n=null){const o=e[0],i=e[1];"sense"===o||"sdsense"===o?this.renderSense(i,t,r,n):("pseq"===o||"bs"===o)&&Array.isArray(i)&&i.forEach(e=>this.processSenseNode(e,t,r,n))},renderSense(e,t,r=null,n=null){if(!e||!e.dt)return;let o=e.sn||"";if(o||!r)if(o&&r){const e=o.match(/^(\d+)/);e&&(r.val=parseInt(e[1])+1)}else o=`${r.val++}.`;const i=o?`<span class="sense-num">${o}${o.endsWith(".")?"":"."}</span>`:'<span class="sense-num"></span>',c=e.sd?`<span class="sense-divider">${this.cleanMWText(e.sd)} </span>`:"";let a="";e.dt.forEach(e=>{const t=e[0],r=e[1];if("text"===t){const e=this.cleanMWText(r);if(e){const t=""===a?c:"";a+=`<div class="def-text">${t}${e} <span class="tts-inline-target" data-text="${e}"></span></div>`}}else"vis"===t&&Array.isArray(r)?r.forEach(e=>{const t=this.cleanMWExample(e.t,n);a+=`<div class="example">"${t}" <span class="tts-inline-target" data-text="${t.replace(/<\/?b>/g,"")}"></span></div>`}):"uns"===t&&Array.isArray(r)&&r.forEach(e=>{e.forEach(e=>{const t=e[0],r=e[1];if("text"===t){const e=this.cleanMWText(r);e&&(a+=`<div class="def-text">${e} <span class="tts-inline-target" data-text="${e}"></span></div>`)}else"vis"===t&&Array.isArray(r)&&r.forEach(e=>{const t=this.cleanMWExample(e.t,n);a+=`<div class="example">"${t}" <span class="tts-inline-target" data-text="${t.replace(/<\/?b>/g,"")}"></span></div>`})})})}),a&&t(`
                 <div class="sense-block">
                     <div class="definition">
-                        ${snHtml}
+                        ${i}
                         <div class="def-content-container">
-                            ${contentHtml}
+                            ${a}
                         </div>
                     </div>
-                </div>`;
-            callback(html);
-        }
-    },
-
-    renderRunOns(uros) {
-        if (!Array.isArray(uros) || uros.length === 0) return "";
-        let html = `<div class="run-ons-section" style="margin-top:20px; padding-top:15px; border-top:1px dashed var(--border-color);">
+                </div>`)},renderRunOns(e){if(!Array.isArray(e)||0===e.length)return"";let t=`<div class="run-ons-section" style="margin-top:20px; padding-top:15px; border-top:1px dashed var(--border-color);">
             <div class="sub-section-title">Related Words</div>
-            <div style="display:flex; flex-wrap:wrap; gap:10px;">`;
-
-        uros.forEach(u => {
-            const word = u.ure.replace(/\*/g, '');
-            const fl = u.fl ? `<span class="run-on-fl">(${u.fl})</span>` : "";
-            html += `<span class="tag syn-tag" data-word="${word}" tabindex="0" style="display:flex; align-items:center;">${word}${fl}</span>`;
-        });
-
-        html += `</div></div>`;
-        return html;
-    },
-
-    renderWordOrigin(dictionary) {
-        if (!Array.isArray(dictionary) || dictionary.length === 0) return "";
-
-        let etymology = "";
-        for (const entry of dictionary) {
-            if (entry.et && Array.isArray(entry.et)) {
-                // Concatenate text from all nodes in the etymology array
-                entry.et.forEach(node => {
-                    if (node[1] && typeof node[1] === 'string') {
-                        etymology += node[1];
-                    }
-                });
-                if (etymology) break;
-            }
-        }
-
-        if (!etymology) return "";
-
-        const cleanEt = this.cleanMWText(etymology);
-
-        return `
+            <div style="display:flex; flex-wrap:wrap; gap:10px;">`;return e.forEach(e=>{const r=e.ure.replace(/\*/g,""),n=e.fl?`<span class="run-on-fl">(${e.fl})</span>`:"";t+=`<span class="tag syn-tag" data-word="${r}" tabindex="0" style="display:flex; align-items:center;">${r}${n}</span>`}),t+="</div></div>",t},renderWordOrigin(e){if(!Array.isArray(e)||0===e.length)return"";let t="";for(const r of e)if(r.et&&Array.isArray(r.et)){if(r.et.forEach(e=>{"string"==typeof e[1]&&(t+=e[1])}),t)break}if(!t)return"";const r=this.cleanMWText(t);return`
             <div class="context-card origin-card" style="margin-top: 20px; border-left: 4px solid var(--accent);">
                 <div class="context-type">Word Origin</div>
-                <div class="definition">${cleanEt}</div>
+                <div class="definition">${r}</div>
             </div>
-        `;
-    },
-
-    attachInlineTTS(container) {
-        container.querySelectorAll('.tts-inline-target').forEach(span => {
-            const text = span.dataset.text;
-            span.appendChild(TTSManager.createButton(text));
-        });
-    },
-
-    extractLinks(data) {
-        const words = new Set();
-        const { word, thesaurus, dictionary } = data;
-
-        // 1. Extract from Thesaurus (Merriam-Webster Thesaurus API structure)
-        if (Array.isArray(thesaurus)) {
-            thesaurus.forEach(entry => {
-                // Synonyms & Antonyms from meta
-                if (entry.meta) {
-                    if (Array.isArray(entry.meta.syns)) {
-                        entry.meta.syns.flat().forEach(w => words.add(w));
-                    }
-                    if (Array.isArray(entry.meta.ants)) {
-                        entry.meta.ants.flat().forEach(w => words.add(w));
-                    }
-                }
-
-                // Related and Near lists inside definitions
-                if (Array.isArray(entry.def)) {
-                    entry.def.forEach(d => {
-                        if (d.sseq) {
-                            d.sseq.flat().forEach(sen => {
-                                const sData = sen[1];
-                                if (!sData) return;
-
-                                // syn_list, ant_list, rel_list, near_list
-                                if (sData.syn_list) sData.syn_list.flat().forEach(sw => words.add(sw.wd));
-                                if (sData.ant_list) sData.ant_list.flat().forEach(aw => words.add(aw.wd));
-                                if (sData.rel_list) sData.rel_list.flat().forEach(rw => words.add(rw.wd));
-                                if (sData.near_list) sData.near_list.flat().forEach(nw => words.add(nw.wd));
-                            });
-                        }
-                    });
-                }
-            });
-        }
-
-        // 2. Extract from Dictionary (Merriam-Webster Collegiate Dictionary)
-        if (Array.isArray(dictionary)) {
-            dictionary.forEach(entry => {
-                // Run-on entries (uro)
-                if (Array.isArray(entry.uro)) {
-                    entry.uro.forEach(u => {
-                        if (u.ure) words.add(u.ure.replace(/\*/g, ''));
-                    });
-                }
-                // Cross-references (defined as {sx|word||})
-                // These are usually handled by cleanMWText in UI, but we can extract them for pre-fetching
-                const entryStr = JSON.stringify(entry);
-                const sxMatches = entryStr.match(/\{sx\|([^}|]+)/g);
-                if (sxMatches) {
-                    sxMatches.forEach(m => {
-                        const w = m.split('|')[1];
-                        if (w) words.add(w.toLowerCase());
-                    });
-                }
-            });
-        }
-
-        // Cleanup: remove original word, empty strings, and long phrases
-        words.delete(word.toLowerCase());
-        return Array.from(words)
-            .map(w => w.toLowerCase().trim())
-            .filter(w => w && w.length > 1 && w.length < 30 && !w.includes(' '));
-    }
-};
+        `},attachInlineTTS(e){e.querySelectorAll(".tts-inline-target").forEach(e=>{const t=e.dataset.text;e.appendChild(TTSManager.createButton(t))})},extractLinks(e){const t=new Set,{word:r,thesaurus:n,dictionary:o}=e;return Array.isArray(n)&&n.forEach(e=>{e.meta&&(Array.isArray(e.meta.syns)&&e.meta.syns.flat().forEach(e=>t.add(e)),Array.isArray(e.meta.ants)&&e.meta.ants.flat().forEach(e=>t.add(e))),Array.isArray(e.def)&&e.def.forEach(e=>{e.sseq&&e.sseq.flat().forEach(e=>{const r=e[1];r&&(r.syn_list&&r.syn_list.flat().forEach(e=>t.add(e.wd)),r.ant_list&&r.ant_list.flat().forEach(e=>t.add(e.wd)),r.rel_list&&r.rel_list.flat().forEach(e=>t.add(e.wd)),r.near_list&&r.near_list.flat().forEach(e=>t.add(e.wd)))})})}),Array.isArray(o)&&o.forEach(e=>{if(Array.isArray(e.uro)&&e.uro.forEach(e=>{e.ure&&t.add(e.ure.replace(/\*/g,""))}),JSON.stringify(e).match(/\{sx\|([^}|]+)/g))for(const r of JSON.stringify(e).match(/\{sx\|([^}|]+)/g)){const e=r.split("|")[1];e&&t.add(e.toLowerCase())}}),t.delete(r.toLowerCase()),Array.from(t).map(e=>e.toLowerCase().trim()).filter(e=>e&&e.length>1&&e.length<30&&!e.includes(" "))}};
