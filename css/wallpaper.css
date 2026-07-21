@@ -158,34 +158,8 @@ body.wallpaper-active #microDimmer {
     background: transparent !important;
 }
 
-/* Create a "hole" in the dimmer so the wallpaper stays bright under the modal */
+/* Dimmer that follows the modal but stays outside its rounded corners */
 body.wallpaper-active #microWindow {
-    overflow: visible !important;
-}
-
-body.wallpaper-active #microWindow::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: -1;
-    border-radius: inherit;
-    box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.6);
-    /* Clip the shadow so it only shows outside the modal area */
-    clip-path: polygon(
-        -200vmax -200vmax,
-        200vmax -200vmax,
-        200vmax 200vmax,
-        -200vmax 200vmax,
-        -200vmax -200vmax,
-        0 0,
-        0 100%,
-        100% 100%,
-        100% 0,
-        0 0
-    );
-    pointer-events: none;
+    outline: 200vmax solid rgba(0, 0, 0, 0.6);
 }
 
