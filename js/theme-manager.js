@@ -40,6 +40,10 @@ window.ThemeManager = {
                 window.AndroidTTS.updateStatusBar("#ffffff", true); // Light card bg, dark icons
             }
         }
+
+        if (window.WallpaperManager && window.WallpaperManager.applySettings) {
+            window.WallpaperManager.applySettings();
+        }
     },
 
     setTheme(theme) {
@@ -50,25 +54,21 @@ window.ThemeManager = {
     },
 
     renderToggle() {
-        const container = document.getElementById('text-scale-control');
+        const container = document.getElementById('theme-settings-container');
         if (!container) return;
 
-        // Find a place to insert the theme toggle.
-        // We'll add it after the font scale controls.
-        const themeSection = document.createElement('div');
-        themeSection.className = 'settings-section theme-settings';
-        themeSection.innerHTML = `
-            <div class="scale-label" style="margin-top:4px; margin-bottom:2px;">Appearance</div>
-            <div class="theme-options">
-                <button class="theme-btn" data-theme="light">Light</button>
-                <button class="theme-btn" data-theme="dark">Dark</button>
-                <button class="theme-btn" data-theme="system">System</button>
+        container.innerHTML = `
+            <div class="settings-section theme-settings">
+                <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-top:10px; margin-bottom:4px;">Appearance</div>
+                <div class="theme-options">
+                    <button class="theme-btn" data-theme="light">Light</button>
+                    <button class="theme-btn" data-theme="dark">Dark</button>
+                    <button class="theme-btn" data-theme="system">System</button>
+                </div>
             </div>
         `;
 
-        container.appendChild(themeSection);
-
-        themeSection.querySelectorAll('.theme-btn').forEach(btn => {
+        container.querySelectorAll('.theme-btn').forEach(btn => {
             btn.onclick = () => this.setTheme(btn.dataset.theme);
         });
 
@@ -82,10 +82,3 @@ window.ThemeManager = {
         });
     }
 };
-
-// Initialize theme manager when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => ThemeManager.init());
-} else {
-    ThemeManager.init();
-}

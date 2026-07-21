@@ -278,6 +278,18 @@ window.TextScaler = {
         // 5. Setup Translation Section
         this.renderTranslationSection();
 
+        // 6. Setup Theme Section
+        if (window.ThemeManager) {
+            window.ThemeManager.renderToggle();
+        }
+
+        // 7. Setup Wallpaper Section
+        const wpContainer = document.getElementById('wallpaper-settings-container');
+        if (wpContainer && window.WallpaperManager) {
+            wpContainer.innerHTML = '';
+            window.WallpaperManager.renderControls(wpContainer);
+        }
+
         // If open and still no voices, try to load once
         if (this.voices.length === 0) {
             this.loadTTSData();
@@ -663,7 +675,11 @@ window.TextScaler = {
 
             <div id="language-section-container"></div>
 
+            <div id="theme-settings-container"></div>
+
             <div id="translation-settings-container"></div>
+
+            <div id="wallpaper-settings-container"></div>
 
             <!-- Full Language Selection List -->
             <div class="full-lang-list" id="fullLangList">
@@ -703,5 +719,3 @@ window.TextScaler = {
         this.updateUI();
     }
 };
-
-document.addEventListener('DOMContentLoaded', () => window.TextScaler.init());

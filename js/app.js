@@ -98,7 +98,11 @@ window.AppClearSearch = (skipPush = false) => {
 };
 
 (async () => {
-    await DBManager.init(); TTSManager.init(); ModalManager.init(); KeyboardNavigator.init(); ScrollManager.init();
+    await DBManager.init();
+    if (window.ThemeManager) window.ThemeManager.init();
+    if (window.TextScaler) window.TextScaler.init();
+    TTSManager.init(); ModalManager.init(); KeyboardNavigator.init(); ScrollManager.init();
+    if (window.WallpaperManager) await window.WallpaperManager.init();
     const wi = document.getElementById('wordInput'), sb = document.getElementById('search-button'), ll = document.querySelector('.logo-link'), pt = document.getElementById('pinnedToggleBtn'), st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn');
 
     if (sb) sb.onclick = () => {

@@ -5,6 +5,7 @@
 const DB_NAME = 'SophDictCachePermanentV1';
 const STORE_NAME = 'wordData';
 const PIN_STORE = 'pinnedWords';
+const ASSETS_STORE = 'appAssets';
 
 window.DBManager = {
     db: null,
@@ -13,7 +14,7 @@ window.DBManager = {
     async init() {
         if (this._initPromise) return this._initPromise;
         this._initPromise = new Promise((resolve, reject) => {
-            const request = indexedDB.open(DB_NAME, 1);
+            const request = indexedDB.open(DB_NAME, 2); // Bumped version
 
             request.onupgradeneeded = (e) => {
                 const db = e.target.result;
@@ -22,6 +23,9 @@ window.DBManager = {
                 }
                 if (!db.objectStoreNames.contains(PIN_STORE)) {
                     db.createObjectStore(PIN_STORE, { keyPath: 'word' });
+                }
+                if (!db.objectStoreNames.contains(ASSETS_STORE)) {
+                    db.createObjectStore(ASSETS_STORE, { keyPath: 'id' });
                 }
             };
 
