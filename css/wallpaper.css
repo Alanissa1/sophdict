@@ -45,25 +45,18 @@ body.dark-mode .wallpaper-overlay {
 /* Settings UI Integration */
 .wallpaper-settings-group {
     margin-top: 15px;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
     background: var(--card-bg);
 }
 
 .wallpaper-settings-title {
     font-weight: bold;
-    margin-bottom: 10px;
     display: flex;
     align-items: center;
-    gap: 8px;
 }
 
 .wallpaper-control-row {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: 12px;
 }
 
 .wallpaper-control-row label {
@@ -77,7 +70,7 @@ body.dark-mode .wallpaper-overlay {
     border-radius: 4px;
     border: 1px solid var(--border-color);
     background: var(--bg-color);
-    color: var(--text-main);
+    color: #ffffff;
 }
 
 body.dark-mode .wallpaper-control-row select {
@@ -95,7 +88,6 @@ body.dark-mode .wallpaper-control-row select {
     cursor: pointer;
     font-size: 0.9em;
     text-align: center;
-    transition: opacity 0.2s;
 }
 
 body.dark-mode .wallpaper-upload-btn {
@@ -106,14 +98,44 @@ body.dark-mode .wallpaper-upload-btn {
     opacity: 0.9;
 }
 
-.wallpaper-reset-btn {
-    font-size: 0.8em;
-    color: #d32f2f; /* Darker red for better contrast in light mode */
+.wallpaper-toggle-btn {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--primary-color);
     background: none;
-    border: none;
+    border: 1px solid var(--primary-color);
+    border-radius: 6px;
     cursor: pointer;
+    padding: 6px 12px;
+}
+
+.wallpaper-toggle-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+body.dark-mode .wallpaper-toggle-btn {
+    color: #8ab4f8;
+    border-color: #8ab4f8;
+}
+
+body.dark-mode .wallpaper-toggle-btn:hover {
+    background: #8ab4f8;
+    color: #000;
+}
+
+.wallpaper-settings-group label {
+    color: var(--text-main) !important;
+    font-weight: 500;
+}
+
+.wallpaper-control-row select,
+.wallpaper-control-row input[type="range"] {
     padding: 5px;
-    text-decoration: underline;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-main);
 }
 
 /* Include Context Page (Modal) and Cards in Wallpaper display */

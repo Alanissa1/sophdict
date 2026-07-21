@@ -115,7 +115,33 @@ window.WallpaperManager = {
         document.body.classList.remove('wallpaper-active');
     },
 
+    async toggle() {
+        this.settings.enabled = !this.settings.enabled;
+        if (this.settings.enabled) {
+            await this.loadWallpaper();
+        } else {
+            this.container.style.display = 'none';
+            document.getElementById('app-container').style.background = 'var(--bg-color)';
+            document.body.classList.remove('wallpaper-active');
+        }
+        await this.saveSettings();
+        // Force refresh UI
+        if (window.TextScaler) window.TextScaler.show();
+    },
+
+    async reset() {
+        await DBManager.delete('appAssets', 'customWallpaper');
+        this.currentUrl = null;
+        this.imgDiv.style.backgroundImage = '';
+        this.settings.enabled = false;
+        await this.saveSettings();
+        this.container.style.display = 'none';
+        document.getElementById('app-container').style.background = 'var(--bg-color)';
+        document.body.classList.remove('wallpaper-active');
+    },
+
     renderControls(container) {
+        const hasWallpaper = !!this.currentUrl || (this.imgDiv && this.imgDiv.style.backgroundImage && this.imgDiv.style.backgroundImage !== 'none');
         const html = `
             <div class="wallpaper-settings-group">
                 <div class="wallpaper-settings-title">
@@ -123,12 +149,12 @@ window.WallpaperManager = {
                     Custom Wallpaper
                 </div>
 
-                <div class="wallpaper-control-row">
-                    <label class="wallpaper-upload-btn" for="wallpaperInput">
+                <div class="wallpaper-control-row" style="flex-direction: row; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <label class="wallpaper-upload-btn" for="wallpaperInput" style="margin-bottom: 0;">
                         Choose Image
                     </label>
                     <input type="file" id="wallpaperInput" accept="image/*" style="display:none">
-                    ${this.settings.enabled ? `<button class="wallpaper-reset-btn" onclick="window.WallpaperManager.reset()">Remove Wallpaper</button>` : ''}
+                    ${hasWallpaper ? `<button class="wallpaper-toggle-btn" onclick="window.WallpaperManager.toggle()">${this.settings.enabled ? 'Turn off' : 'Turn on'}</button>` : ''}
                 </div>
 
                 <div class="wallpaper-control-row">
