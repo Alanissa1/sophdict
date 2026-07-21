@@ -48,9 +48,8 @@
 
         const ogUrl = document.querySelector('meta[property="og:url"]');
         if (ogUrl) {
-            const isModal = window.location.pathname.startsWith('/modal/');
-            const path = isModal ? `/modal/${encodeURIComponent(word)}` : `/${encodeURIComponent(word)}`;
-            ogUrl.setAttribute('content', window.location.origin + path);
+            const pathname = window.location.pathname;
+            ogUrl.setAttribute('content', window.location.origin + pathname);
         }
     };
 
@@ -64,33 +63,87 @@
 
             if (word && !isSilent) {
                 window.updateMetadata(word);
-                // Update URL to .com/word if not a history navigation
+                // Update URL to /word if not a history navigation
                 if (!isHistoryNav) {
-                    window.history.pushState({ word }, "", `/${encodeURIComponent(word)}`);
+                    const pathname = window.location.pathname;
+                    // Check if we're in a /word/modal/word2 state
+                    if (pathname.includes('/modal/')) {
+                        // Keep the modal part, just update the main word
+                        const modalWord = pathname.split('/modal/')[1];
+                        window.history.pushState({ word }, "", `/${encodeURIComponent(word)}/modal/${modalWord}`);
+                    } else {
+                        // Regular word search
+                        window.history.pushState({ word }, "", `/${encodeURIComponent(word)}`);
+                    }
                 }
             }
             return result;
         };
     }
 
-    // 4. Handle initial load from a path (e.g., sophdict.vercel.app/apple or /modal/apple)
+    // 4. Handle initial load from a path (e.g., sophdict.vercel.app/apple or /modal/apple or /apple/modal/banana)
     const handleRouting = () => {
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
-        if (path.startsWith('modal/')) {
+        // Pattern: /word/modal/modalword
+        const modalPattern = /^([^/]+)\/modal\/([^/]+)$/;
+        const modalMatch = path.match(modalPattern);
+        
+        if (modalMatch) {
+            const mainWord = decodeURIComponent(modalMatch[1]);
+            const modalWord = decodeURIComponent(modalMatch[2]);
+            
+            // Search the main word first, then open modal
+            if (window.AppSearch) {
+                window.AppSearch(mainWord, false, true).then(() => {
+                    // After main word is loaded, show the modal with the second word
+                    if (window.ModalManager) {
+                        window.ModalManager.show(modalWord, null, true);
+                    }
+                });
+            }
+        } else if (path.startsWith('modal/')) {
+            // Legacy: /modal/word format
             const word = decodeURIComponent(path.substring(6));
             if (word && window.ModalManager) {
                 window.ModalManager.show(word, null, true);
             }
-        } else if (!path.includes('/') && window.AppSearch) {
-            window.AppSearch(decodeURIComponent(path), false, true);
+        } else if (!path.includes('/')) {
+            // Simple word search
+            if (window.AppSearch) {
+                window.AppSearch(decodeURIComponent(path), false, true);
+            }
         }
     };
 
     // Handle back/forward buttons
     window.addEventListener('popstate', (e) => {
-        if (e.state && e.state.modal && e.state.word) {
+        const path = window.location.pathname.substring(1);
+        const modalPattern = /^([^/]+)\/modal\/([^/]+)$/;
+        const modalMatch = path.match(modalPattern);
+        
+        if (modalMatch) {
+            const mainWord = decodeURIComponent(modalMatch[1]);
+            const modalWord = decodeURIComponent(modalMatch[2]);
+            const currentMainWord = localStorage.getItem('lastWord');
+            
+            if (mainWord !== currentMainWord) {
+                // Need to load the main word first
+                if (window.AppSearch) {
+                    window.AppSearch(mainWord, false, true).then(() => {
+                        if (window.ModalManager) {
+                            window.ModalManager.show(modalWord, null, true);
+                        }
+                    });
+                }
+            } else {
+                // Main word already loaded, just show modal
+                if (window.ModalManager) {
+                    window.ModalManager.show(modalWord, null, true);
+                }
+            }
+        } else if (e.state && e.state.modal && e.state.word) {
             if (window.ModalManager) window.ModalManager.show(e.state.word, null, true);
         } else if (e.state && e.state.word) {
             const currentMainWord = localStorage.getItem('lastWord');
