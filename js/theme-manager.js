@@ -59,7 +59,7 @@ window.ThemeManager = {
 
         container.innerHTML = `
             <div class="settings-section theme-settings">
-                <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-top:10px; margin-bottom:4px;">Appearance</div>
+                <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-bottom:4px;">Appearance</div>
                 <div class="theme-options">
                     <button class="theme-btn" data-theme="light">Light</button>
                     <button class="theme-btn" data-theme="dark">Dark</button>

@@ -49,10 +49,12 @@ window.WallpaperManager = {
             this.applyImage(url);
             this.container.style.display = 'block';
             document.getElementById('app-container').style.background = 'transparent';
+            document.body.classList.add('wallpaper-active');
             this.settings.enabled = true;
         } else {
             this.container.style.display = 'none';
             document.getElementById('app-container').style.background = 'var(--bg-color)';
+            document.body.classList.remove('wallpaper-active');
             this.settings.enabled = false;
         }
         this.applySettings();
@@ -101,6 +103,7 @@ window.WallpaperManager = {
         await this.saveSettings();
         this.container.style.display = 'none';
         document.getElementById('app-container').style.background = 'var(--bg-color)';
+        document.body.classList.remove('wallpaper-active');
     },
 
     renderControls(container) {
