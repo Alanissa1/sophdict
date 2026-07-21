@@ -29,6 +29,7 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
             localStorage.setItem('lastWord', word);
             if (wordInput) wordInput.value = word;
             if (window.HistoryManager && !isHistoryNav) window.HistoryManager.addToRAM(word);
+            return true;
         } else if (!isSilent) {
             alert('Word not found.');
             UIUtils.updateSharedDimmer();
@@ -44,6 +45,7 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
         if (!isSilent && loader) loader.style.display = 'none';
         UIUtils.updateSharedDimmer();
     }
+    return false;
 };
 
 window.renderHomeLists = () => {

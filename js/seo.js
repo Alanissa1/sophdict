@@ -151,10 +151,10 @@
             
             // Search the main word first, then open modal
             if (window.AppSearch) {
-                window.AppSearch(mainWord, true, true).then(() => {
+                window.AppSearch(mainWord, true, true).then((success) => {
                     // After main word is loaded, show the modal with the second word
-                    if (window.ModalManager) {
-                        window.ModalManager.show(modalWord, null, true);
+                    if (success && window.ModalManager) {
+                        window.ModalManager.show(modalWord, null, true, true);
                     }
                 });
             }
@@ -162,7 +162,7 @@
             // Legacy: /modal/word format
             const word = decodeURIComponent(path.substring(6).replace(/\/$/, ""));
             if (word && window.ModalManager) {
-                window.ModalManager.show(word, null, true);
+                window.ModalManager.show(word, null, true, true);
             }
         } else if (!path.includes('/')) {
             // Simple word search
@@ -189,20 +189,20 @@
             if (mainWord !== currentMainWord) {
                 // Need to load the main word first
                 if (window.AppSearch) {
-                    window.AppSearch(mainWord, true, true).then(() => {
-                        if (window.ModalManager) {
-                            window.ModalManager.show(modalWord, null, true);
+                    window.AppSearch(mainWord, true, true).then((success) => {
+                        if (success && window.ModalManager) {
+                            window.ModalManager.show(modalWord, null, true, true);
                         }
                     });
                 }
             } else {
                 // Main word already loaded, just show modal
                 if (window.ModalManager) {
-                    window.ModalManager.show(modalWord, null, true);
+                    window.ModalManager.show(modalWord, null, true, true);
                 }
             }
         } else if (e.state && e.state.modal && e.state.word) {
-            if (window.ModalManager) window.ModalManager.show(e.state.word, null, true);
+            if (window.ModalManager) window.ModalManager.show(e.state.word, null, true, true);
         } else if (e.state && e.state.word) {
             const currentMainWord = localStorage.getItem('lastWord');
             if (e.state.word !== currentMainWord) {
