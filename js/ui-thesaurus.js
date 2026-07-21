@@ -1,12 +1,32 @@
 window.UIThesaurus = {
     generateHtml(data) {
-        const { word, thesaurus } = data;
+        const { word, thesaurus, dictionary } = data;
         let html = "";
 
         if (Array.isArray(thesaurus) && thesaurus.length > 0) {
             // Separate actual entry objects from string suggestions
             const entries = thesaurus.filter(item => typeof item === 'object' && item !== null);
             const suggestions = thesaurus.filter(item => typeof item === 'string');
+
+            // Pre-process dictionary entries to easily map missing part-of-speech (fl) tags
+            const dictMap = new Map();
+            let defaultDictFl = null;
+
+            if (Array.isArray(dictionary)) {
+                dictionary.forEach(dictEntry => {
+                    if (dictEntry.fl && dictEntry.fl !== 'other') {
+                        if (!defaultDictFl) defaultDictFl = dictEntry.fl;
+                        
+                        const id = dictEntry.meta?.id ? dictEntry.meta.id.split(':')[0].toLowerCase() : "";
+                        if (id) dictMap.set(id, dictEntry.fl);
+
+                        const stems = dictEntry.meta?.stems?.map(s => s.toLowerCase()) || [];
+                        stems.forEach(stem => {
+                            if (!dictMap.has(stem)) dictMap.set(stem, dictEntry.fl);
+                        });
+                    }
+                });
+            }
 
             const grouped = {};
             const searchTerm = (word || "").toLowerCase();
@@ -20,12 +40,16 @@ window.UIThesaurus = {
                     return;
                 }
 
-                let type = entry.fl || "other";
+                let type = entry.fl;
 
-                // Supplement missing 'fl' from dictionary data if available
-                if ((!entry.fl || entry.fl === 'other') && Array.isArray(data.dictionary)) {
-                    const dictMatch = data.dictionary.find(de => de.fl && de.fl !== 'other');
-                    if (dictMatch) type = dictMatch.fl;
+                // If 'fl' is missing or 'other', attempt to fetch it ONLY from Dictionary data
+                if (!type || type === 'other') {
+                    if (dictMap.has(entryId)) {
+                        type = dictMap.get(entryId);
+                    } else {
+                        const matchingStem = stems.find(s => dictMap.has(s));
+                        type = matchingStem ? dictMap.get(matchingStem) : defaultDictFl || "other";
+                    }
                 }
 
                 if (!grouped[type]) grouped[type] = [];
@@ -106,7 +130,7 @@ window.UIThesaurus = {
             if (suggestions.length > 0) {
                 html += `
                     <div class="context-card suggestions-card">
-                        <div class="context-type">Did you mean?</div>
+                        <div class="context-type">Related</div>
                         <div class="tags-row" style="padding: 10px 0;">
                             ${suggestions.map(s => `<span class="tag syn-tag" data-word="${s}" tabindex="0">${s}</span>`).join('')}
                         </div>
