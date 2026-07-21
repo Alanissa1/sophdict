@@ -4,19 +4,25 @@ window.UIThesaurus = {
         let html = "";
 
         if (Array.isArray(thesaurus) && thesaurus.length > 0) {
-            const grouped = {};
-            const searchTerm = word.toLowerCase();
+            // Separate actual entry objects from string suggestions
+            const entries = thesaurus.filter(item => typeof item === 'object' && item !== null);
+            const suggestions = thesaurus.filter(item => typeof item === 'string');
 
-            thesaurus.forEach(entry => {
-                const entryId = entry.meta?.id.split(':')[0].toLowerCase();
+            const grouped = {};
+            const searchTerm = (word || "").toLowerCase();
+
+            entries.forEach(entry => {
+                const entryId = entry.meta?.id ? entry.meta.id.split(':')[0].toLowerCase() : "";
                 const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
 
-                // Allow if entry ID or stems contain the search term
-                if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+                // Filter out entries that don't match entry ID or stems
+                if (entryId && !entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) {
+                    return;
+                }
 
                 let type = entry.fl || "other";
 
-                // Supplement missing fl from dictionary data if available
+                // Supplement missing 'fl' from dictionary data if available
                 if ((!entry.fl || entry.fl === 'other') && Array.isArray(data.dictionary)) {
                     const dictMatch = data.dictionary.find(de => de.fl && de.fl !== 'other');
                     if (dictMatch) type = dictMatch.fl;
@@ -27,10 +33,8 @@ window.UIThesaurus = {
             });
 
             const types = Object.keys(grouped);
-            if (types.length === 0) {
-                return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
-            }
 
+            // Render structured dictionary/thesaurus groups if available
             types.forEach(type => {
                 html += `<div class="context-card"><div class="context-type">${type}</div>`;
                 let senseCounter = 1;
@@ -97,6 +101,22 @@ window.UIThesaurus = {
                 });
                 html += `</div>`;
             });
+
+            // Append string suggestions at the end if present
+            if (suggestions.length > 0) {
+                html += `
+                    <div class="context-card suggestions-card">
+                        <div class="context-type">Did you mean?</div>
+                        <div class="tags-row" style="padding: 10px 0;">
+                            ${suggestions.map(s => `<span class="tag syn-tag" data-word="${s}" tabindex="0">${s}</span>`).join('')}
+                        </div>
+                    </div>`;
+            }
+
+            // Fallback if neither structured entries nor suggestions generated content
+            if (types.length === 0 && suggestions.length === 0) {
+                return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
+            }
         } else {
             html = `<div style="padding:20px; text-align:center; color:var(--text-sub);">Thesaurus data not available for this word.</div>`;
         }
@@ -111,13 +131,10 @@ window.UIThesaurus = {
         const isExpanded = wrapper.classList.toggle('expanded');
         btn.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
 
-        // Only apply scroll compensation when CLOSING to prevent jumping upwards.
-        // For expansion, let the browser handle the natural growth of the page.
         if (!isExpanded) {
             const rectAfter = btn.getBoundingClientRect();
             const diff = rectAfter.top - rectBefore.top;
             if (Math.abs(diff) > 1) {
-                // If in a modal, check if we should scroll the modal content instead
                 const modalContent = document.getElementById('microContent');
                 const isInsideModal = modalContent && modalContent.contains(btn);
 
