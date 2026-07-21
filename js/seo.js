@@ -62,32 +62,84 @@
             const word = (target || wordInput?.value || "").trim().toLowerCase();
 
             if (word && !isSilent) {
-                window.updateMetadata(word);
                 // Update URL to /word if not a history navigation
                 if (!isHistoryNav) {
                     const pathname = window.location.pathname;
                     // Check if we're in a /word/modal/word2 state
                     if (pathname.includes('/modal/')) {
-                        // Keep the modal part, just update the main word
-                        const modalWord = pathname.split('/modal/')[1];
+                        // Keep the modal part, just update the main word. Removed trailing slashes defensively.
+                        const modalWord = pathname.split('/modal/')[1].replace(/\/$/, "");
                         window.history.pushState({ word }, "", `/${encodeURIComponent(word)}/modal/${modalWord}`);
                     } else {
                         // Regular word search
                         window.history.pushState({ word }, "", `/${encodeURIComponent(word)}`);
                     }
                 }
+                
+                // FIXED: Update metadata AFTER pushState so og:url pulls the new, correct location.pathname
+                window.updateMetadata(word);
             }
             return result;
         };
     }
 
-    // 4. Handle initial load from a path (e.g., sophdict.vercel.app/apple or /modal/apple or /apple/modal/banana)
+    // 4. Hook into ModalManager to fix URL state issues on opening and closing
+    const initModalManagerHooks = () => {
+        // Poll for ModalManager in case it initializes slightly after this script
+        const hookInterval = setInterval(() => {
+            if (window.ModalManager) {
+                clearInterval(hookInterval);
+                
+                // Prevent duplicate hooking
+                if (window.ModalManager._seoHooked) return;
+                window.ModalManager._seoHooked = true;
+
+                const originalShow = window.ModalManager.show;
+                const originalHide = window.ModalManager.hide;
+
+                // Intercept modal open to append it to the main word
+                window.ModalManager.show = function(word, sourceElement, isHistoryNav) {
+                    const result = originalShow ? originalShow.apply(this, arguments) : undefined;
+                    
+                    if (!isHistoryNav) {
+                        const mainWord = localStorage.getItem('lastWord');
+                        if (mainWord) {
+                            // replaceState fixes the issue where the URL jumps to `/modal/word` by overwriting it instantly 
+                            window.history.replaceState({ modal: true, word }, "", `/${encodeURIComponent(mainWord)}/modal/${encodeURIComponent(word)}`);
+                        } else {
+                            window.history.replaceState({ modal: true, word }, "", `/modal/${encodeURIComponent(word)}`);
+                        }
+                    }
+                    return result;
+                };
+
+                // Intercept modal close to revert the URL cleanly to the main word
+                window.ModalManager.hide = function(isHistoryNav) {
+                    const result = originalHide ? originalHide.apply(this, arguments) : undefined;
+                    
+                    if (!isHistoryNav) {
+                        const mainWord = localStorage.getItem('lastWord');
+                        if (mainWord) {
+                            window.history.pushState({ word: mainWord }, "", `/${encodeURIComponent(mainWord)}`);
+                            window.updateMetadata(mainWord);
+                        } else {
+                            window.history.pushState({}, "", "/");
+                            document.title = 'SophDict - The Sophisticated Dictionary';
+                        }
+                    }
+                    return result;
+                };
+            }
+        }, 100); // 100ms polling until ModalManager is available
+    };
+
+    // 5. Handle initial load from a path (e.g., sophdict.vercel.app/apple or /modal/apple or /apple/modal/banana)
     const handleRouting = () => {
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
-        // Pattern: /word/modal/modalword
-        const modalPattern = /^([^/]+)\/modal\/([^/]+)$/;
+        // FIXED: Added optional trailing slash `/?` to regex to prevent routing breaks if a user manually adds a slash
+        const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
         
         if (modalMatch) {
@@ -105,7 +157,7 @@
             }
         } else if (path.startsWith('modal/')) {
             // Legacy: /modal/word format
-            const word = decodeURIComponent(path.substring(6));
+            const word = decodeURIComponent(path.substring(6).replace(/\/$/, ""));
             if (word && window.ModalManager) {
                 window.ModalManager.show(word, null, true);
             }
@@ -120,7 +172,7 @@
     // Handle back/forward buttons
     window.addEventListener('popstate', (e) => {
         const path = window.location.pathname.substring(1);
-        const modalPattern = /^([^/]+)\/modal\/([^/]+)$/;
+        const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
         
         if (modalMatch) {
@@ -165,10 +217,12 @@
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             injectJSONLD();
+            initModalManagerHooks();
             handleRouting();
         });
     } else {
         injectJSONLD();
+        initModalManagerHooks();
         handleRouting();
     }
 })();
