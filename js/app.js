@@ -193,10 +193,6 @@ window.AppClearSearch = (skipPush = false) => {
         const tag = e.target.closest('.tag');
         if (tag) ModalManager.show(tag.dataset.word, tag.closest('.context-card')?.querySelector('.context-type')?.innerText.trim().toLowerCase());
     });
-    window.onpopstate = () => {
-        ModalManager.hide(true);
-        window.AppClosePinnedPanel(true);
-    };
     if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
         window.AppClearSearch();
     }

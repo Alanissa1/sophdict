@@ -115,15 +115,16 @@
 
                 // Intercept modal close to revert the URL cleanly to the main word
                 window.ModalManager.hide = function(isHistoryNav) {
+                    const shouldGoBack = !isHistoryNav && window.history.state?.modal;
                     const result = originalHide ? originalHide.apply(this, arguments) : undefined;
                     
-                    if (!isHistoryNav) {
+                    if (!isHistoryNav && !shouldGoBack) {
                         const mainWord = localStorage.getItem('lastWord');
                         if (mainWord) {
-                            window.history.pushState({ word: mainWord }, "", `/${encodeURIComponent(mainWord)}`);
+                            window.history.replaceState({ word: mainWord }, "", `/${encodeURIComponent(mainWord)}`);
                             window.updateMetadata(mainWord);
                         } else {
-                            window.history.pushState({}, "", "/");
+                            window.history.replaceState({}, "", "/");
                             document.title = 'SophDict - The Sophisticated Dictionary';
                         }
                     }
@@ -149,9 +150,9 @@
             const mainWord = decodeURIComponent(modalMatch[1]);
             const modalWord = decodeURIComponent(modalMatch[2]);
             
-            // Search the main word first, then open modal
+            // Search the main word first, then open modal (Silent for errorless offline)
             if (window.AppSearch) {
-                window.AppSearch(mainWord, false, true).then((success) => {
+                window.AppSearch(mainWord, true, true).then((success) => {
                     // After main word is loaded, show the modal with the second word
                     if (window.ModalManager) {
                         window.ModalManager.show(modalWord, null, true);
@@ -165,31 +166,34 @@
                 window.ModalManager.show(word, null, true);
             }
         } else if (!path.includes('/')) {
-            // Simple word search
+            // Simple word search (Silent for errorless offline)
             if (window.AppSearch) {
-                window.AppSearch(decodeURIComponent(path), false, true);
+                window.AppSearch(decodeURIComponent(path), true, true);
             }
         }
     };
 
     // Handle back/forward buttons
     window.addEventListener('popstate', (e) => {
-        // Open empty page first for consistent behavior
-        if (window.AppClearSearch) window.AppClearSearch(true);
-
         const path = window.location.pathname.substring(1);
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
-        
+        const currentMainWord = localStorage.getItem('lastWord');
+
+        // Determine if the main word is actually changing
+        const nextMainWord = modalMatch ? decodeURIComponent(modalMatch[1]) : (e.state && e.state.word ? e.state.word : null);
+        if (nextMainWord && nextMainWord !== currentMainWord) {
+            if (window.AppClearSearch) window.AppClearSearch(true);
+        }
+
         if (modalMatch) {
             const mainWord = decodeURIComponent(modalMatch[1]);
             const modalWord = decodeURIComponent(modalMatch[2]);
-            const currentMainWord = localStorage.getItem('lastWord');
-            
+
             if (mainWord !== currentMainWord) {
-                // Need to load the main word first
+                // Need to load the main word first (Silent)
                 if (window.AppSearch) {
-                    window.AppSearch(mainWord, false, true).then((success) => {
+                    window.AppSearch(mainWord, true, true).then((success) => {
                         if (window.ModalManager) {
                             window.ModalManager.show(modalWord, null, true);
                         }
@@ -204,9 +208,8 @@
         } else if (e.state && e.state.modal && e.state.word) {
             if (window.ModalManager) window.ModalManager.show(e.state.word, null, true);
         } else if (e.state && e.state.word) {
-            const currentMainWord = localStorage.getItem('lastWord');
             if (e.state.word !== currentMainWord) {
-                window.AppSearch(e.state.word, false, true);
+                window.AppSearch(e.state.word, true, true);
             } else {
                 // If returning to the same word from a modal, just hide the modal
                 if (window.ModalManager) window.ModalManager.hide(true);
@@ -217,6 +220,9 @@
             if (window.AppClearSearch) window.AppClearSearch();
             document.title = 'SophDict - The Sophisticated Dictionary';
         }
+
+        // Close panels on any back navigation
+        if (window.AppClosePinnedPanel) window.AppClosePinnedPanel(true);
     });
 
     // Initialize
