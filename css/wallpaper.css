@@ -155,6 +155,13 @@ body.wallpaper-active .micro-header {
 
 
 body.wallpaper-active #microDimmer {
-    background: rgba(0, 0, 0, 0.3) !important; /* Lighter dimmer to see wallpaper */
+    background: transparent !important; /* Don't darken the modal from behind */
+}
+
+/* Dim the background app instead of using an overlay behind the modal */
+body.wallpaper-active.modal-open #app-container,
+body.wallpaper-active.modal-open #appHeader {
+    filter: brightness(0.8);
+    transition: filter 0.3s ease;
 }
 
