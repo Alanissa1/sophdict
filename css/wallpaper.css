@@ -9,7 +9,7 @@
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-    transition: opacity 0.5s ease;
+    /* transition: opacity 0.5s ease; */
 }
 
 .wallpaper-image {
@@ -18,7 +18,7 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    transition: filter 0.3s ease, background-size 0.3s ease, background-position 0.3s ease;
+    /* transition: filter 0.3s ease, background-size 0.3s ease, background-position 0.3s ease; */
 }
 
 /* Dynamic Dimmer Overlay */
@@ -29,8 +29,9 @@
     width: 100%;
     height: 100%;
     background: rgba(255, 255, 255, 0.5); /* Light Mode default */
-    transition: background 0.3s ease;
+    /* transition: background 0.3s ease; */
 }
+
 
 body.dark-mode .wallpaper-overlay {
     background: rgba(0, 0, 0, 0.6); /* Dark Mode darkened */
@@ -165,12 +166,14 @@ body.wallpaper-active .micro-header {
 }
 
 
-body.wallpaper-active #microDimmer {
-    background: transparent !important;
+/* Dimmer that follows the modal but stays outside its rounded corners */
+body.wallpaper-active #microWindow,
+body.wallpaper-active #text-scale-control {
+    outline: 200vmax solid rgba(0, 0, 0, 0.6);
 }
 
-/* Dimmer that follows the modal but stays outside its rounded corners */
-body.wallpaper-active #microWindow {
-    outline: 200vmax solid rgba(0, 0, 0, 0.6);
+body.wallpaper-active #microDimmer,
+body.wallpaper-active #scaleDimmer {
+    background: transparent !important;
 }
 
