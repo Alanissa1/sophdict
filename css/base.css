@@ -25,7 +25,6 @@
 html {
     font-size: 16px;
     cursor: default;
-    scrollbar-gutter: stable;
 }
 
 body {
