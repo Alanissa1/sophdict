@@ -7,6 +7,8 @@ window.WallpaperManager = {
         fit: 'cover',
         position: 'center',
         opacity: 0.5,
+        contentBlur: 12,
+        contentOpacity: 0.8,
         enabled: false
     },
 
@@ -74,11 +76,14 @@ window.WallpaperManager = {
         this.imgDiv.style.backgroundPosition = this.settings.position;
 
         // Update overlay opacity based on settings
-        // Note: Theme manager handles the base color, we just adjust the alpha
         const isDark = document.body.classList.contains('dark-mode');
         this.overlay.style.backgroundColor = isDark
             ? `rgba(0, 0, 0, ${this.settings.opacity + 0.1})`
             : `rgba(255, 255, 255, ${this.settings.opacity})`;
+
+        // Update Content Surface settings
+        document.body.style.setProperty('--wp-content-blur', `${this.settings.contentBlur}px`);
+        document.body.style.setProperty('--wp-content-bg-opacity', this.settings.contentOpacity);
     },
 
     async handleUpload(file) {
@@ -133,6 +138,16 @@ window.WallpaperManager = {
                 </div>
 
                 <div class="wallpaper-control-row">
+                    <label>Surface Blur: <span id="surfaceBlurVal">${this.settings.contentBlur}px</span></label>
+                    <input type="range" id="surfaceBlur" min="0" max="30" value="${this.settings.contentBlur}">
+                </div>
+
+                <div class="wallpaper-control-row">
+                    <label>Surface Opacity: <span id="surfaceOpVal">${Math.round(this.settings.contentOpacity * 100)}%</span></label>
+                    <input type="range" id="surfaceOpacity" min="0.1" max="1" step="0.05" value="${this.settings.contentOpacity}">
+                </div>
+
+                <div class="wallpaper-control-row">
                     <label>Image Fit</label>
                     <select id="wallpaperFit">
                         <option value="cover" ${this.settings.fit === 'cover' ? 'selected' : ''}>Cover (Fill)</option>
@@ -171,6 +186,20 @@ window.WallpaperManager = {
         if (opSl) opSl.oninput = (e) => {
             this.settings.opacity = parseFloat(e.target.value);
             document.getElementById('opacityVal').innerText = Math.round(this.settings.opacity * 100) + '%';
+            this.saveSettings();
+        };
+
+        const sBlurSl = document.getElementById('surfaceBlur');
+        if (sBlurSl) sBlurSl.oninput = (e) => {
+            this.settings.contentBlur = parseInt(e.target.value);
+            document.getElementById('surfaceBlurVal').innerText = this.settings.contentBlur + 'px';
+            this.saveSettings();
+        };
+
+        const sOpSl = document.getElementById('surfaceOpacity');
+        if (sOpSl) sOpSl.oninput = (e) => {
+            this.settings.contentOpacity = parseFloat(e.target.value);
+            document.getElementById('surfaceOpVal').innerText = Math.round(this.settings.contentOpacity * 100) + '%';
             this.saveSettings();
         };
 
