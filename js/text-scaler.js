@@ -334,7 +334,7 @@ window.TextScaler = {
     },
 
     updateSpeed(newRate) {
-        this.speechRate = Math.max(0.1, Math.min(2.0, newRate));
+        this.speechRate = Math.max(0.5, Math.min(2.0, newRate));
         if (window.AndroidTTS) {
             window.AndroidTTS.setSpeechRate(this.speechRate);
         } else {
@@ -663,7 +663,7 @@ window.TextScaler = {
                 <button class="scale-btn" id="speed-down">
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M188-438v-86h584v86H188Z"/></svg>
                 </button>
-                <input type="range" id="speedRange" min="1" max="20" step="1" value="${Math.round(this.speechRate * 10)}">
+                <input type="range" id="speedRange" min="5" max="20" step="1" value="${Math.round(this.speechRate * 10)}">
                 <button class="scale-btn" id="speed-up">
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M437-108v-329H108v-86h329v-329h86v329h329v86H523v329h-86Z"/></svg>
                 </button>

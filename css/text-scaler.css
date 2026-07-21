@@ -32,30 +32,9 @@
     gap: 15px;
 }
 
-#scaleRange, #speedRange, .wallpaper-control-row input[type="range"] {
+#scaleRange {
     flex-grow: 1;
     cursor: pointer;
-    height: 6px;
-    -webkit-appearance: none;
-    background: #dfe1e5;
-    border-radius: 5px;
-    outline: none;
-}
-
-#scaleRange::-webkit-slider-thumb, #speedRange::-webkit-slider-thumb, .wallpaper-control-row input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    background: var(--primary-color);
-    cursor: pointer;
-    border-radius: 50%;
-    border: 2px solid white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-
-body.dark-mode #scaleRange, body.dark-mode #speedRange, body.dark-mode .wallpaper-control-row input[type="range"] {
-    background: #3c4043;
 }
 
 .scale-btn {

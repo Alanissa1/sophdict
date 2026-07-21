@@ -9,8 +9,6 @@ window.WallpaperManager = {
         opacity: 0.5,
         contentBlur: 12,
         contentOpacity: 0.8,
-        modalBlur: 12,
-        modalOpacity: 1.0,
         enabled: false
     },
 
@@ -86,8 +84,6 @@ window.WallpaperManager = {
         // Update Content Surface settings
         document.body.style.setProperty('--wp-content-blur', `${this.settings.contentBlur}px`);
         document.body.style.setProperty('--wp-content-bg-opacity', this.settings.contentOpacity);
-        document.body.style.setProperty('--wp-modal-blur', `${this.settings.modalBlur}px`);
-        document.body.style.setProperty('--wp-modal-bg-opacity', this.settings.modalOpacity);
     },
 
     async handleUpload(file) {
@@ -104,41 +100,18 @@ window.WallpaperManager = {
         this.settings.enabled = true;
         await this.saveSettings();
         await this.loadWallpaper();
-
-        // Refresh UI to show toggle/remove buttons
-        if (window.TextScaler) window.TextScaler.show();
     },
 
     async reset() {
         await DBManager.delete('appAssets', 'customWallpaper');
-        this.currentUrl = null;
-        if (this.imgDiv) this.imgDiv.style.backgroundImage = '';
         this.settings.enabled = false;
         await this.saveSettings();
         this.container.style.display = 'none';
         document.getElementById('app-container').style.background = 'var(--bg-color)';
         document.body.classList.remove('wallpaper-active');
-
-        // Refresh UI to hide toggle/remove buttons
-        if (window.TextScaler) window.TextScaler.show();
-    },
-
-    async toggle() {
-        this.settings.enabled = !this.settings.enabled;
-        if (this.settings.enabled) {
-            await this.loadWallpaper();
-        } else {
-            this.container.style.display = 'none';
-            document.getElementById('app-container').style.background = 'var(--bg-color)';
-            document.body.classList.remove('wallpaper-active');
-        }
-        await this.saveSettings();
-        // Force refresh UI
-        if (window.TextScaler) window.TextScaler.show();
     },
 
     renderControls(container) {
-        const hasWallpaper = !!this.currentUrl || (this.imgDiv && this.imgDiv.style.backgroundImage && this.imgDiv.style.backgroundImage !== 'none');
         const html = `
             <div class="wallpaper-settings-group">
                 <div class="wallpaper-settings-title">
@@ -146,21 +119,12 @@ window.WallpaperManager = {
                     Custom Wallpaper
                 </div>
 
-                <div class="wallpaper-control-row" style="flex-direction: row; align-items: center; margin-bottom: 10px; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
-                    <label class="wallpaper-upload-btn" for="wallpaperInput" style="margin-bottom: 0; color:#fff; flex-shrink: 0;">
+                <div class="wallpaper-control-row">
+                    <label class="wallpaper-upload-btn" for="wallpaperInput">
                         Choose Image
                     </label>
                     <input type="file" id="wallpaperInput" accept="image/*" style="display:none">
-
-                    ${hasWallpaper ? `
-                        <div style="padding: 10px 0; display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-                            <label class="switch" style="margin: 0; transform: scale(0.85);">
-                                <input type="checkbox" id="wallpaperToggle" ${this.settings.enabled ? 'checked' : ''}>
-                                <span class="slider"></span>
-                            </label>
-                            <button class="wallpaper-remove-btn" onclick="window.WallpaperManager.reset()" style="margin: 0; background: none; border: none; color: #ff4b6b; cursor: pointer; font-size: 0.8em; text-decoration: underline;">Remove</button>
-                        </div>
-                    ` : ''}
+                    ${this.settings.enabled ? `<button class="wallpaper-reset-btn" onclick="window.WallpaperManager.reset()">Remove Wallpaper</button>` : ''}
                 </div>
 
                 <div class="wallpaper-control-row">
@@ -181,16 +145,6 @@ window.WallpaperManager = {
                 <div class="wallpaper-control-row">
                     <label>Surface Opacity: <span id="surfaceOpVal">${Math.round(this.settings.contentOpacity * 100)}%</span></label>
                     <input type="range" id="surfaceOpacity" min="0.1" max="1" step="0.05" value="${this.settings.contentOpacity}">
-                </div>
-
-                <div class="wallpaper-control-row">
-                    <label>Modal Blur: <span id="modalBlurVal">${this.settings.modalBlur}px</span></label>
-                    <input type="range" id="modalBlur" min="0" max="30" value="${this.settings.modalBlur}">
-                </div>
-
-                <div class="wallpaper-control-row">
-                    <label>Modal Opacity: <span id="modalOpVal">${Math.round(this.settings.modalOpacity * 100)}%</span></label>
-                    <input type="range" id="modalOpacity" min="0.1" max="1" step="0.05" value="${this.settings.modalOpacity}">
                 </div>
 
                 <div class="wallpaper-control-row">
@@ -221,9 +175,6 @@ window.WallpaperManager = {
         const input = document.getElementById('wallpaperInput');
         if (input) input.onchange = (e) => this.handleUpload(e.target.files[0]);
 
-        const toggle = document.getElementById('wallpaperToggle');
-        if (toggle) toggle.onchange = (e) => this.toggle();
-
         const blurSl = document.getElementById('wallpaperBlur');
         if (blurSl) blurSl.oninput = (e) => {
             this.settings.blur = parseInt(e.target.value);
@@ -249,20 +200,6 @@ window.WallpaperManager = {
         if (sOpSl) sOpSl.oninput = (e) => {
             this.settings.contentOpacity = parseFloat(e.target.value);
             document.getElementById('surfaceOpVal').innerText = Math.round(this.settings.contentOpacity * 100) + '%';
-            this.saveSettings();
-        };
-
-        const mBlurSl = document.getElementById('modalBlur');
-        if (mBlurSl) mBlurSl.oninput = (e) => {
-            this.settings.modalBlur = parseInt(e.target.value);
-            document.getElementById('modalBlurVal').innerText = this.settings.modalBlur + 'px';
-            this.saveSettings();
-        };
-
-        const mOpSl = document.getElementById('modalOpacity');
-        if (mOpSl) mOpSl.oninput = (e) => {
-            this.settings.modalOpacity = parseFloat(e.target.value);
-            document.getElementById('modalOpVal').innerText = Math.round(this.settings.modalOpacity * 100) + '%';
             this.saveSettings();
         };
 
