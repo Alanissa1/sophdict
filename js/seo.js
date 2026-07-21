@@ -138,6 +138,9 @@
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
+        // Open empty page first
+        if (window.AppClearSearch) window.AppClearSearch(true);
+
         // FIXED: Added optional trailing slash `/?` to regex to prevent routing breaks if a user manually adds a slash
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
@@ -148,7 +151,7 @@
             
             // Search the main word first, then open modal
             if (window.AppSearch) {
-                window.AppSearch(mainWord, false, true).then(() => {
+                window.AppSearch(mainWord, true, true).then(() => {
                     // After main word is loaded, show the modal with the second word
                     if (window.ModalManager) {
                         window.ModalManager.show(modalWord, null, true);
@@ -164,13 +167,16 @@
         } else if (!path.includes('/')) {
             // Simple word search
             if (window.AppSearch) {
-                window.AppSearch(decodeURIComponent(path), false, true);
+                window.AppSearch(decodeURIComponent(path), true, true);
             }
         }
     };
 
     // Handle back/forward buttons
     window.addEventListener('popstate', (e) => {
+        // Open empty page first
+        if (window.AppClearSearch) window.AppClearSearch(true);
+
         const path = window.location.pathname.substring(1);
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
@@ -183,7 +189,7 @@
             if (mainWord !== currentMainWord) {
                 // Need to load the main word first
                 if (window.AppSearch) {
-                    window.AppSearch(mainWord, false, true).then(() => {
+                    window.AppSearch(mainWord, true, true).then(() => {
                         if (window.ModalManager) {
                             window.ModalManager.show(modalWord, null, true);
                         }
@@ -200,7 +206,7 @@
         } else if (e.state && e.state.word) {
             const currentMainWord = localStorage.getItem('lastWord');
             if (e.state.word !== currentMainWord) {
-                window.AppSearch(e.state.word, false, true);
+                window.AppSearch(e.state.word, true, true);
             } else {
                 // If returning to the same word from a modal, just hide the modal
                 if (window.ModalManager) window.ModalManager.hide(true);

@@ -69,7 +69,7 @@ window.promptHomeRemoval = (btn, item, type, event) => {
     }
 };
 
-window.AppClearSearch = () => {
+window.AppClearSearch = (skipPush = false) => {
     if (window.PreFetcher) {
         window.PreFetcher.stopBatch();
         window.PreFetcher.reset();
@@ -83,7 +83,7 @@ window.AppClearSearch = () => {
         window.renderHomeLists();
     }
     localStorage.removeItem('lastWord');
-    if (window.location.pathname !== '/') {
+    if (!skipPush && window.location.pathname !== '/') {
         window.history.pushState({}, "", "/");
     }
     document.title = 'SophDict - The Sophisticated Dictionary';
