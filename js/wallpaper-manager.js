@@ -104,15 +104,23 @@ window.WallpaperManager = {
         this.settings.enabled = true;
         await this.saveSettings();
         await this.loadWallpaper();
+
+        // Refresh UI to show toggle/remove buttons
+        if (window.TextScaler) window.TextScaler.show();
     },
 
     async reset() {
         await DBManager.delete('appAssets', 'customWallpaper');
+        this.currentUrl = null;
+        if (this.imgDiv) this.imgDiv.style.backgroundImage = '';
         this.settings.enabled = false;
         await this.saveSettings();
         this.container.style.display = 'none';
         document.getElementById('app-container').style.background = 'var(--bg-color)';
         document.body.classList.remove('wallpaper-active');
+
+        // Refresh UI to hide toggle/remove buttons
+        if (window.TextScaler) window.TextScaler.show();
     },
 
     async toggle() {
@@ -127,17 +135,6 @@ window.WallpaperManager = {
         await this.saveSettings();
         // Force refresh UI
         if (window.TextScaler) window.TextScaler.show();
-    },
-
-    async reset() {
-        await DBManager.delete('appAssets', 'customWallpaper');
-        this.currentUrl = null;
-        this.imgDiv.style.backgroundImage = '';
-        this.settings.enabled = false;
-        await this.saveSettings();
-        this.container.style.display = 'none';
-        document.getElementById('app-container').style.background = 'var(--bg-color)';
-        document.body.classList.remove('wallpaper-active');
     },
 
     renderControls(container) {
