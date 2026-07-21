@@ -39,6 +39,7 @@ body {
     align-items: center;
     min-height: 100vh;
     overflow-x: hidden;
+    background-attachment: fixed;
 }
 
 input, textarea {
@@ -151,7 +152,6 @@ main {
     padding-bottom: calc(env(safe-area-inset-bottom) + 0px);
     box-sizing: border-box;
     flex-grow: 1;
-    background: var(--card-bg);
     display: flex;
     flex-direction: column;
 }
@@ -324,7 +324,7 @@ body.home-state #appHeader {
 }
 
 body.home-state main {
-    background: #ffffff; /* Match background on home screen */
+    background: transparent; /* Match background on home screen */
 }
 
 body.home-state .search-container {

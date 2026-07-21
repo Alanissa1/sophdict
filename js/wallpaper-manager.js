@@ -48,9 +48,11 @@ window.WallpaperManager = {
             const url = URL.createObjectURL(asset.blob);
             this.applyImage(url);
             this.container.style.display = 'block';
+            document.getElementById('app-container').style.background = 'transparent';
             this.settings.enabled = true;
         } else {
             this.container.style.display = 'none';
+            document.getElementById('app-container').style.background = 'var(--bg-color)';
             this.settings.enabled = false;
         }
         this.applySettings();
@@ -98,6 +100,7 @@ window.WallpaperManager = {
         this.settings.enabled = false;
         await this.saveSettings();
         this.container.style.display = 'none';
+        document.getElementById('app-container').style.background = 'var(--bg-color)';
     },
 
     renderControls(container) {

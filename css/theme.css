@@ -318,13 +318,17 @@ body.dark-mode {
     background-color: var(--bg-color) !important;
 }
 
+body.dark-mode #app-container {
+    background: transparent !important;
+}
+
 body.dark-mode ddd {
     background-color: var(--card-bg) !important;
     box-shadow: none !important;
 }
 
 body.dark-mode.home-state main {
-    background: #1e1e1e; /* Match background on home screen */
+    background: transparent !important;
 }
 
 body.dark-mode .ttdd svg:not(.ignore-dark-override) path{

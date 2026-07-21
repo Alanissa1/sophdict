@@ -18,9 +18,10 @@
 }
 
 #language-section-container {
-    max-height: 400px;
-    overflow-y: auto;
+    min-height: 140px;
+    flex-shrink: 0;
     padding-right: 5px;
+    margin-bottom: 10px;
 }
 
 /* Removed #scaleDimmer from here, moved to base.css */
