@@ -83,45 +83,36 @@ body.dark-mode .wallpaper-control-row select {
     display: inline-block;
     padding: 8px 12px;
     background: var(--primary-color);
-    color: white;
+    color: #ffffff !important;
     border-radius: 6px;
     cursor: pointer;
     font-size: 0.9em;
     text-align: center;
+    font-weight: 600;
 }
 
 body.dark-mode .wallpaper-upload-btn {
-    color: #000; /* Better contrast in dark mode on light-blue background */
+    color: #000000 !important;
 }
 
-.wallpaper-upload-btn:hover {
-    opacity: 0.9;
-}
-
-.wallpaper-toggle-btn {
-    font-size: 0.85em;
-    font-weight: 600;
-    color: var(--primary-color);
+.wallpaper-remove-btn {
+    color: #d32f2f;
+    opacity: 0.8;
+    transition: opacity 0.2s;
     background: none;
-    border: 1px solid var(--primary-color);
-    border-radius: 6px;
+    border: none;
     cursor: pointer;
-    padding: 6px 12px;
+    padding: 5px;
+    text-decoration: underline;
+    font-size: 0.8em;
 }
 
-.wallpaper-toggle-btn:hover {
-    background: var(--primary-color);
-    color: white;
+.wallpaper-remove-btn:hover {
+    opacity: 1;
 }
 
-body.dark-mode .wallpaper-toggle-btn {
-    color: #8ab4f8;
-    border-color: #8ab4f8;
-}
-
-body.dark-mode .wallpaper-toggle-btn:hover {
-    background: #8ab4f8;
-    color: #000;
+body.dark-mode .wallpaper-remove-btn {
+    color: #ff708d;
 }
 
 .wallpaper-settings-group label {
