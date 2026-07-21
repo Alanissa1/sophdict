@@ -11,6 +11,7 @@ window.WallpaperManager = {
         contentOpacity: 0.8,
         enabled: false
     },
+    expanded: false,
 
     async init() {
         console.log('[Wallpaper] Initializing...');
@@ -100,6 +101,9 @@ window.WallpaperManager = {
         this.settings.enabled = true;
         await this.saveSettings();
         await this.loadWallpaper();
+
+        // Refresh UI if controls are visible
+        this.refreshUI();
     },
 
     async reset() {
@@ -109,62 +113,83 @@ window.WallpaperManager = {
         this.container.style.display = 'none';
         document.getElementById('app-container').style.background = 'var(--bg-color)';
         document.body.classList.remove('wallpaper-active');
+
+        // Refresh UI if controls are visible
+        this.refreshUI();
+    },
+
+    refreshUI() {
+        const wpContainer = document.getElementById('wallpaper-settings-container');
+        if (wpContainer) {
+            wpContainer.innerHTML = '';
+            this.renderControls(wpContainer);
+        }
+    },
+
+    toggleExpand() {
+        this.expanded = !this.expanded;
+        this.refreshUI();
     },
 
     renderControls(container) {
         const html = `
             <div class="wallpaper-settings-group">
-                <div class="wallpaper-settings-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0-33-23.5-56.5T760-120H200Zm0-80h560v-560H200v560Zm40-80h480L570-480 450-320l-90-120-120 160Zm-40 80v-560 560Z"/></svg>
-                    Custom Wallpaper
+                <div class="wallpaper-settings-title" onclick="window.WallpaperManager.toggleExpand()" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0-33-23.5-56.5T760-120H200Zm0-80h560v-560H200v560Zm40-80h480L570-480 450-320l-90-120-120 160Zm-40 80v-560 560Z"/></svg>
+                        Custom Wallpaper
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor" style="transition: transform 0.3s; ${this.expanded ? 'transform: rotate(180deg);' : ''}"><path d="M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z"/></svg>
                 </div>
 
-                <div class="wallpaper-control-row">
-                    <label class="wallpaper-upload-btn" for="wallpaperInput">
-                        Choose Image
-                    </label>
-                    <input type="file" id="wallpaperInput" accept="image/*" style="display:none">
-                    ${this.settings.enabled ? `<button class="wallpaper-reset-btn" onclick="window.WallpaperManager.reset()">Remove Wallpaper</button>` : ''}
-                </div>
+                <div id="wallpaper-controls-content" style="display: ${this.expanded ? 'block' : 'none'};">
+                    <div class="wallpaper-control-row">
+                        <label class="wallpaper-upload-btn" for="wallpaperInput">
+                            Choose Image
+                        </label>
+                        <input type="file" id="wallpaperInput" accept="image/*" style="display:none">
+                        ${this.settings.enabled ? `<button class="wallpaper-reset-btn" onclick="window.WallpaperManager.reset()">Remove Wallpaper</button>` : ''}
+                    </div>
 
-                <div class="wallpaper-control-row">
-                    <label>Blur Intensity: <span id="blurVal">${this.settings.blur}px</span></label>
-                    <input type="range" id="wallpaperBlur" min="0" max="20" value="${this.settings.blur}">
-                </div>
+                    <div class="wallpaper-control-row">
+                        <label>Blur Intensity: <span id="blurVal">${this.settings.blur}px</span></label>
+                        <input type="range" id="wallpaperBlur" min="0" max="20" value="${this.settings.blur}">
+                    </div>
 
-                <div class="wallpaper-control-row">
-                    <label>Overlay Opacity: <span id="opacityVal">${Math.round(this.settings.opacity * 100)}%</span></label>
-                    <input type="range" id="wallpaperOpacity" min="0" max="0.9" step="0.05" value="${this.settings.opacity}">
-                </div>
+                    <div class="wallpaper-control-row">
+                        <label>Overlay Opacity: <span id="opacityVal">${Math.round(this.settings.opacity * 100)}%</span></label>
+                        <input type="range" id="wallpaperOpacity" min="0" max="0.9" step="0.05" value="${this.settings.opacity}">
+                    </div>
 
-                <div class="wallpaper-control-row">
-                    <label>Surface Blur: <span id="surfaceBlurVal">${this.settings.contentBlur}px</span></label>
-                    <input type="range" id="surfaceBlur" min="0" max="30" value="${this.settings.contentBlur}">
-                </div>
+                    <div class="wallpaper-control-row">
+                        <label>Surface Blur: <span id="surfaceBlurVal">${this.settings.contentBlur}px</span></label>
+                        <input type="range" id="surfaceBlur" min="0" max="30" value="${this.settings.contentBlur}">
+                    </div>
 
-                <div class="wallpaper-control-row">
-                    <label>Surface Opacity: <span id="surfaceOpVal">${Math.round(this.settings.contentOpacity * 100)}%</span></label>
-                    <input type="range" id="surfaceOpacity" min="0.1" max="1" step="0.05" value="${this.settings.contentOpacity}">
-                </div>
+                    <div class="wallpaper-control-row">
+                        <label>Surface Opacity: <span id="surfaceOpVal">${Math.round(this.settings.contentOpacity * 100)}%</span></label>
+                        <input type="range" id="surfaceOpacity" min="0.1" max="1" step="0.05" value="${this.settings.contentOpacity}">
+                    </div>
 
-                <div class="wallpaper-control-row">
-                    <label>Image Fit</label>
-                    <select id="wallpaperFit">
-                        <option value="cover" ${this.settings.fit === 'cover' ? 'selected' : ''}>Cover (Fill)</option>
-                        <option value="contain" ${this.settings.fit === 'contain' ? 'selected' : ''}>Contain</option>
-                        <option value="auto" ${this.settings.fit === 'auto' ? 'selected' : ''}>Original</option>
-                    </select>
-                </div>
+                    <div class="wallpaper-control-row">
+                        <label>Image Fit</label>
+                        <select id="wallpaperFit">
+                            <option value="cover" ${this.settings.fit === 'cover' ? 'selected' : ''}>Cover (Fill)</option>
+                            <option value="contain" ${this.settings.fit === 'contain' ? 'selected' : ''}>Contain</option>
+                            <option value="auto" ${this.settings.fit === 'auto' ? 'selected' : ''}>Original</option>
+                        </select>
+                    </div>
 
-                <div class="wallpaper-control-row">
-                    <label>Position</label>
-                    <select id="wallpaperPos">
-                        <option value="center" ${this.settings.position === 'center' ? 'selected' : ''}>Center</option>
-                        <option value="top" ${this.settings.position === 'top' ? 'selected' : ''}>Top</option>
-                        <option value="bottom" ${this.settings.position === 'bottom' ? 'selected' : ''}>Bottom</option>
-                        <option value="left" ${this.settings.position === 'left' ? 'selected' : ''}>Left</option>
-                        <option value="right" ${this.settings.position === 'right' ? 'selected' : ''}>Right</option>
-                    </select>
+                    <div class="wallpaper-control-row">
+                        <label>Position</label>
+                        <select id="wallpaperPos">
+                            <option value="center" ${this.settings.position === 'center' ? 'selected' : ''}>Center</option>
+                            <option value="top" ${this.settings.position === 'top' ? 'selected' : ''}>Top</option>
+                            <option value="bottom" ${this.settings.position === 'bottom' ? 'selected' : ''}>Bottom</option>
+                            <option value="left" ${this.settings.position === 'left' ? 'selected' : ''}>Left</option>
+                            <option value="right" ${this.settings.position === 'right' ? 'selected' : ''}>Right</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         `;

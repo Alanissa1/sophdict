@@ -9,7 +9,6 @@
     z-index: -1;
     overflow: hidden;
     pointer-events: none;
-    transition: opacity 0.5s ease;
 }
 
 .wallpaper-image {
@@ -18,7 +17,6 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    transition: filter 0.3s ease, background-size 0.3s ease, background-position 0.3s ease;
 }
 
 /* Dynamic Dimmer Overlay */
@@ -42,13 +40,8 @@ body.dark-mode .wallpaper-overlay {
 .wallpaper-blur-med { filter: blur(5px); }
 .wallpaper-blur-high { filter: blur(10px); }
 
-/* Settings UI Integration */
 .wallpaper-settings-group {
     margin-top: 15px;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--card-bg);
 }
 
 .wallpaper-settings-title {
@@ -62,12 +55,11 @@ body.dark-mode .wallpaper-overlay {
 .wallpaper-control-row {
     display: flex;
     flex-direction: column;
-    gap: 8px;
     margin-bottom: 12px;
 }
 
 .wallpaper-control-row label {
-    font-size: 0.9em;
+    font-size: 1em;
     color: var(--text-sub);
 }
 
@@ -90,12 +82,11 @@ body.dark-mode .wallpaper-control-row select {
     display: inline-block;
     padding: 8px 12px;
     background: var(--primary-color);
-    color: white;
+    color: white !important;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 1em;
     text-align: center;
-    transition: opacity 0.2s;
 }
 
 body.dark-mode .wallpaper-upload-btn {
@@ -107,7 +98,7 @@ body.dark-mode .wallpaper-upload-btn {
 }
 
 .wallpaper-reset-btn {
-    font-size: 0.8em;
+    font-size: 1em;
     color: #d32f2f; /* Darker red for better contrast in light mode */
     background: none;
     border: none;
