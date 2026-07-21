@@ -117,11 +117,16 @@ body.dark-mode .wallpaper-upload-btn {
 }
 
 /* Include Context Page (Modal) and Cards in Wallpaper display */
-body.wallpaper-active:not(.home-state) main,
-body.wallpaper-active #microWindow {
+body.wallpaper-active:not(.home-state) main {
     background: rgba(255, 255, 255, var(--wp-content-bg-opacity, 0.8)) !important;
     backdrop-filter: blur(var(--wp-content-blur, 12px));
     -webkit-backdrop-filter: blur(var(--wp-content-blur, 12px));
+}
+
+body.wallpaper-active #microWindow {
+    background: rgba(255, 255, 255, var(--wp-modal-bg-opacity, 1.0)) !important;
+    backdrop-filter: blur(var(--wp-modal-blur, 12px));
+    -webkit-backdrop-filter: blur(var(--wp-modal-blur, 12px));
 }
 
 body.wallpaper-active .context-card {
@@ -129,11 +134,13 @@ body.wallpaper-active .context-card {
     box-shadow: none !important;
 }
 
-body.wallpaper-active.dark-mode:not(.home-state) main,
-body.wallpaper-active.dark-mode #microWindow {
+body.wallpaper-active.dark-mode:not(.home-state) main {
     background: rgba(30, 30, 30, var(--wp-content-bg-opacity, 0.8)) !important;
 }
 
+body.wallpaper-active.dark-mode #microWindow {
+    background: rgba(30, 30, 30, var(--wp-modal-bg-opacity, 1.0)) !important;
+}
 
 body.wallpaper-active.dark-mode .context-card {
     background: transparent !important;

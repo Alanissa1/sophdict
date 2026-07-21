@@ -9,6 +9,8 @@ window.WallpaperManager = {
         opacity: 0.5,
         contentBlur: 12,
         contentOpacity: 0.8,
+        modalBlur: 12,
+        modalOpacity: 1.0,
         enabled: false
     },
 
@@ -84,6 +86,8 @@ window.WallpaperManager = {
         // Update Content Surface settings
         document.body.style.setProperty('--wp-content-blur', `${this.settings.contentBlur}px`);
         document.body.style.setProperty('--wp-content-bg-opacity', this.settings.contentOpacity);
+        document.body.style.setProperty('--wp-modal-blur', `${this.settings.modalBlur}px`);
+        document.body.style.setProperty('--wp-modal-bg-opacity', this.settings.modalOpacity);
     },
 
     async handleUpload(file) {
@@ -148,6 +152,16 @@ window.WallpaperManager = {
                 </div>
 
                 <div class="wallpaper-control-row">
+                    <label>Modal Blur: <span id="modalBlurVal">${this.settings.modalBlur}px</span></label>
+                    <input type="range" id="modalBlur" min="0" max="30" value="${this.settings.modalBlur}">
+                </div>
+
+                <div class="wallpaper-control-row">
+                    <label>Modal Opacity: <span id="modalOpVal">${Math.round(this.settings.modalOpacity * 100)}%</span></label>
+                    <input type="range" id="modalOpacity" min="0.1" max="1" step="0.05" value="${this.settings.modalOpacity}">
+                </div>
+
+                <div class="wallpaper-control-row">
                     <label>Image Fit</label>
                     <select id="wallpaperFit">
                         <option value="cover" ${this.settings.fit === 'cover' ? 'selected' : ''}>Cover (Fill)</option>
@@ -200,6 +214,20 @@ window.WallpaperManager = {
         if (sOpSl) sOpSl.oninput = (e) => {
             this.settings.contentOpacity = parseFloat(e.target.value);
             document.getElementById('surfaceOpVal').innerText = Math.round(this.settings.contentOpacity * 100) + '%';
+            this.saveSettings();
+        };
+
+        const mBlurSl = document.getElementById('modalBlur');
+        if (mBlurSl) mBlurSl.oninput = (e) => {
+            this.settings.modalBlur = parseInt(e.target.value);
+            document.getElementById('modalBlurVal').innerText = this.settings.modalBlur + 'px';
+            this.saveSettings();
+        };
+
+        const mOpSl = document.getElementById('modalOpacity');
+        if (mOpSl) mOpSl.oninput = (e) => {
+            this.settings.modalOpacity = parseFloat(e.target.value);
+            document.getElementById('modalOpVal').innerText = Math.round(this.settings.modalOpacity * 100) + '%';
             this.saveSettings();
         };
 
