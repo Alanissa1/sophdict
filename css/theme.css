@@ -331,7 +331,7 @@ body.dark-mode ddd {
     box-shadow: none !important;
 }
 
-body.dark-mode.home-state main {
+body.dark-mode.home-state:not(.wallpaper-active) main {
     background: transparent !important;
 }
 

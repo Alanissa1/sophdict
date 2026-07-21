@@ -322,7 +322,7 @@ body.home-state #appHeader {
     display: none;
 }
 
-body.home-state main {
+body.home-state:not(.wallpaper-active) main {
     background: transparent; /* Match background on home screen */
 }
 

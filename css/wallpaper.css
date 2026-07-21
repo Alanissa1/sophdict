@@ -108,7 +108,7 @@ body.dark-mode .wallpaper-upload-btn {
 }
 
 /* Include Context Page (Modal) and Cards in Wallpaper display */
-body.wallpaper-active:not(.home-state) main,
+body.wallpaper-active main,
 body.wallpaper-active #microWindow {
     background: rgba(255, 255, 255, var(--wp-content-bg-opacity, 0.8)) !important;
     backdrop-filter: blur(var(--wp-content-blur, 12px));
@@ -120,7 +120,7 @@ body.wallpaper-active .context-card {
     box-shadow: none !important;
 }
 
-body.wallpaper-active.dark-mode:not(.home-state) main,
+body.wallpaper-active.dark-mode main,
 body.wallpaper-active.dark-mode #microWindow {
     background: rgba(30, 30, 30, var(--wp-content-bg-opacity, 0.8)) !important;
 }
@@ -129,6 +129,43 @@ body.wallpaper-active.dark-mode #microWindow {
 body.wallpaper-active.dark-mode .context-card {
     background: transparent !important;
     box-shadow: none !important;
+}
+
+/* Home State Card treatment for Wallpaper */
+body.wallpaper-active.home-state .welcome-screen {
+    padding-bottom: 40px;
+    border-radius: 12px;
+}
+
+body.wallpaper-active .home-list-item {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+body.wallpaper-active.dark-mode .home-list-item {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+body.wallpaper-active .welcome-logo {
+    filter: drop-shadow(0 0 10px rgba(0,0,0,0.1));
+}
+
+body.wallpaper-active.dark-mode .welcome-logo {
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
+}
+
+body.wallpaper-active .search-container {
+    background: rgba(255, 255, 255, 0.4) !important;
+    backdrop-filter: blur(10px);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.wallpaper-active.dark-mode .search-container {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
 
