@@ -108,7 +108,7 @@ body.dark-mode .wallpaper-upload-btn {
 }
 
 /* Include Context Page (Modal) and Cards in Wallpaper display */
-body.wallpaper-active:not(.home-state) main,
+body.wallpaper-active main,
 body.wallpaper-active #microWindow {
     background: rgba(255, 255, 255, var(--wp-content-bg-opacity, 0.8)) !important;
     backdrop-filter: blur(var(--wp-content-blur, 12px));

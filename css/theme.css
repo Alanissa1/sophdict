@@ -332,7 +332,7 @@ body.dark-mode ddd {
 }
 
 body.dark-mode.home-state main {
-    background: transparent !important;
+    background: #000000b0 !important;
 }
 
 body.dark-mode .ttdd svg:not(.ignore-dark-override) path{
