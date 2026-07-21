@@ -5,10 +5,6 @@
       "destination": "/api/sitemap"
     },
     {
-      "source": "/sitemap-:page.xml",
-      "destination": "/api/sitemap?page=$page"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
