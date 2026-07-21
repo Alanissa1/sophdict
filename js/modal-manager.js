@@ -24,9 +24,6 @@ window.ModalManager = {
         if (window.ScrollFixer) window.ScrollFixer.save();
         if (window.StatsManager) window.StatsManager.recordTagOpen(word);
 
-        if (!isHistoryNav) {
-            window.history.pushState({ modal: true, word: word }, "", "/modal/" + encodeURIComponent(word));
-        }
         if (window.updateMetadata) window.updateMetadata(word);
 
         if (this.win) this.win.style.display = 'flex';
@@ -59,9 +56,5 @@ window.ModalManager = {
         }
 
         if (window.ScrollFixer) window.ScrollFixer.restore();
-
-        if (!fromHistory && window.history.state?.modal) {
-            window.history.back();
-        }
     }
 };

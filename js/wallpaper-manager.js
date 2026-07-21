@@ -63,6 +63,8 @@ window.WallpaperManager = {
     },
 
     applySettings() {
+        if (!this.imgDiv || !this.overlay) return;
+
         this.imgDiv.style.filter = `blur(${this.settings.blur}px)`;
         this.imgDiv.style.backgroundSize = this.settings.fit;
         this.imgDiv.style.backgroundPosition = this.settings.position;
@@ -111,7 +113,7 @@ window.WallpaperManager = {
                         Choose Image
                     </label>
                     <input type="file" id="wallpaperInput" accept="image/*" style="display:none">
-                    ${this.settings.enabled ? `<button class="wallpaper-reset-btn" onclick="WallpaperManager.reset()">Remove Wallpaper</button>` : ''}
+                    ${this.settings.enabled ? `<button class="wallpaper-reset-btn" onclick="window.WallpaperManager.reset()">Remove Wallpaper</button>` : ''}
                 </div>
 
                 <div class="wallpaper-control-row">

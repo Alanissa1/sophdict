@@ -14,6 +14,7 @@
     transform: translateX(-50%);
     max-height: 80%;
     flex-direction: column;
+    overflow-y: auto;
 }
 
 #language-section-container {
@@ -61,7 +62,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max height: 40%;
+    max-height: 40%;
 }
 
 #added-languages-list {

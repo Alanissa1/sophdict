@@ -104,10 +104,9 @@
                     if (!isHistoryNav) {
                         const mainWord = localStorage.getItem('lastWord');
                         if (mainWord) {
-                            // replaceState fixes the issue where the URL jumps to `/modal/word` by overwriting it instantly 
-                            window.history.replaceState({ modal: true, word }, "", `/${encodeURIComponent(mainWord)}/modal/${encodeURIComponent(word)}`);
+                            window.history.pushState({ modal: true, word }, "", `/${encodeURIComponent(mainWord)}/modal/${encodeURIComponent(word)}`);
                         } else {
-                            window.history.replaceState({ modal: true, word }, "", `/modal/${encodeURIComponent(word)}`);
+                            window.history.pushState({ modal: true, word }, "", `/modal/${encodeURIComponent(word)}`);
                         }
                     }
                     return result;
@@ -115,17 +114,20 @@
 
                 // Intercept modal close to revert the URL cleanly to the main word
                 window.ModalManager.hide = function(isHistoryNav) {
-                    const shouldGoBack = !isHistoryNav && window.history.state?.modal;
                     const result = originalHide ? originalHide.apply(this, arguments) : undefined;
                     
-                    if (!isHistoryNav && !shouldGoBack) {
-                        const mainWord = localStorage.getItem('lastWord');
-                        if (mainWord) {
-                            window.history.replaceState({ word: mainWord }, "", `/${encodeURIComponent(mainWord)}`);
-                            window.updateMetadata(mainWord);
+                    if (!isHistoryNav) {
+                        if (window.history.state?.modal) {
+                            window.history.back();
                         } else {
-                            window.history.replaceState({}, "", "/");
-                            document.title = 'SophDict - The Sophisticated Dictionary';
+                            const mainWord = localStorage.getItem('lastWord');
+                            if (mainWord) {
+                                window.history.pushState({ word: mainWord }, "", `/${encodeURIComponent(mainWord)}`);
+                                window.updateMetadata(mainWord);
+                            } else {
+                                window.history.pushState({}, "", "/");
+                                document.title = 'SophDict - The Sophisticated Dictionary';
+                            }
                         }
                     }
                     return result;
@@ -154,7 +156,7 @@
             if (window.AppSearch) {
                 window.AppSearch(mainWord, true, true).then((success) => {
                     // After main word is loaded, show the modal with the second word
-                    if (window.ModalManager) {
+                    if (success && window.ModalManager) {
                         window.ModalManager.show(modalWord, null, true);
                     }
                 });
@@ -194,7 +196,7 @@
                 // Need to load the main word first (Silent)
                 if (window.AppSearch) {
                     window.AppSearch(mainWord, true, true).then((success) => {
-                        if (window.ModalManager) {
+                        if (success && window.ModalManager) {
                             window.ModalManager.show(modalWord, null, true);
                         }
                     });

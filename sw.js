@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sophdict-v38';
+const CACHE_NAME = 'sophdict-v39';
 
 // Essential files for the app to function
 const REQUIRED_ASSETS = [
