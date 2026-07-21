@@ -8,11 +8,9 @@ const PIN_STORE = 'pinnedWords';
 
 window.DBManager = {
     db: null,
-    _initPromise: null,
 
     async init() {
-        if (this._initPromise) return this._initPromise;
-        this._initPromise = new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             const request = indexedDB.open(DB_NAME, 1);
 
             request.onupgradeneeded = (e) => {
@@ -33,11 +31,9 @@ window.DBManager = {
 
             request.onerror = (e) => {
                 console.error('[DB] Failed to open IndexedDB', e);
-                this._initPromise = null;
                 reject(e);
             };
         });
-        return this._initPromise;
     },
 
     async getWord(word) {
@@ -65,9 +61,9 @@ window.DBManager = {
         return !!pin;
     },
 
-    async get(storeName, key) {
-        if (!this.db) await this.init();
+    get(storeName, key) {
         return new Promise((resolve) => {
+            if (!this.db) return resolve(null);
             const tx = this.db.transaction(storeName, 'readonly');
             const req = tx.objectStore(storeName).get(key);
             req.onsuccess = () => resolve(req.result);
@@ -75,9 +71,9 @@ window.DBManager = {
         });
     },
 
-    async put(storeName, data) {
-        if (!this.db) await this.init();
+    put(storeName, data) {
         return new Promise((resolve) => {
+            if (!this.db) return resolve(null);
             const tx = this.db.transaction(storeName, 'readwrite');
             const req = tx.objectStore(storeName).put(data);
             req.onsuccess = () => resolve(true);
@@ -85,9 +81,9 @@ window.DBManager = {
         });
     },
 
-    async delete(storeName, key) {
-        if (!this.db) await this.init();
+    delete(storeName, key) {
         return new Promise((resolve) => {
+            if (!this.db) return resolve(null);
             const tx = this.db.transaction(storeName, 'readwrite');
             const req = tx.objectStore(storeName).delete(key);
             req.onsuccess = () => resolve(true);
@@ -95,9 +91,9 @@ window.DBManager = {
         });
     },
 
-    async getAll(storeName) {
-        if (!this.db) await this.init();
+    getAll(storeName) {
         return new Promise((resolve) => {
+            if (!this.db) return resolve([]);
             const tx = this.db.transaction(storeName, 'readonly');
             const req = tx.objectStore(storeName).getAll();
             req.onsuccess = () => resolve(req.result);

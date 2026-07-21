@@ -16,13 +16,10 @@ window.ModalManager = {
         }
     },
 
-    async show(word, targetContext = null, isHistoryNav = false, isSilent = false) {
+    async show(word, targetContext = null, isHistoryNav = false) {
         if (!this.win || !this.dim) this.init();
 
         this.lastTriggerElement = document.activeElement;
-
-        const data = await APIClient.fetchWordData(word);
-        if (isSilent && (!data || data.error)) return false;
 
         if (window.ScrollFixer) window.ScrollFixer.save();
         if (window.StatsManager) window.StatsManager.recordTagOpen(word);
@@ -36,13 +33,10 @@ window.ModalManager = {
         UIUtils.updateSharedDimmer();
         if (this.dim) UIUtils.setupQuickClose(this.dim);
 
-        if (data && !data.error) {
-            UIEntry.render(data, 'microContent', targetContext);
-        } else {
-            this.content.innerHTML = '<div style="text-align:center; padding:40px;"><div class="spinner" style="display:inline-block;"></div></div>';
-            UIEntry.render(data, 'microContent', targetContext);
-        }
-        return true;
+        this.content.innerHTML = '<div style="text-align:center; padding:40px;"><div class="spinner" style="display:inline-block;"></div></div>';
+
+        const data = await APIClient.fetchWordData(word);
+        UIEntry.render(data, 'microContent', targetContext);
     },
 
     hide(fromHistory = false) {

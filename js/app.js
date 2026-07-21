@@ -29,7 +29,6 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
             localStorage.setItem('lastWord', word);
             if (wordInput) wordInput.value = word;
             if (window.HistoryManager && !isHistoryNav) window.HistoryManager.addToRAM(word);
-            return true;
         } else if (!isSilent) {
             alert('Word not found.');
             UIUtils.updateSharedDimmer();
@@ -45,7 +44,6 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
         if (!isSilent && loader) loader.style.display = 'none';
         UIUtils.updateSharedDimmer();
     }
-    return false;
 };
 
 window.renderHomeLists = () => {
@@ -71,7 +69,7 @@ window.promptHomeRemoval = (btn, item, type, event) => {
     }
 };
 
-window.AppClearSearch = (skipPush = false) => {
+window.AppClearSearch = () => {
     if (window.PreFetcher) {
         window.PreFetcher.stopBatch();
         window.PreFetcher.reset();
@@ -85,7 +83,7 @@ window.AppClearSearch = (skipPush = false) => {
         window.renderHomeLists();
     }
     localStorage.removeItem('lastWord');
-    if (!skipPush && window.location.pathname !== '/') {
+    if (window.location.pathname !== '/') {
         window.history.pushState({}, "", "/");
     }
     document.title = 'SophDict - The Sophisticated Dictionary';
