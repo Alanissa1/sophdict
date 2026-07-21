@@ -138,6 +138,9 @@
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
+        // Open empty page first as requested
+        if (window.AppClearSearch) window.AppClearSearch(true);
+
         // FIXED: Added optional trailing slash `/?` to regex to prevent routing breaks if a user manually adds a slash
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
@@ -148,7 +151,7 @@
             
             // Search the main word first, then open modal
             if (window.AppSearch) {
-                window.AppSearch(mainWord, false, true).then(() => {
+                window.AppSearch(mainWord, false, true).then((success) => {
                     // After main word is loaded, show the modal with the second word
                     if (window.ModalManager) {
                         window.ModalManager.show(modalWord, null, true);
@@ -171,6 +174,9 @@
 
     // Handle back/forward buttons
     window.addEventListener('popstate', (e) => {
+        // Open empty page first for consistent behavior
+        if (window.AppClearSearch) window.AppClearSearch(true);
+
         const path = window.location.pathname.substring(1);
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
@@ -183,7 +189,7 @@
             if (mainWord !== currentMainWord) {
                 // Need to load the main word first
                 if (window.AppSearch) {
-                    window.AppSearch(mainWord, false, true).then(() => {
+                    window.AppSearch(mainWord, false, true).then((success) => {
                         if (window.ModalManager) {
                             window.ModalManager.show(modalWord, null, true);
                         }

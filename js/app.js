@@ -8,7 +8,7 @@
 window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
     const wordInput = document.getElementById('wordInput');
     const word = (target || wordInput?.value || "").trim().toLowerCase();
-    if (!word) return;
+    if (!word) return false;
     const loader = document.getElementById('loader');
     if (window.PreFetcher) window.PreFetcher.reset();
     if (!isSilent) {
@@ -29,6 +29,7 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
             localStorage.setItem('lastWord', word);
             if (wordInput) wordInput.value = word;
             if (window.HistoryManager && !isHistoryNav) window.HistoryManager.addToRAM(word);
+            return true;
         } else if (!isSilent) {
             alert('Word not found.');
             UIUtils.updateSharedDimmer();
@@ -44,6 +45,7 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
         if (!isSilent && loader) loader.style.display = 'none';
         UIUtils.updateSharedDimmer();
     }
+    return false;
 };
 
 window.renderHomeLists = () => {
@@ -69,7 +71,7 @@ window.promptHomeRemoval = (btn, item, type, event) => {
     }
 };
 
-window.AppClearSearch = () => {
+window.AppClearSearch = (skipPush = false) => {
     if (window.PreFetcher) {
         window.PreFetcher.stopBatch();
         window.PreFetcher.reset();
@@ -83,7 +85,7 @@ window.AppClearSearch = () => {
         window.renderHomeLists();
     }
     localStorage.removeItem('lastWord');
-    if (window.location.pathname !== '/') {
+    if (!skipPush && window.location.pathname !== '/') {
         window.history.pushState({}, "", "/");
     }
     document.title = 'SophDict - The Sophisticated Dictionary';
