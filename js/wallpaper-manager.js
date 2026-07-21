@@ -149,18 +149,18 @@ window.WallpaperManager = {
                     Custom Wallpaper
                 </div>
 
-                <div class="wallpaper-control-row" style="flex-direction: row; align-items: center; gap: 12px; margin-bottom: 15px;">
-                    <label class="wallpaper-upload-btn" for="wallpaperInput" style="margin-bottom: 0;">
+                <div class="wallpaper-control-row" style="flex-direction: row; align-items: center; margin-bottom: 10px; justify-content: space-between;">
+                    <label class="wallpaper-upload-btn" for="wallpaperInput" style="margin-bottom: 0; color:#fff;">
                         Choose Image
                     </label>
                     <input type="file" id="wallpaperInput" accept="image/*" style="display:none">
 
                     ${hasWallpaper ? `
-                        <label class="switch" style="margin: 0; transform: scale(0.85);">
+                        <label class="switch" style="margin: 0; ">
                             <input type="checkbox" id="wallpaperToggle" ${this.settings.enabled ? 'checked' : ''}>
                             <span class="slider"></span>
                         </label>
-                        <button class="wallpaper-remove-btn" onclick="window.WallpaperManager.reset()" style="margin: 0; background: none; border: none; color: #ff4b6b; cursor: pointer; font-size: 0.8em; text-decoration: underline;">Remove</button>
+                        <button class="wallpaper-remove-btn" onclick="window.WallpaperManager.reset()" style="">Remove</button>
                     ` : ''}
                 </div>
 

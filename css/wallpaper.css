@@ -97,8 +97,6 @@ body.dark-mode .wallpaper-upload-btn {
 
 .wallpaper-remove-btn {
     color: #d32f2f;
-    opacity: 0.8;
-    transition: opacity 0.2s;
     background: none;
     border: none;
     cursor: pointer;
