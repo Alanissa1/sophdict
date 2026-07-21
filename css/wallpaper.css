@@ -80,6 +80,12 @@ body.dark-mode .wallpaper-overlay {
     color: var(--text-main);
 }
 
+body.dark-mode .wallpaper-control-row select {
+    background: #333;
+    color: #fff;
+    border-color: #555;
+}
+
 .wallpaper-upload-btn {
     display: inline-block;
     padding: 8px 12px;
@@ -110,24 +116,29 @@ body.dark-mode .wallpaper-upload-btn {
     text-decoration: underline;
 }
 
-body.dark-mode .wallpaper-reset-btn {
-    color: #ff708d; /* Lighter red for better contrast on dark bg */
-}
-
 /* Include Context Page (Modal) and Cards in Wallpaper display */
 body.wallpaper-active:not(.home-state) main,
-body.wallpaper-active .context-card,
 body.wallpaper-active #microWindow {
-    background: rgba(255, 255, 255, 0.8) !important; /* Unified opacity for better visibility */
+    background: rgba(255, 255, 255, 0.8) !important;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 }
 
+body.wallpaper-active .context-card {
+    background: transparent !important; /* Prevent double-stacking background with main */
+    box-shadow: none !important;
+}
+
 body.wallpaper-active.dark-mode:not(.home-state) main,
-body.wallpaper-active.dark-mode .context-card,
 body.wallpaper-active.dark-mode #microWindow {
     background: rgba(30, 30, 30, 0.8) !important;
 }
+
+body.wallpaper-active.dark-mode .context-card {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
 
 
 body.wallpaper-active .micro-header {

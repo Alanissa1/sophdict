@@ -319,6 +319,10 @@ body.dark-mode {
 }
 
 body.dark-mode #app-container {
+    background: var(--card-bg) !important;
+}
+
+body.dark-mode.wallpaper-active #app-container {
     background: transparent !important;
 }
 
