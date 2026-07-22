@@ -136,9 +136,6 @@ window.UIThesaurus = {
                 });
                 html += `</div>`;
             });
-        } else {
-            html = `<div style="padding:20px; text-align:center; color:var(--text-sub);">Thesaurus data not available for this word.</div>`;
-        }
         return html;
     },
 
