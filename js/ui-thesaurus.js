@@ -5,27 +5,28 @@ window.UIThesaurus = {
         const grouped = {};
         const searchTerm = word.toLowerCase();
 
+        const suggestions = Array.isArray(thesaurus) ? thesaurus.filter(t => typeof t === 'string') : [];
+        const entries = Array.isArray(thesaurus) ? thesaurus.filter(t => typeof t === 'object' && t !== null) : [];
+
         // 1. Group existing thesaurus entries
-        if (Array.isArray(thesaurus)) {
-            thesaurus.forEach(entry => {
-                const entryId = entry.meta?.id.split(':')[0].toLowerCase();
-                const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
+        entries.forEach(entry => {
+            const entryId = entry.meta?.id.split(':')[0].toLowerCase();
+            const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
 
-                // Allow if entry ID or stems contain the search term
-                if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+            // Allow if entry ID or stems contain the search term
+            if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
 
-                let type = entry.fl || "other";
+            let type = entry.fl || "other";
 
-                // Supplement missing fl from dictionary data if available
-                if ((!entry.fl || entry.fl === 'other') && Array.isArray(dictionary)) {
-                    const dictMatch = dictionary.find(de => de.fl && de.fl !== 'other');
-                    if (dictMatch) type = dictMatch.fl;
-                }
+            // Supplement missing fl from dictionary data if available
+            if ((!entry.fl || entry.fl === 'other') && Array.isArray(dictionary)) {
+                const dictMatch = dictionary.find(de => de.fl && de.fl !== 'other');
+                if (dictMatch) type = dictMatch.fl;
+            }
 
-                if (!grouped[type]) grouped[type] = [];
-                grouped[type].push(entry);
-            });
-        }
+            if (!grouped[type]) grouped[type] = [];
+            grouped[type].push(entry);
+        });
 
         // 2. Supplement missing context types from dictionary
         if (Array.isArray(dictionary)) {
@@ -45,12 +46,8 @@ window.UIThesaurus = {
         }
 
         const types = Object.keys(grouped);
-        if (types.length === 0) {
-            return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
-        }
-
         types.forEach(type => {
-            html += `<div class="context-card"><div class="context-type">${type}</div>`;
+            let contextHtml = "";
             let senseCounter = 1;
 
             grouped[type].forEach(entry => {
@@ -101,7 +98,7 @@ window.UIThesaurus = {
                             const mergedOpposite = [...ants, ...opps];
                             const hasTags = mergedSimilar.length || rels.length || mergedOpposite.length || nears.length;
 
-                            html += `
+                            contextHtml += `
                                 <div class="sense-block">
                                     <div class="definition">
                                         <span class="sense-num">${senseCounter++}.</span>
@@ -123,14 +120,29 @@ window.UIThesaurus = {
                                         </div>
                                     </div>
                                 </div>`;
-
                         };
                         processNode(node);
                     });
                 });
             });
-            html += `</div>`;
+            if (contextHtml) {
+                html += `<div class="context-card"><div class="context-type">${type}</div>${contextHtml}</div>`;
+            }
         });
+
+        // 3. Suggestions Card (Simple related word strings)
+        if (suggestions.length > 0) {
+            html += `<div class="context-card suggestions-card">
+                <div class="context-type">Related</div>
+                <div class="tags-row" style="padding: 10px 0;">
+                    ${suggestions.map(s => `<span class="tag syn-tag" data-word="${s}" tabindex="0">${s}</span>`).join('')}
+                </div>
+            </div>`;
+        }
+
+        if (!html) {
+            return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found.</div>`;
+        }
         return html;
     },
 
@@ -142,13 +154,10 @@ window.UIThesaurus = {
         const isExpanded = wrapper.classList.toggle('expanded');
         btn.style.transform = isExpanded ? 'rotate(180deg)' : 'rotate(0deg)';
 
-        // Only apply scroll compensation when CLOSING to prevent jumping upwards.
-        // For expansion, let the browser handle the natural growth of the page.
         if (!isExpanded) {
             const rectAfter = btn.getBoundingClientRect();
             const diff = rectAfter.top - rectBefore.top;
             if (Math.abs(diff) > 1) {
-                // If in a modal, check if we should scroll the modal content instead
                 const modalContent = document.getElementById('microContent');
                 const isInsideModal = modalContent && modalContent.contains(btn);
 
