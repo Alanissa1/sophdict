@@ -1,12 +1,12 @@
 window.UIThesaurus = {
     generateHtml(data) {
-        const { word, thesaurus, dictionary } = data;
+        const { word, thesaurus } = data;
         let html = "";
 
-        const grouped = {};
-        const searchTerm = word.toLowerCase();
-
         if (Array.isArray(thesaurus) && thesaurus.length > 0) {
+            const grouped = {};
+            const searchTerm = word.toLowerCase();
+
             thesaurus.forEach(entry => {
                 const entryId = entry.meta?.id.split(':')[0].toLowerCase();
                 const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
@@ -17,67 +17,28 @@ window.UIThesaurus = {
                 let type = entry.fl || "other";
 
                 // Supplement missing fl from dictionary data if available
-                if ((!entry.fl || entry.fl === 'other') && Array.isArray(dictionary)) {
-                    const dictMatch = dictionary.find(de => de.fl && de.fl !== 'other');
+                if ((!entry.fl || entry.fl === 'other') && Array.isArray(data.dictionary)) {
+                    const dictMatch = data.dictionary.find(de => de.fl && de.fl !== 'other');
                     if (dictMatch) type = dictMatch.fl;
                 }
 
                 if (!grouped[type]) grouped[type] = [];
                 grouped[type].push(entry);
             });
-        }
 
-        // Supplement missing context types from dictionary if not already existing in thesaurus
-        if (Array.isArray(dictionary) && dictionary.length > 0) {
-            const existingTypes = new Set(Object.keys(grouped).map(t => t.toLowerCase()));
+            const types = Object.keys(grouped);
+            if (types.length === 0) {
+                return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
+            }
 
-            dictionary.forEach(dictEntry => {
-                const fl = dictEntry.fl || "other";
-                if (!existingTypes.has(fl.toLowerCase())) {
-                    if (!grouped[fl]) grouped[fl] = [];
-                    grouped[fl].push({ ...dictEntry, _isFromDict: true });
-                }
-            });
-        }
+            types.forEach(type => {
+                html += `<div class="context-card"><div class="context-type">${type}</div>`;
+                let senseCounter = 1;
 
-        const types = Object.keys(grouped);
-        if (types.length === 0) {
-            return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
-        }
+                grouped[type].forEach(entry => {
+                    if (!entry.def || !entry.def[0] || !entry.def[0].sseq) return;
 
-        types.forEach(type => {
-            html += `<div class="context-card"><div class="context-type">${type}</div>`;
-            let senseCounter = 1;
-
-            grouped[type].forEach(entry => {
-                if (entry._isFromDict || !entry.def || !Array.isArray(entry.def) || !entry.def[0]?.sseq) {
-                    if (entry.shortdef && Array.isArray(entry.shortdef) && entry.shortdef.length > 0) {
-                        entry.shortdef.forEach(defRaw => {
-                            const def = UIUtils.cleanMWText(defRaw);
-                            const escapedDef = UIUtils.stripTags(def).replace(/"/g, '&quot;');
-                            html += `
-                                <div class="sense-block">
-                                    <div class="definition">
-                                        <span class="sense-num">${senseCounter++}.</span>
-                                        <div class="def-content-container">
-                                            <div class="def-text">${def} <span class="tts-inline-target" data-text="${escapedDef}"></span></div>
-                                            <div class="tags-section expandable-wrapper">
-                                                <div class="tags-rows-container">
-                                                    <div class="tags-row"><span class="tags-label" style="opacity:0.7; font-style:italic;">No synonyms found (Dictionary definition)</span></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>`;
-                        });
-                    }
-                    return;
-                }
-
-                entry.def.forEach(defObj => {
-                    if (!defObj || !defObj.sseq || !Array.isArray(defObj.sseq)) return;
-
-                    defObj.sseq.forEach(sseq => {
+                    entry.def[0].sseq.forEach(sseq => {
                         sseq.forEach(sen => {
                             const sData = sen[1];
                             if (!sData || !sData.dt) return;
@@ -136,6 +97,9 @@ window.UIThesaurus = {
                 });
                 html += `</div>`;
             });
+        } else {
+            html = `<div style="padding:20px; text-align:center; color:var(--text-sub);">Thesaurus data not available for this word.</div>`;
+        }
         return html;
     },
 
