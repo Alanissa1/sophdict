@@ -45,6 +45,9 @@ window.UIThesaurus = {
         }
 
         const types = Object.keys(grouped);
+        if (types.length === 0) {
+            return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
+        }
 
         types.forEach(type => {
             html += `<div class="context-card"><div class="context-type">${type}</div>`;
@@ -128,19 +131,6 @@ window.UIThesaurus = {
             });
             html += `</div>`;
         });
-
-        // Add related suggestions from the thesaurus (strings)
-        if (Array.isArray(thesaurus)) {
-            const suggestions = thesaurus.filter(t => typeof t === 'string');
-            if (suggestions.length > 0) {
-                html += `<div class="context-card suggestions-card"><div class="context-type">Related</div><div class="tags-row" style="padding: 10px 0;">${suggestions.map(t => `<span class="tag syn-tag" data-word="${t}" tabindex="0">${t}</span>`).join('')}</div></div>`;
-            }
-        }
-
-        if (!html) {
-            return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
-        }
-
         return html;
     },
 
