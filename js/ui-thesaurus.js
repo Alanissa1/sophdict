@@ -1,12 +1,12 @@
 window.UIThesaurus = {
     generateHtml(data) {
-        const { word, thesaurus } = data;
+        const { word, thesaurus, dictionary } = data;
         let html = "";
+        const grouped = {};
+        const searchTerm = word.toLowerCase();
 
-        if (Array.isArray(thesaurus) && thesaurus.length > 0) {
-            const grouped = {};
-            const searchTerm = word.toLowerCase();
-
+        // 1. Group existing thesaurus entries
+        if (Array.isArray(thesaurus)) {
             thesaurus.forEach(entry => {
                 const entryId = entry.meta?.id.split(':')[0].toLowerCase();
                 const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
@@ -17,35 +17,64 @@ window.UIThesaurus = {
                 let type = entry.fl || "other";
 
                 // Supplement missing fl from dictionary data if available
-                if ((!entry.fl || entry.fl === 'other') && Array.isArray(data.dictionary)) {
-                    const dictMatch = data.dictionary.find(de => de.fl && de.fl !== 'other');
+                if ((!entry.fl || entry.fl === 'other') && Array.isArray(dictionary)) {
+                    const dictMatch = dictionary.find(de => de.fl && de.fl !== 'other');
                     if (dictMatch) type = dictMatch.fl;
                 }
 
                 if (!grouped[type]) grouped[type] = [];
                 grouped[type].push(entry);
             });
+        }
 
-            const types = Object.keys(grouped);
-            if (types.length === 0) {
-                return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
-            }
+        // 2. Supplement missing context types from dictionary
+        if (Array.isArray(dictionary)) {
+            const existingTypes = new Set(Object.keys(grouped).map(t => t.toLowerCase()));
+            dictionary.forEach(dictEntry => {
+                const type = dictEntry.fl;
+                if (type && type !== 'other' && !existingTypes.has(type.toLowerCase())) {
+                    const entryId = dictEntry.meta?.id.split(':')[0].toLowerCase();
+                    const stems = dictEntry.meta?.stems?.map(s => s.toLowerCase()) || [];
+                    if (entryId.includes(searchTerm) || stems.some(s => s.includes(searchTerm))) {
+                        if (!grouped[type]) grouped[type] = [];
+                        grouped[type].push(dictEntry);
+                        existingTypes.add(type.toLowerCase());
+                    }
+                }
+            });
+        }
 
-            types.forEach(type => {
-                html += `<div class="context-card"><div class="context-type">${type}</div>`;
-                let senseCounter = 1;
+        const types = Object.keys(grouped);
+        if (types.length === 0) {
+            return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
+        }
 
-                grouped[type].forEach(entry => {
-                    if (!entry.def || !entry.def[0] || !entry.def[0].sseq) return;
+        types.forEach(type => {
+            html += `<div class="context-card"><div class="context-type">${type}</div>`;
+            let senseCounter = 1;
 
-                    entry.def[0].sseq.forEach(sseq => {
-                        sseq.forEach(sen => {
-                            const sData = sen[1];
+            grouped[type].forEach(entry => {
+                if (!entry.def || !entry.def[0] || !entry.def[0].sseq) return;
+
+                entry.def[0].sseq.forEach(sseq => {
+                    sseq.forEach(node => {
+                        const processNode = (n) => {
+                            const nodeType = n[0];
+                            const sData = n[1];
+
+                            if (nodeType === 'pseq' || nodeType === 'bs') {
+                                if (Array.isArray(sData)) sData.forEach(child => processNode(child));
+                                return;
+                            }
+                            if (nodeType !== 'sense' && nodeType !== 'sdsense') return;
                             if (!sData || !sData.dt) return;
 
                             UIUtils.reclassifyMetadata(sData);
 
-                            let def = UIUtils.cleanMWText(sData.dt[0][1]);
+                            const textNode = sData.dt.find(i => i[0] === 'text');
+                            if (!textNode) return;
+
+                            let def = UIUtils.cleanMWText(textNode[1]);
                             const escapedDef = UIUtils.stripTags(def).replace(/"/g, '&quot;');
                             let vis = sData.dt.find(i => i[0] === 'vis');
                             let exHtml = vis ? vis[1].map(v => {
@@ -92,14 +121,13 @@ window.UIThesaurus = {
                                         </div>
                                     </div>
                                 </div>`;
-                        });
+                        };
+                        processNode(node);
                     });
                 });
-                html += `</div>`;
             });
-        } else {
-            html = `<div style="padding:20px; text-align:center; color:var(--text-sub);">Thesaurus data not available for this word.</div>`;
-        }
+            html += `</div>`;
+        });
         return html;
     },
 
