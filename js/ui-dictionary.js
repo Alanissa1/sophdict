@@ -25,9 +25,9 @@ window.UIDictionary = {
                 if (Array.isArray(thesaurus)) {
                     const searchTerm = word.toLowerCase();
                     thesaurus.forEach(entry => {
-                        const entryId = entry.meta?.id?.split(':')[0].toLowerCase() || "";
+                        const entryId = entry.meta?.id.split(':')[0].toLowerCase();
                         const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
-                        if (entryId && !entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+                        if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
 
                         const fl = entry.fl || 'other';
                         if (!dictTypes.has(fl.toLowerCase())) {
@@ -47,10 +47,8 @@ window.UIDictionary = {
                 });
 
                 sortedKeys.forEach(fl => {
-                    let sectionHtml = "";
+                    html += `<div class="context-card"><div class="context-type">${fl}</div>`;
                     const counter = { val: 1 };
-                    let hasExamples = false;
-
                     grouped[fl].forEach(e => {
                         const skipTags = e._isSupplementary || false;
                         if (e.def && Array.isArray(e.def)) {
@@ -59,8 +57,7 @@ window.UIDictionary = {
                                     defObj.sseq.forEach(sseq => {
                                         sseq.forEach(node => {
                                             this.processSenseNode(node, (itemHtml) => {
-                                                if (itemHtml.includes('class="example"')) hasExamples = true;
-                                                sectionHtml += itemHtml;
+                                                html += itemHtml;
                                             }, counter, skipTags, word);
                                         });
                                     });
@@ -70,7 +67,7 @@ window.UIDictionary = {
                             e.shortdef.forEach(d => {
                                 const sn = `${counter.val++}.`;
                                 const escapedD = UIUtils.stripTags(d).replace(/"/g, '&quot;');
-                                sectionHtml += `
+                                html += `
                                     <div class="sense-block">
                                         <div class="definition">
                                             <span class="sense-num"><span class="sn-main">${sn}</span></span>
@@ -82,30 +79,7 @@ window.UIDictionary = {
                             });
                         }
                     });
-
-                    // Supplement from thesaurus if no examples were found for this type in dictionary
-                    if (!hasExamples && Array.isArray(thesaurus)) {
-                        const thesEntries = thesaurus.filter(te => (te.fl || 'other').toLowerCase() === fl.toLowerCase());
-                        thesEntries.forEach(te => {
-                            if (te.def && Array.isArray(te.def)) {
-                                te.def.forEach(defObj => {
-                                    if (defObj.sseq && Array.isArray(defObj.sseq)) {
-                                        defObj.sseq.forEach(sseq => {
-                                            sseq.forEach(node => {
-                                                this.processSenseNode(node, (itemHtml) => {
-                                                    sectionHtml += itemHtml;
-                                                }, counter, true, word);
-                                            });
-                                        });
-                                    }
-                                });
-                            }
-                        });
-                    }
-
-                    if (sectionHtml.trim()) {
-                        html += `<div class="context-card"><div class="context-type">${fl}</div>${sectionHtml}</div>`;
-                    }
+                    html += `</div>`;
                 });
             } else {
                 // Standard Non-Modal Rendering
@@ -115,9 +89,9 @@ window.UIDictionary = {
                 if (Array.isArray(thesaurus)) {
                     const searchTerm = word.toLowerCase();
                     thesaurus.forEach(entry => {
-                        const entryId = entry.meta?.id?.split(':')[0].toLowerCase() || "";
+                        const entryId = entry.meta?.id.split(':')[0].toLowerCase();
                         const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
-                        if (entryId && !entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+                        if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
 
                         const fl = entry.fl || 'other';
                         if (!dictTypes.has(fl.toLowerCase())) {
@@ -147,14 +121,14 @@ window.UIDictionary = {
                         if (thesMatch) fl = thesMatch.fl;
                     }
 
-                    let entryHtml = "";
+                    html += `<div class="context-card"><div class="context-type">${fl}</div>`;
                     if (e.def && Array.isArray(e.def)) {
                         e.def.forEach(defObj => {
                             if (defObj.sseq && Array.isArray(defObj.sseq)) {
                                 defObj.sseq.forEach(sseq => {
                                     sseq.forEach(node => {
                                         this.processSenseNode(node, (itemHtml) => {
-                                            entryHtml += itemHtml;
+                                            html += itemHtml;
                                         }, null, skipTags, word);
                                     });
                                 });
@@ -163,13 +137,10 @@ window.UIDictionary = {
                     } else if (e.shortdef) {
                         e.shortdef.forEach(d => {
                             const escapedD = UIUtils.stripTags(d).replace(/"/g, '&quot;');
-                            entryHtml += `<div class="definition"><div class="sense-num"></div><div class="def-text">${d} <span class="tts-inline-target" data-text="${escapedD}"></span></div></div>`;
+                            html += `<div class="definition"><div class="sense-num"></div><div class="def-text">${d} <span class="tts-inline-target" data-text="${escapedD}"></span></div></div>`;
                         });
                     }
-
-                    if (entryHtml.trim()) {
-                        html += `<div class="context-card"><div class="context-type">${fl}</div>${entryHtml}</div>`;
-                    }
+                    html += `</div>`;
                 });
             }
         } else {
