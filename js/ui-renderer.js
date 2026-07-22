@@ -186,8 +186,8 @@ window.UIRenderer = {
         if (type === 'thesaurus') {
             if (Array.isArray(thesaurus) && thesaurus.length > 0) {
                 thesaurus.forEach(entry => {
-                    const entryId = entry.meta?.id.split(':')[0];
-                    if (entryId !== word && !entry.meta?.stems?.includes(word)) return;
+                    const entryId = entry.meta?.id?.split(':')[0];
+                    if (entryId && entryId !== word && !entry.meta?.stems?.includes(word)) return;
 
                     html += `<div class="context-card"><div class="context-type">${entry.fl}</div>`;
                     let senseCounter = 1;

@@ -10,11 +10,11 @@ window.UIThesaurus = {
 
         // 1. Group existing thesaurus entries
         entries.forEach(entry => {
-            const entryId = entry.meta?.id.split(':')[0].toLowerCase();
+            const entryId = entry.meta?.id?.split(':')[0].toLowerCase() || "";
             const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
 
             // Allow if entry ID or stems contain the search term
-            if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+            if (entryId && !entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
 
             let type = entry.fl || "other";
 
@@ -34,9 +34,9 @@ window.UIThesaurus = {
             dictionary.forEach(dictEntry => {
                 const type = dictEntry.fl;
                 if (type && type !== 'other' && !existingTypes.has(type.toLowerCase())) {
-                    const entryId = dictEntry.meta?.id.split(':')[0].toLowerCase();
+                    const entryId = dictEntry.meta?.id?.split(':')[0].toLowerCase() || "";
                     const stems = dictEntry.meta?.stems?.map(s => s.toLowerCase()) || [];
-                    if (entryId.includes(searchTerm) || stems.some(s => s.includes(searchTerm))) {
+                    if (entryId && (entryId.includes(searchTerm) || stems.some(s => s.includes(searchTerm)))) {
                         if (!grouped[type]) grouped[type] = [];
                         grouped[type].push(dictEntry);
                         existingTypes.add(type.toLowerCase());

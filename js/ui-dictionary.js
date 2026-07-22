@@ -25,9 +25,9 @@ window.UIDictionary = {
                 if (Array.isArray(thesaurus)) {
                     const searchTerm = word.toLowerCase();
                     thesaurus.forEach(entry => {
-                        const entryId = entry.meta?.id.split(':')[0].toLowerCase();
+                        const entryId = entry.meta?.id?.split(':')[0].toLowerCase() || "";
                         const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
-                        if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+                        if (entryId && !entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
 
                         const fl = entry.fl || 'other';
                         if (!dictTypes.has(fl.toLowerCase())) {
@@ -89,9 +89,9 @@ window.UIDictionary = {
                 if (Array.isArray(thesaurus)) {
                     const searchTerm = word.toLowerCase();
                     thesaurus.forEach(entry => {
-                        const entryId = entry.meta?.id.split(':')[0].toLowerCase();
+                        const entryId = entry.meta?.id?.split(':')[0].toLowerCase() || "";
                         const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
-                        if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+                        if (entryId && !entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
 
                         const fl = entry.fl || 'other';
                         if (!dictTypes.has(fl.toLowerCase())) {

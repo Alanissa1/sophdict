@@ -11,7 +11,7 @@ window.UIEntry = {
 
             const { word, dictionary, thesaurus } = data;
             const dictArr = Array.isArray(dictionary) ? dictionary : [];
-            const mainEntry = dictArr.find(e => e.meta?.id.split(':')[0] === word) || dictArr[0];
+            const mainEntry = dictArr.find(e => e.meta?.id?.split(':')[0] === word) || dictArr[0];
             const pronunciation = mainEntry?.hwi?.prs?.[0]?.mw || '';
             const isPinned = await DBManager.isPinned(word);
 
@@ -85,7 +85,7 @@ window.UIEntry = {
                 const headerTop = document.querySelector('.micro-header-top');
                 if (headerTop) {
                     const dictArr = Array.isArray(dictionary) ? dictionary : [];
-                    const mainEntry = dictArr.find(e => e.meta?.id.split(':')[0] === word) || dictArr[0];
+                    const mainEntry = dictArr.find(e => e.meta?.id?.split(':')[0] === word) || dictArr[0];
                     const pronunciation = mainEntry?.hwi?.prs?.[0]?.mw || '';
                     const stems = mainEntry?.meta?.stems?.filter(s => s !== word) || [];
 
@@ -135,6 +135,12 @@ window.UIEntry = {
                 const mInfo = document.getElementById('microInfo');
                 if (mInfo) mInfo.style.display = 'none';
 
+                if (typeof UIDictionary === 'undefined') {
+                    console.error("UIDictionary is not defined");
+                    targetContainer.innerHTML = `<div style="padding:40px; text-align:center;">Error: UI components not loaded properly.</div>`;
+                    return;
+                }
+
                 let html = UIDictionary.generateHtml(data, targetContext, true);
                 html += `<button id="full-page-btn" class="view-full-btn">View Full Main Page</button>`;
                 targetContainer.innerHTML = html;
@@ -159,6 +165,10 @@ window.UIEntry = {
             PreFetcher.addToQueue(UIUtils.extractLinks(data));
         } catch (err) {
             console.error("[UI] Render Error:", err);
+            const targetContainer = document.getElementById(containerId);
+            if (targetContainer) {
+                targetContainer.innerHTML = `<div style="padding:40px; text-align:center;">An error occurred while rendering.</div>`;
+            }
         }
     },
 
