@@ -1,1 +1,154 @@
-window.UIThesaurus={generateHtml(t){const{word:e,thesaurus:n,dictionary:s}=t;let o="";const r=(e||"").toLowerCase(),a=t=>{const e=t.meta?.id?t.meta.id.split(":")[0].toLowerCase():"",n=t.meta?.stems?.map((t=>t.toLowerCase()))||[];return!e||e.includes(r)||n.some((t=>t.includes(r)))},c=(t,o)=>{let r="";if(!t.def||!t.def[0]||!t.def[0].sseq)return{html:r,senseCounter:o};return t.def[0].sseq.forEach((a=>{a.forEach((a=>{const c=a[1];if(!c||!c.dt)return;UIUtils.reclassifyMetadata(c);let l=UIUtils.cleanMWText(c.dt[0][1]);const i=UIUtils.stripTags(l).replace(/"/g,"&quot;"),u=c.dt.find((t=>"vis"===t[0])),s=u?u[1].map((t=>{const n=UIUtils.cleanMWExample(t.t,e),s=UIUtils.stripTags(n).replace(/"/g,"&quot;");return`<div class="example">"${n}" <span class="tts-inline-target" data-text="${s}"></span></div>`})).join(""):"",d=t=>t?.flat().map((t=>({wd:t.wd,html:`${t.wd}${t.wsls?' <small style="opacity:0.6; font-style:italic;">('+t.wsls.join(", ")+")</small>":""}`})))||[],p=d(c.syn_list),m=d(c.sim_list),h=d(c.rel_list),f=d(c.near_list),g=d(c.ant_list),v=d(c.opp_list),y=c.phrase_list?.flat().map((t=>({wd:t.wd,html:t.wd})))||[],w=[...p,...m,...y],b=[...g,...v],k=w.length||h.length||b.length||f.length,x=k?`<div class="tags-section expandable-wrapper"><div class="tags-rows-container">${w.length?`<div class="tags-row Similar-row"><span class="tags-label">Similar:</span>${w.map((t=>`<span class="tag syn-tag" data-word="${t.wd}" tabindex="0">${t.html}</span>`)).join("")}</div>`:""}${h.length?`<div class="tags-row"><span class="tags-label">Related:</span>${h.map((t=>`<span class="tag syn-tag" data-word="${t.wd}" tabindex="0">${t.html}</span>`)).join("")}</div>`:""}${b.length?`<div class="tags-row"><span class="tags-label">Opposite:</span>${b.map((t=>`<span class="tag ant-tag" data-word="${t.wd}" tabindex="0">${t.html}</span>`)).join("")}</div>`:""}${f.length?`<div class="tags-row"><span class="tags-label">Near:</span>${f.map((t=>`<span class="tag ant-tag" data-word="${t.wd}" tabindex="0">${t.html}</span>`)).join("")}</div>`:""}<button class="tag-expand-btn" onclick="UIThesaurus.toggleExpand(this)" aria-label="Expand tags"><svg class="ignore-dark-override" xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="currentColor"><path d="m480-347.33 175.33-175.34-47.66-46.66L480-441.67 352.33-569.33l-47.66 46.66L480-347.33ZM480-80q-82.33 0-155.33-31.5-73-31.5-127.34-85.83Q143-251.67 111.5-324.67T80-480q0-83 31.5-156t85.83-127q54.34-54 127.34-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82.33-31.5 155.33-31.5 73-85.5 127.34Q709-143 636-111.5T480-80Zm0-66.67q139.33 0 236.33-97.33t97-236q0-139.33-97-236.33t-236.33-97q-138.67 0-236 97-97.33 97-97.33 236.33 0 138.67 97.33 236 97.33 97.33 236 97.33ZM480-480Z"/></svg></button></div></div>`:"";r+=`<div class="sense-block"><div class="definition"><span class="sense-num">${o++}.</span><div class="def-content-container"><div class="def-text">${l} <span class="tts-inline-target" data-text="${i}"></span></div>${s}${x}</div></div></div>`}))})),{html:r,senseCounter:o}},l=Array.isArray(n)&&n.length>0,i=l?n.filter((t=>"string"==typeof t)):[],u=l?n.filter((t=>"object"==typeof t&&null!==t)):[],d={};u.forEach((t=>{if(!a(t))return;let e=t.fl||"other";if((!t.fl||"other"===t.fl)&&Array.isArray(s)){const n=s.find((t=>t.fl&&"other"!==t.fl));n&&(e=n.fl)}d[e]||(d[e]=[]),d[e].push(t)}));const p=new Set(Object.keys(d));Array.isArray(s)&&s.forEach((t=>{const e=t.fl;e&&"other"!==e&&!p.has(e)&&a(t)&&(d[e]||(d[e]=[]),d[e].push(t),p.add(e))}));const m=Object.keys(d);if(m.forEach((t=>{let e="",n=1;d[t].forEach((t=>{const s=c(t,n);e+=s.html,n=s.senseCounter})),e&&(o+=`<div class="context-card"><div class="context-type">${t}</div>${e}</div>`)})),i.length>0&&(o+=`<div class="context-card suggestions-card"><div class="context-type">Related</div><div class="tags-row" style="padding: 10px 0;">${i.map((t=>`<span class="tag syn-tag" data-word="${t}" tabindex="0">${t}</span>`)).join("")}</div></div>`),!o)return'<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found.</div>';return o},toggleExpand(t){const e=t.closest(".expandable-wrapper");if(!e)return;const n=t.getBoundingClientRect(),s=window.pageYOffset,o=e.classList.toggle("expanded");if(t.style.transform=o?"rotate(180deg)":"rotate(0deg)",!o){const e=t.getBoundingClientRect().top-n.top;if(Math.abs(e)>1){const t=document.getElementById("microContent");t&&t.contains(e)?t.scrollTop+=e:window.scrollTo(0,s+e)}}}};
+window.UIThesaurus = {
+    generateHtml(data) {
+        const { word, thesaurus, dictionary } = data;
+        let html = "";
+        const searchWord = (word || "").toLowerCase();
+
+        const filterFn = (entry) => {
+            const entryId = entry.meta?.id ? entry.meta.id.split(":")[0].toLowerCase() : "";
+            const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
+            return !entryId || entryId.includes(searchWord) || stems.some(s => s.includes(searchWord));
+        };
+
+        const renderDefGroup = (entry, senseCounter) => {
+            let defHtml = "";
+            if (!entry.def || !entry.def[0] || !entry.def[0].sseq) {
+                return { html: defHtml, senseCounter };
+            }
+
+            entry.def[0].sseq.forEach(sseq => {
+                sseq.forEach(node => {
+                    const sData = node[1];
+                    if (!sData || !sData.dt) return;
+
+                    UIUtils.reclassifyMetadata(sData);
+
+                    const rawDef = sData.dt[0][1];
+                    const cleanedDef = UIUtils.cleanMWText(rawDef);
+                    const escapedDef = UIUtils.stripTags(cleanedDef).replace(/"/g, '&quot;');
+
+                    const visNode = sData.dt.find(t => t[0] === 'vis');
+                    const examplesHtml = visNode ? visNode[1].map(v => {
+                        const cleanEx = UIUtils.cleanMWExample(v.t, word);
+                        const escapedEx = UIUtils.stripTags(cleanEx).replace(/"/g, '&quot;');
+                        return `<div class="example">"${cleanEx}" <span class="tts-inline-target" data-text="${escapedEx}"></span></div>`;
+                    }).join('') : "";
+
+                    const extractWords = (list) => list?.flat().map(item => ({
+                        wd: item.wd,
+                        html: `${item.wd}${item.wsls ? ' <small style="opacity:0.6; font-style:italic;">(' + item.wsls.join(', ') + ')</small>' : ''}`
+                    })) || [];
+
+                    const syns = extractWords(sData.syn_list);
+                    const sims = extractWords(sData.sim_list);
+                    const rels = extractWords(sData.rel_list);
+                    const nears = extractWords(sData.near_list);
+                    const ants = extractWords(sData.ant_list);
+                    const opps = extractWords(sData.opp_list);
+                    const phrases = sData.phrase_list?.flat().map(item => ({ wd: item.wd, html: item.wd })) || [];
+
+                    const similarWords = [...syns, ...sims, ...phrases];
+                    const oppositeWords = [...ants, ...opps];
+
+                    const hasTags = similarWords.length || rels.length || oppositeWords.length || nears.length;
+                    const tagsSection = hasTags ? `
+                        <div class="tags-section expandable-wrapper">
+                            <div class="tags-rows-container">
+                                ${similarWords.length ? `<div class="tags-row Similar-row"><span class="tags-label">Similar:</span>${similarWords.map(t => `<span class="tag syn-tag" data-word="${t.wd}" tabindex="0">${t.html}</span>`).join('')}</div>` : ''}
+                                ${rels.length ? `<div class="tags-row"><span class="tags-label">Related:</span>${rels.map(t => `<span class="tag syn-tag" data-word="${t.wd}" tabindex="0">${t.html}</span>`).join('')}</div>` : ''}
+                                ${oppositeWords.length ? `<div class="tags-row"><span class="tags-label">Opposite:</span>${oppositeWords.map(t => `<span class="tag ant-tag" data-word="${t.wd}" tabindex="0">${t.html}</span>`).join('')}</div>` : ''}
+                                ${nears.length ? `<div class="tags-row"><span class="tags-label">Near:</span>${nears.map(t => `<span class="tag ant-tag" data-word="${t.wd}" tabindex="0">${t.html}</span>`).join('')}</div>` : ''}
+                                <button class="tag-expand-btn" onclick="UIThesaurus.toggleExpand(this)" aria-label="Expand tags">
+                                    <svg class="ignore-dark-override" xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="currentColor"><path d="m480-347.33 175.33-175.34-47.66-46.66L480-441.67 352.33-569.33l-47.66 46.66L480-347.33ZM480-80q-82.33 0-155.33-31.5-73-31.5-127.34-85.83Q143-251.67 111.5-324.67T80-480q0-83 31.5-156t85.83-127q54.34-54 127.34-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82.33-31.5 155.33-31.5 73-85.5 127.34Q709-143 636-111.5T480-80Zm0-66.67q139.33 0 236.33-97.33t97-236q0-139.33-97-236.33t-236.33-97q-138.67 0-236 97-97.33 97-97.33 236.33 0 138.67 97.33 236 97.33 97.33 236 97.33ZM480-480Z"/></svg>
+                                </button>
+                            </div>
+                        </div>` : "";
+
+                    defHtml += `
+                        <div class="sense-block">
+                            <div class="definition">
+                                <span class="sense-num">${senseCounter++}.</span>
+                                <div class="def-content-container">
+                                    <div class="def-text">${cleanedDef} <span class="tts-inline-target" data-text="${escapedDef}"></span></div>
+                                    ${examplesHtml}
+                                    ${tagsSection}
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            });
+
+            return { html: defHtml, senseCounter };
+        };
+
+        const isThesArray = Array.isArray(thesaurus) && thesaurus.length > 0;
+        const stringSuggestions = isThesArray ? thesaurus.filter(item => typeof item === 'string') : [];
+        const entryObjects = isThesArray ? thesaurus.filter(item => typeof item === 'object' && item !== null) : [];
+
+        const grouped = {};
+        entryObjects.forEach(entry => {
+            if (!filterFn(entry)) return;
+            let fl = entry.fl || "other";
+            if ((!entry.fl || entry.fl === "other") && Array.isArray(dictionary)) {
+                const dictMatch = dictionary.find(d => d.fl && d.fl !== "other");
+                if (dictMatch) fl = dictMatch.fl;
+            }
+            if (!grouped[fl]) grouped[fl] = [];
+            grouped[fl].push(entry);
+        });
+
+        const knownTypes = new Set(Object.keys(grouped));
+        if (Array.isArray(dictionary)) {
+            dictionary.forEach(entry => {
+                const fl = entry.fl;
+                if (fl && fl !== 'other' && !knownTypes.has(fl) && filterFn(entry)) {
+                    if (!grouped[fl]) grouped[fl] = [];
+                    grouped[fl].push(entry);
+                    knownTypes.add(fl);
+                }
+            });
+        }
+
+        Object.keys(grouped).forEach(fl => {
+            let contextHtml = "";
+            let counter = 1;
+            grouped[fl].forEach(entry => {
+                const res = renderDefGroup(entry, counter);
+                contextHtml += res.html;
+                counter = res.senseCounter;
+            });
+            if (contextHtml) {
+                html += `<div class="context-card"><div class="context-type">${fl}</div>${contextHtml}</div>`;
+            }
+        });
+
+        if (stringSuggestions.length > 0) {
+            html += `<div class="context-card suggestions-card"><div class="context-type">Related</div><div class="tags-row" style="padding: 10px 0;">${stringSuggestions.map(w => `<span class="tag syn-tag" data-word="${w}" tabindex="0">${w}</span>`).join('')}</div></div>`;
+        }
+
+        if (!html) {
+            return '<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found.</div>';
+        }
+        return html;
+    },
+
+    toggleExpand(btn) {
+        const wrapper = btn.closest('.expandable-wrapper');
+        if (!wrapper) return;
+        const rect = btn.getBoundingClientRect();
+        const pageY = window.pageYOffset;
+        const expanded = wrapper.classList.toggle('expanded');
+        btn.style.transform = expanded ? 'rotate(180deg)' : 'rotate(0deg)';
+        if (!expanded) {
+            const diff = btn.getBoundingClientRect().top - rect.top;
+            if (Math.abs(diff) > 1) {
+                const modalContent = document.getElementById('microContent');
+                if (modalContent && modalContent.contains(btn)) {
+                    modalContent.scrollTop += diff;
+                } else {
+                    window.scrollTo(0, pageY + diff);
+                }
+            }
+        }
+    }
+};
