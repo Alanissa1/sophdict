@@ -99,6 +99,7 @@ window.UIEntry = {
                             <div style="display: flex; gap: 5px; font-size: 0.9em; width: max-content;">
                                 <span class="micro-pronunciation" style="line-height:1.2;">/${pronunciation}/</span>
                                 ${this.renderHeaderVariants(mainEntry, true)}
+                                ${this.renderHeaderInflections(mainEntry)}
                             </div>
                         </div>
                         <div style="display:flex; align-items:center; gap: 8px; flex-shrink: 0; margin-left: 10px;">
