@@ -35,7 +35,7 @@ window.UIThesaurus = {
                 const fl = dictEntry.fl || "other";
                 if (!existingTypes.has(fl.toLowerCase())) {
                     if (!grouped[fl]) grouped[fl] = [];
-                    grouped[fl].push(dictEntry);
+                    grouped[fl].push({ ...dictEntry, _isFromDict: true });
                 }
             });
         }
@@ -50,7 +50,29 @@ window.UIThesaurus = {
             let senseCounter = 1;
 
             grouped[type].forEach(entry => {
-                if (!entry.def || !Array.isArray(entry.def)) return;
+                if (entry._isFromDict || !entry.def || !Array.isArray(entry.def) || !entry.def[0]?.sseq) {
+                    if (entry.shortdef && Array.isArray(entry.shortdef) && entry.shortdef.length > 0) {
+                        entry.shortdef.forEach(defRaw => {
+                            const def = UIUtils.cleanMWText(defRaw);
+                            const escapedDef = UIUtils.stripTags(def).replace(/"/g, '&quot;');
+                            html += `
+                                <div class="sense-block">
+                                    <div class="definition">
+                                        <span class="sense-num">${senseCounter++}.</span>
+                                        <div class="def-content-container">
+                                            <div class="def-text">${def} <span class="tts-inline-target" data-text="${escapedDef}"></span></div>
+                                            <div class="tags-section expandable-wrapper">
+                                                <div class="tags-rows-container">
+                                                    <div class="tags-row"><span class="tags-label" style="opacity:0.7; font-style:italic;">No synonyms found (Dictionary definition)</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>`;
+                        });
+                    }
+                    return;
+                }
 
                 entry.def.forEach(defObj => {
                     if (!defObj || !defObj.sseq || !Array.isArray(defObj.sseq)) return;
