@@ -3,12 +3,9 @@ window.UIUtils = {
         if (!text) return "";
         return text
             .replace(/[\s\.]*\{bc\}/g, '; ')
-            .replace(/\{[a-z0-9\_]+\|([^}|]+)\|([^}]+)\}/g, '$2')
             .replace(/\{[a-z0-9\_]+\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
             .replace(/\{it\}|\{\/it\}|\{wi\}|\{\/wi\}/g, '')
             .replace(/\{[^}]+\}/g, '')
-            .replace(/>\s*/g, ' ')
-            .replace(/\s+/g, ' ')
             .trim()
             .replace(/^;\s*/, '')
             .replace(/^""/, '"')
@@ -18,42 +15,27 @@ window.UIUtils = {
     cleanMWExample(text, headword = null) {
         if (!text) return "";
         let cleaned = text
-            .replace(/[\s\.]*\{bc\}/g, '')
-            .replace(/\{[a-z0-9\_]+\|([^}|]+)\|([^}]+)\}/g, '$2')
-            .replace(/\{[a-z0-9\_]+\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
+            .replace(/\{bc\}/g, '')
+            .replace(/\{a_link\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
+            .replace(/\{d_link\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
+            .replace(/\{sx\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
             .replace(/\{it\}|\{\/it\}/g, '')
-            .replace(/\{wi\}([^}]+)\{\/wi\}/g, '<b>$1</b>')
-            .replace(/\{[^}]+\}/g, '')
-            .replace(/>\s*/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
+            .replace(/\{wi\}([^}]+)\{\/wi\}/g, '<b>$1</b>');
 
         if (headword) {
-            const base = headword.replace(/\*/g, '').toLowerCase().trim();
-            if (base) {
-                const variants = new Set([base]);
-                if (base.includes('-')) {
-                    base.split('-').forEach(part => {
-                        if (part.length > 2) variants.add(part);
-                    });
-                }
-                if (base.endsWith('y')) variants.add(base.slice(0, -1) + 'ie');
-                else if (base.endsWith('e')) variants.add(base.slice(0, -1));
+            const base = headword.replace(/\*/g, '').toLowerCase();
+            const variants = [base];
+            if (base.endsWith('y')) variants.push(base.slice(0, -1) + 'ie');
+            else if (base.endsWith('e')) variants.push(base.slice(0, -1));
 
-                variants.forEach(v => {
-                    const escapedV = v.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                    const regex = new RegExp(`(?<!<[^>]*)\\b(${escapedV}[\\w-]*)\\b(?![^<]*>)`, 'gi');
-                    cleaned = cleaned.replace(regex, (match, p1, offset, string) => {
-                        const before = string.slice(0, offset);
-                        const openB = (before.match(/<b>/gi) || []).length;
-                        const closeB = (before.match(/<\/b>/gi) || []).length;
-                        if (openB > closeB) return match;
-                        return `<b>${match}</b>`;
-                    });
-                });
-            }
+            variants.forEach(v => {
+                const escapedV = v.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                // Regex that avoids matching if already inside <b> tag
+                const regex = new RegExp(`(?<!<b>)\\b(${escapedV}[^\\s.]*)\\b(?!<\\/b>)`, 'gi');
+                cleaned = cleaned.replace(regex, '<b>$1</b>');
+            });
         }
-        return cleaned;
+        return cleaned.replace(/\{[^}]+\}/g, '').trim();
     },
 
     stripTags(html) {

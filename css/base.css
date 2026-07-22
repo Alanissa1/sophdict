@@ -117,12 +117,8 @@ font-size: 1.8em !important; font-weight: bold;
 }
 
 /* Tags & Labels - Scale tags, but keep label fixed and stable */
-.tag, .syn-tag, .ant-tag, .tags-label {
+.tag, .syn-tag, .ant-tag, .tags-label{
     font-size: 1em !important;
-}
-
-.tag, .syn-tag, .ant-tag {
-    font-weight: 600 !important;
 }
 
 
