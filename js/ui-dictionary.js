@@ -49,6 +49,8 @@ window.UIDictionary = {
                 sortedKeys.forEach(fl => {
                     let sectionHtml = "";
                     const counter = { val: 1 };
+                    let hasExamples = false;
+
                     grouped[fl].forEach(e => {
                         const skipTags = e._isSupplementary || false;
                         if (e.def && Array.isArray(e.def)) {
@@ -57,6 +59,7 @@ window.UIDictionary = {
                                     defObj.sseq.forEach(sseq => {
                                         sseq.forEach(node => {
                                             this.processSenseNode(node, (itemHtml) => {
+                                                if (itemHtml.includes('class="example"')) hasExamples = true;
                                                 sectionHtml += itemHtml;
                                             }, counter, skipTags, word);
                                         });
@@ -79,6 +82,27 @@ window.UIDictionary = {
                             });
                         }
                     });
+
+                    // Supplement from thesaurus if no examples were found for this type in dictionary
+                    if (!hasExamples && Array.isArray(thesaurus)) {
+                        const thesEntries = thesaurus.filter(te => (te.fl || 'other').toLowerCase() === fl.toLowerCase());
+                        thesEntries.forEach(te => {
+                            if (te.def && Array.isArray(te.def)) {
+                                te.def.forEach(defObj => {
+                                    if (defObj.sseq && Array.isArray(defObj.sseq)) {
+                                        defObj.sseq.forEach(sseq => {
+                                            sseq.forEach(node => {
+                                                this.processSenseNode(node, (itemHtml) => {
+                                                    sectionHtml += itemHtml;
+                                                }, counter, true, word);
+                                            });
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+
                     if (sectionHtml.trim()) {
                         html += `<div class="context-card"><div class="context-type">${fl}</div>${sectionHtml}</div>`;
                     }
