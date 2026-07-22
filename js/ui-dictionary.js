@@ -47,7 +47,7 @@ window.UIDictionary = {
                 });
 
                 sortedKeys.forEach(fl => {
-                    html += `<div class="context-card"><div class="context-type">${fl}</div>`;
+                    let sectionHtml = "";
                     const counter = { val: 1 };
                     grouped[fl].forEach(e => {
                         const skipTags = e._isSupplementary || false;
@@ -57,7 +57,7 @@ window.UIDictionary = {
                                     defObj.sseq.forEach(sseq => {
                                         sseq.forEach(node => {
                                             this.processSenseNode(node, (itemHtml) => {
-                                                html += itemHtml;
+                                                sectionHtml += itemHtml;
                                             }, counter, skipTags, word);
                                         });
                                     });
@@ -67,7 +67,7 @@ window.UIDictionary = {
                             e.shortdef.forEach(d => {
                                 const sn = `${counter.val++}.`;
                                 const escapedD = UIUtils.stripTags(d).replace(/"/g, '&quot;');
-                                html += `
+                                sectionHtml += `
                                     <div class="sense-block">
                                         <div class="definition">
                                             <span class="sense-num"><span class="sn-main">${sn}</span></span>
@@ -79,7 +79,9 @@ window.UIDictionary = {
                             });
                         }
                     });
-                    html += `</div>`;
+                    if (sectionHtml.trim()) {
+                        html += `<div class="context-card"><div class="context-type">${fl}</div>${sectionHtml}</div>`;
+                    }
                 });
             } else {
                 // Standard Non-Modal Rendering
@@ -121,14 +123,14 @@ window.UIDictionary = {
                         if (thesMatch) fl = thesMatch.fl;
                     }
 
-                    html += `<div class="context-card"><div class="context-type">${fl}</div>`;
+                    let entryHtml = "";
                     if (e.def && Array.isArray(e.def)) {
                         e.def.forEach(defObj => {
                             if (defObj.sseq && Array.isArray(defObj.sseq)) {
                                 defObj.sseq.forEach(sseq => {
                                     sseq.forEach(node => {
                                         this.processSenseNode(node, (itemHtml) => {
-                                            html += itemHtml;
+                                            entryHtml += itemHtml;
                                         }, null, skipTags, word);
                                     });
                                 });
@@ -137,10 +139,13 @@ window.UIDictionary = {
                     } else if (e.shortdef) {
                         e.shortdef.forEach(d => {
                             const escapedD = UIUtils.stripTags(d).replace(/"/g, '&quot;');
-                            html += `<div class="definition"><div class="sense-num"></div><div class="def-text">${d} <span class="tts-inline-target" data-text="${escapedD}"></span></div></div>`;
+                            entryHtml += `<div class="definition"><div class="sense-num"></div><div class="def-text">${d} <span class="tts-inline-target" data-text="${escapedD}"></span></div></div>`;
                         });
                     }
-                    html += `</div>`;
+
+                    if (entryHtml.trim()) {
+                        html += `<div class="context-card"><div class="context-type">${fl}</div>${entryHtml}</div>`;
+                    }
                 });
             }
         } else {
