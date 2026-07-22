@@ -1,12 +1,12 @@
 window.UIThesaurus = {
     generateHtml(data) {
-        const { word, thesaurus } = data;
+        const { word, thesaurus, dictionary } = data;
         let html = "";
 
-        if (Array.isArray(thesaurus) && thesaurus.length > 0) {
-            const grouped = {};
-            const searchTerm = word.toLowerCase();
+        const grouped = {};
+        const searchTerm = word.toLowerCase();
 
+        if (Array.isArray(thesaurus) && thesaurus.length > 0) {
             thesaurus.forEach(entry => {
                 const entryId = entry.meta?.id.split(':')[0].toLowerCase();
                 const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
@@ -17,28 +17,45 @@ window.UIThesaurus = {
                 let type = entry.fl || "other";
 
                 // Supplement missing fl from dictionary data if available
-                if ((!entry.fl || entry.fl === 'other') && Array.isArray(data.dictionary)) {
-                    const dictMatch = data.dictionary.find(de => de.fl && de.fl !== 'other');
+                if ((!entry.fl || entry.fl === 'other') && Array.isArray(dictionary)) {
+                    const dictMatch = dictionary.find(de => de.fl && de.fl !== 'other');
                     if (dictMatch) type = dictMatch.fl;
                 }
 
                 if (!grouped[type]) grouped[type] = [];
                 grouped[type].push(entry);
             });
+        }
 
-            const types = Object.keys(grouped);
-            if (types.length === 0) {
-                return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
-            }
+        // Supplement missing context types from dictionary if not already existing in thesaurus
+        if (Array.isArray(dictionary) && dictionary.length > 0) {
+            const existingTypes = new Set(Object.keys(grouped).map(t => t.toLowerCase()));
 
-            types.forEach(type => {
-                html += `<div class="context-card"><div class="context-type">${type}</div>`;
-                let senseCounter = 1;
+            dictionary.forEach(dictEntry => {
+                const fl = dictEntry.fl || "other";
+                if (!existingTypes.has(fl.toLowerCase())) {
+                    if (!grouped[fl]) grouped[fl] = [];
+                    grouped[fl].push(dictEntry);
+                }
+            });
+        }
 
-                grouped[type].forEach(entry => {
-                    if (!entry.def || !entry.def[0] || !entry.def[0].sseq) return;
+        const types = Object.keys(grouped);
+        if (types.length === 0) {
+            return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant thesaurus data found.</div>`;
+        }
 
-                    entry.def[0].sseq.forEach(sseq => {
+        types.forEach(type => {
+            html += `<div class="context-card"><div class="context-type">${type}</div>`;
+            let senseCounter = 1;
+
+            grouped[type].forEach(entry => {
+                if (!entry.def || !Array.isArray(entry.def)) return;
+
+                entry.def.forEach(defObj => {
+                    if (!defObj || !defObj.sseq || !Array.isArray(defObj.sseq)) return;
+
+                    defObj.sseq.forEach(sseq => {
                         sseq.forEach(sen => {
                             const sData = sen[1];
                             if (!sData || !sData.dt) return;
