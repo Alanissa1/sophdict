@@ -20,7 +20,7 @@ window.UIUtils = {
             .replace(/\{d_link\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
             .replace(/\{sx\|([^}|]+)(?:\|[^}]*)?\}/g, '$1')
             .replace(/\{it\}|\{\/it\}/g, '')
-            .replace(/\{wi\}([^}]+)\{\/wi\}/g, '<b>$1</b>');
+            .replace(/\{wi\}([^}]+)\{\/wi\}/g, '___BOLD_START___$1___BOLD_END___');
 
         if (headword) {
             const base = headword.replace(/\*/g, '').toLowerCase();
@@ -28,14 +28,27 @@ window.UIUtils = {
             if (base.endsWith('y')) variants.push(base.slice(0, -1) + 'ie');
             else if (base.endsWith('e')) variants.push(base.slice(0, -1));
 
+            variants.sort((a, b) => b.length - a.length);
+
             variants.forEach(v => {
                 const escapedV = v.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-                // Regex that avoids matching if already inside <b> tag
-                const regex = new RegExp(`(?<!<b>)\\b(${escapedV}[^\\s.]*)\\b(?!<\\/b>)`, 'gi');
-                cleaned = cleaned.replace(regex, '<b>$1</b>');
+                const regex = new RegExp(`\\b(${escapedV}(?:ing|ed|s|es|ly)?)\\b`, 'gi');
+
+                const parts = cleaned.split(/(___BOLD_START___[\s\S]*?___BOLD_END___)/g);
+                cleaned = parts.map(part => {
+                    if (part.startsWith('___BOLD_START___') && part.endsWith('___BOLD_END___')) {
+                        return part;
+                    }
+                    return part.replace(regex, '___BOLD_START___$1___BOLD_END___');
+                }).join('');
             });
         }
-        return cleaned.replace(/\{[^}]+\}/g, '').trim();
+
+        return cleaned
+            .replace(/___BOLD_START___/g, '<b>')
+            .replace(/___BOLD_END___/g, '</b>')
+            .replace(/\{[^}]+\}/g, '')
+            .trim();
     },
 
     stripTags(html) {
