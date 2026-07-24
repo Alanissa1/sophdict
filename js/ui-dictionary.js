@@ -3,37 +3,65 @@ window.UIDictionary = {
         const { dictionary, thesaurus, word } = data;
         let html = "";
 
-        if (Array.isArray(dictionary) && dictionary.length > 0) {
+        const hasDictionary = Array.isArray(dictionary) && dictionary.length > 0;
+        const hasThesaurus = Array.isArray(thesaurus) && thesaurus.length > 0;
+
+        if (hasDictionary || hasThesaurus) {
             if (isModal) {
                 // Filter and Group for Modal
                 const grouped = {};
-                dictionary.forEach(e => {
-                    let fl = e.fl || 'other';
+                const dictTypes = new Set();
+                const typeHasExamples = {};
 
-                    // Supplement missing fl from thesaurus data if available
-                    if ((!e.fl || e.fl === 'other') && Array.isArray(thesaurus)) {
-                        const thesMatch = thesaurus.find(te => te.fl && te.fl !== 'other');
-                        if (thesMatch) fl = thesMatch.fl;
-                    }
+                if (hasDictionary) {
+                    dictionary.forEach(e => {
+                        let fl = e.fl || 'other';
 
-                    if (!grouped[fl]) grouped[fl] = [];
-                    grouped[fl].push(e);
-                });
+                        // Supplement missing fl from thesaurus data if available
+                        if ((!e.fl || e.fl === 'other') && Array.isArray(thesaurus)) {
+                            const thesMatch = thesaurus.find(te => te.fl && te.fl !== 'other');
+                            if (thesMatch) fl = thesMatch.fl;
+                        }
 
-                // Supplement with missing types from thesaurus
-                const dictTypes = new Set(dictionary.map(e => (e.fl || 'other').toLowerCase()));
-                if (Array.isArray(thesaurus)) {
+                        if (!grouped[fl]) grouped[fl] = [];
+                        grouped[fl].push(e);
+                        dictTypes.add(fl.toLowerCase());
+                        if (!typeHasExamples[fl]) {
+                            if ((e.vis && e.vis.length > 0) || this.extractVisFromEntry(e).length > 0) {
+                                typeHasExamples[fl] = true;
+                            }
+                        }
+                    });
+                }
+
+                // Supplement with thesaurus entries
+                if (hasThesaurus) {
                     const searchTerm = word.toLowerCase();
                     thesaurus.forEach(entry => {
-                        const entryId = entry.meta?.id.split(':')[0].toLowerCase();
-                        const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
-                        if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+                        const entryId = (entry.meta?.id || "").split(':')[0].toLowerCase();
+                        const stems = entry.meta?.stems?.map(s => s?.toLowerCase()) || [];
+                        if (!entryId.includes(searchTerm) && !stems.some(s => s?.includes(searchTerm))) return;
 
                         const fl = entry.fl || 'other';
-                        if (!dictTypes.has(fl.toLowerCase())) {
-                            if (!grouped[fl]) grouped[fl] = [];
-                            entry._isSupplementary = true;
-                            grouped[fl].push(entry);
+                        const flLower = fl.toLowerCase();
+                        const hasEx = this.extractVisFromEntry(entry).length > 0;
+
+                        // Missing context types OR (Existing type has no examples AND this entry has examples)
+                        if (!dictTypes.has(flLower) || (!typeHasExamples[fl] && hasEx)) {
+                            // De-duplication check
+                            const entryShortDef = entry.shortdef || [];
+                            const isDuplicate = grouped[fl]?.some(existing => {
+                                if (!existing.shortdef) return false;
+                                return entryShortDef.some(d => existing.shortdef.includes(d));
+                            });
+
+                            if (!isDuplicate) {
+                                if (!grouped[fl]) grouped[fl] = [];
+                                entry._isSupplementary = true;
+                                grouped[fl].push(entry);
+                                if (hasEx) typeHasExamples[fl] = true;
+                                dictTypes.add(flLower);
+                            }
                         }
                     });
                 }
@@ -50,8 +78,10 @@ window.UIDictionary = {
                     html += `<div class="context-card"><div class="context-type">${fl}</div>`;
                     const counter = { val: 1 };
                     grouped[fl].forEach(e => {
-                        const skipTags = e._isSupplementary || false;
+                        const skipTags = isModal; // Tags are not allowed in modal
+                        let defRendered = false;
                         if (e.def && Array.isArray(e.def)) {
+                            const htmlBefore = html.length;
                             e.def.forEach(defObj => {
                                 if (defObj.sseq && Array.isArray(defObj.sseq)) {
                                     defObj.sseq.forEach(sseq => {
@@ -63,16 +93,48 @@ window.UIDictionary = {
                                     });
                                 }
                             });
-                        } else if (e.shortdef) {
-                            e.shortdef.forEach(d => {
+                            defRendered = html.length > htmlBefore;
+                        }
+                        if (!defRendered && e.shortdef) {
+                            // Extract vis examples from deep within the entry's def/sseq/dt structure
+                            const deepVis = this.extractVisFromEntry(e);
+                            e.shortdef.forEach((d, idx) => {
                                 const sn = `${counter.val++}.`;
                                 const escapedD = UIUtils.stripTags(d).replace(/"/g, '&quot;');
+
+                                let examplesHtml = "";
+
+                                // First check entry-level vis (rare but possible)
+                                if (e.vis && Array.isArray(e.vis)) {
+                                    e.vis.forEach(ex => {
+                                        const cleanedEx = UIUtils.cleanMWExample(ex.t || "", word);
+                                        const ttsText = UIUtils.stripTags(cleanedEx);
+                                        const escapedEx = ttsText.replace(/"/g, '&quot;');
+                                        if (cleanedEx) {
+                                            examplesHtml += `<div class="example">"${cleanedEx}" <span class="tts-inline-target" data-text="${escapedEx}"></span></div>`;
+                                        }
+                                    });
+                                }
+
+                                // Then append examples extracted from nested def/dt structures
+                                if (deepVis.length > 0 && idx === 0) {
+                                    deepVis.forEach(ex => {
+                                        const cleanedEx = UIUtils.cleanMWExample(ex.t || "", word);
+                                        const ttsText = UIUtils.stripTags(cleanedEx);
+                                        const escapedEx = ttsText.replace(/"/g, '&quot;');
+                                        if (cleanedEx) {
+                                            examplesHtml += `<div class="example">"${cleanedEx}" <span class="tts-inline-target" data-text="${escapedEx}"></span></div>`;
+                                        }
+                                    });
+                                }
+
                                 html += `
                                     <div class="sense-block">
                                         <div class="definition">
                                             <span class="sense-num"><span class="sn-main">${sn}</span></span>
                                             <div class="def-content-container">
                                                 <div class="def-text">${d} <span class="tts-inline-target" data-text="${escapedD}"></span></div>
+                                                ${examplesHtml}
                                             </div>
                                         </div>
                                     </div>`;
@@ -89,9 +151,9 @@ window.UIDictionary = {
                 if (Array.isArray(thesaurus)) {
                     const searchTerm = word.toLowerCase();
                     thesaurus.forEach(entry => {
-                        const entryId = entry.meta?.id.split(':')[0].toLowerCase();
-                        const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
-                        if (!entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+                        const entryId = (entry.meta?.id || "").split(':')[0].toLowerCase();
+                        const stems = entry.meta?.stems?.map(s => s?.toLowerCase()) || [];
+                        if (!entryId.includes(searchTerm) && !stems.some(s => s?.includes(searchTerm))) return;
 
                         const fl = entry.fl || 'other';
                         if (!dictTypes.has(fl.toLowerCase())) {
@@ -122,7 +184,9 @@ window.UIDictionary = {
                     }
 
                     html += `<div class="context-card"><div class="context-type">${fl}</div>`;
+                    let defRendered = false;
                     if (e.def && Array.isArray(e.def)) {
+                        const htmlBefore = html.length;
                         e.def.forEach(defObj => {
                             if (defObj.sseq && Array.isArray(defObj.sseq)) {
                                 defObj.sseq.forEach(sseq => {
@@ -134,10 +198,37 @@ window.UIDictionary = {
                                 });
                             }
                         });
-                    } else if (e.shortdef) {
-                        e.shortdef.forEach(d => {
+                        defRendered = html.length > htmlBefore;
+                    }
+                    if (!defRendered && e.shortdef) {
+                        const deepVis = this.extractVisFromEntry(e);
+                        e.shortdef.forEach((d, idx) => {
                             const escapedD = UIUtils.stripTags(d).replace(/"/g, '&quot;');
-                            html += `<div class="definition"><div class="sense-num"></div><div class="def-text">${d} <span class="tts-inline-target" data-text="${escapedD}"></span></div></div>`;
+
+                            let examplesHtml = "";
+                            if (e.vis && Array.isArray(e.vis)) {
+                                e.vis.forEach(ex => {
+                                    const cleanedEx = UIUtils.cleanMWExample(ex.t || "", word);
+                                    const ttsText = UIUtils.stripTags(cleanedEx);
+                                    const escapedEx = ttsText.replace(/"/g, '&quot;');
+                                    if (cleanedEx) {
+                                        examplesHtml += `<div class="example">"${cleanedEx}" <span class="tts-inline-target" data-text="${escapedEx}"></span></div>`;
+                                    }
+                                });
+                            }
+
+                            if (deepVis.length > 0 && idx === 0) {
+                                deepVis.forEach(ex => {
+                                    const cleanedEx = UIUtils.cleanMWExample(ex.t || "", word);
+                                    const ttsText = UIUtils.stripTags(cleanedEx);
+                                    const escapedEx = ttsText.replace(/"/g, '&quot;');
+                                    if (cleanedEx) {
+                                        examplesHtml += `<div class="example">"${cleanedEx}" <span class="tts-inline-target" data-text="${escapedEx}"></span></div>`;
+                                    }
+                                });
+                            }
+
+                            html += `<div class="definition"><div class="sense-num"></div><div class="def-text">${d} <span class="tts-inline-target" data-text="${escapedD}"></span></div>${examplesHtml}</div>`;
                         });
                     }
                     html += `</div>`;
@@ -159,7 +250,84 @@ window.UIDictionary = {
             if (Array.isArray(data)) {
                 data.forEach(n => this.processSenseNode(n, callback, counter, skipTags, word));
             }
+        } else if (type === 'vis' && Array.isArray(data)) {
+            let examplesHtml = "";
+            data.forEach(v => {
+                const cleanEx = UIUtils.cleanMWExample(v.t, word);
+                const ttsText = UIUtils.stripTags(cleanEx);
+                const escapedEx = ttsText.replace(/"/g, '&quot;');
+                examplesHtml += `<div class="example">"${cleanEx}" <span class="tts-inline-target" data-text="${escapedEx}"></span></div>`;
+            });
+            if (examplesHtml) {
+                callback(`<div class="sense-block"><div class="definition"><div class="def-content-container">${examplesHtml}</div></div></div>`);
+            }
         }
+    },
+
+    extractVisFromEntry(entry) {
+        const vis = [];
+        if (!entry.def || !Array.isArray(entry.def)) return vis;
+        entry.def.forEach(defObj => {
+            if (!defObj.sseq || !Array.isArray(defObj.sseq)) return;
+            defObj.sseq.forEach(sseq => {
+                sseq.forEach(node => {
+                    const type = node[0];
+                    const data = node[1];
+                    if ((type === 'sense' || type === 'sdsense') && data && data.dt) {
+                        data.dt.forEach(dtNode => {
+                            if (dtNode[0] === 'vis' && Array.isArray(dtNode[1])) {
+                                dtNode[1].forEach(v => { if (v && v.t) vis.push(v); });
+                            }
+                            // Also check inside uns (usage notes) for vis
+                            if (dtNode[0] === 'uns' && Array.isArray(dtNode[1])) {
+                                dtNode[1].forEach(u => {
+                                    if (Array.isArray(u)) {
+                                        u.forEach(unode => {
+                                            if (unode[0] === 'vis' && Array.isArray(unode[1])) {
+                                                unode[1].forEach(v => { if (v && v.t) vis.push(v); });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                    // Also handle pseq/bs containers
+                    if ((type === 'pseq' || type === 'bs') && Array.isArray(data)) {
+                        this._extractVisFromNodes(data, vis);
+                    }
+                });
+            });
+        });
+        return vis;
+    },
+
+    _extractVisFromNodes(nodes, vis) {
+        nodes.forEach(node => {
+            const type = node[0];
+            const data = node[1];
+            if ((type === 'sense' || type === 'sdsense') && data && data.dt) {
+                data.dt.forEach(dtNode => {
+                    if (dtNode[0] === 'vis' && Array.isArray(dtNode[1])) {
+                        dtNode[1].forEach(v => { if (v && v.t) vis.push(v); });
+                    }
+                    if (dtNode[0] === 'uns' && Array.isArray(dtNode[1])) {
+                        dtNode[1].forEach(u => {
+                            if (Array.isArray(u)) {
+                                u.forEach(unode => {
+                                    if (unode[0] === 'vis' && Array.isArray(unode[1])) {
+                                        unode[1].forEach(v => { if (v && v.t) vis.push(v); });
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            if ((type === 'pseq' || type === 'bs') && Array.isArray(data)) {
+                this._extractVisFromNodes(data, vis);
+            }
+        });
     },
 
     renderSense(sData, callback, counter = null, skipTags = false, word = null) {
@@ -313,34 +481,58 @@ window.UIDictionary = {
         // Add similar/opposite from dictionary API if present
         let tagsHtml = "";
         if (!skipTags) {
+            const renderTags = (list, tagClass) => {
+                let res = "";
+                const academic = [];
+                const others = [];
+                list.forEach(w => {
+                    if (!w || typeof w !== 'string') return;
+                    const clean = w.toLowerCase().trim();
+                    const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean);
+
+                    if (isAcademic) academic.push(w);
+                    else others.push(w);
+                });
+
+                if (academic.length) {
+                    res += academic.map(w => `<span class="tag ${tagClass} ielts-match" data-word="${w}" tabindex="0">${w}</span>`).join('');
+                    res += `<span class="academic-tag-label">&lt;academic</span>`;
+                }
+                res += others.filter(w => {
+                    const clean = w.toLowerCase().trim();
+                    return !((window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean)));
+                }).map(w => `<span class="tag ${tagClass}" data-word="${w}" tabindex="0">${w}</span>`).join('');
+                return res;
+            };
+
             if (sData.syn_list) {
-                const syns = sData.syn_list.flat().map(s => s.wd);
+                const syns = sData.syn_list.flat().map(s => s?.wd).filter(Boolean);
                 if (syns.length) {
-                    tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">Similar:</span>${syns.map(s => `<span class="tag syn-tag" data-word="${s}" tabindex="0">${s}</span>`).join('')}</div>`;
+                    tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">similar:</span>${renderTags(syns, 'syn-tag')}</div>`;
                 }
             }
             if (sData.rel_list) {
-                const rels = sData.rel_list.flat().map(r => r.wd);
+                const rels = sData.rel_list.flat().map(r => r?.wd).filter(Boolean);
                 if (rels.length) {
-                    tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">Related:</span>${rels.map(r => `<span class="tag syn-tag" data-word="${r}" tabindex="0">${r}</span>`).join('')}</div>`;
+                    tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">related:</span>${renderTags(rels, 'syn-tag')}</div>`;
                 }
             }
             if (sData.phrase_list) {
-                const phrases = sData.phrase_list.flat().map(p => p.wd);
+                const phrases = sData.phrase_list.flat().map(p => p?.wd).filter(Boolean);
                 if (phrases.length) {
-                    tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">Phrases:</span>${phrases.map(p => `<span class="tag syn-tag" data-word="${p}" tabindex="0">${p}</span>`).join('')}</div>`;
+                    tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">phrases:</span>${renderTags(phrases, 'syn-tag')}</div>`;
                 }
             }
             if (sData.near_list) {
-                const nears = sData.near_list.flat().map(n => n.wd);
+                const nears = sData.near_list.flat().map(n => n?.wd).filter(Boolean);
                 if (nears.length) {
-                    tagsHtml += `<div class="tags-row antonyms-container"><span class="tags-label">Near:</span>${nears.map(n => `<span class="tag ant-tag" data-word="${n}" tabindex="0">${n}</span>`).join('')}</div>`;
+                    tagsHtml += `<div class="tags-row antonyms-container"><span class="tags-label">near:</span>${renderTags(nears, 'ant-tag')}</div>`;
                 }
             }
             if (sData.ant_list) {
-                const ants = sData.ant_list.flat().map(a => a.wd);
+                const ants = sData.ant_list.flat().map(a => a?.wd).filter(Boolean);
                 if (ants.length) {
-                    tagsHtml += `<div class="tags-row antonyms-container"><span class="tags-label">Opposite:</span>${ants.map(a => `<span class="tag ant-tag" data-word="${a}" tabindex="0">${a}</span>`).join('')}</div>`;
+                    tagsHtml += `<div class="tags-row antonyms-container"><span class="tags-label">opposite:</span>${renderTags(ants, 'ant-tag')}</div>`;
                 }
             }
         }

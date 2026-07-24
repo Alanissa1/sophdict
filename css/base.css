@@ -5,7 +5,7 @@
     --text-main: #202124;
     --text-sub: #70757a;
     --border-color: #dfe1e5;
-    --shadow: 0 1px 6px rgba(32,33,36,.28);
+    --shadow: 0 1px 6px rgba(32, 33, 36, .28);
     --header-bg: #ffffff;
     --dim-bg: rgba(0, 0, 0, 0.75);
     --font-scale: 1.0;
@@ -18,9 +18,6 @@
     caret-color: transparent;
 }
 
-*:focus {
-    outline: none !important;
-}
 
 html {
     font-size: 16px;
@@ -41,15 +38,21 @@ body {
     background-attachment: fixed;
 }
 
-input, textarea {
+input,
+textarea {
     cursor: text;
     caret-color: auto;
     flex-grow: 1;
 }
 
-.header-logo{
-width: 150px;
-margin: 0 0 0 4px;
+.header-logo {
+    width: 150px;
+    margin: 0 0 0 4px;
+}
+
+.academic-list-trigger {
+    background: #fff;
+    transition: filter 0.2s, background-color 0.2s;
 }
 
 /* HEADER: Scrolls with page, No Scale */
@@ -59,55 +62,81 @@ margin: 0 0 0 4px;
     color: var(--text-main);
     padding: 0 0 10px 0;
     padding-top: max(env(safe-area-inset-top), 10px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    position: relative; /* Changed from sticky to relative to scroll away */
-    z-index: 2000; /* Higher than results container to keep suggestions on top */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    /* Changed from sticky to relative to scroll away */
+    z-index: 2000;
+    /* Higher than results container to keep suggestions on top */
     display: flex;
     flex-direction: column;
     align-items: center;
     font-size: 16px !important;
 }
 
-#appHeader * { font-size: 16px !important; }
-#appHeader .icon-btn {
-
+#appHeader * {
+    font-size: 16px !important;
 }
 
+#appHeader .icon-btn {}
+
 /* SCALABLE CONTENT CONTAINERS */
-main, #microWindow, #pinnedPanel, #results-container, #content-body {
+main,
+#microWindow,
+#pinnedPanel,
+#results-container,
+#content-body {
     font-size: calc(16px * var(--font-scale)) !important;
 }
 
-main, #microWindow, #pinnedPanel, #results-container, #content-body {
+main,
+#microWindow,
+#pinnedPanel,
+#results-container,
+#content-body {
     font-size: calc(16px * var(--font-scale)) !important;
 }
 
 /* PROPORTIONAL HIERARCHY (em scales with container) */
 
 /* Words & Titles */
-.word-title { font-size: 2.0em !important; font-weight: bold; }
+.word-title {
+    font-size: 2.0em !important;
+    font-weight: bold;
+}
 
 .micro-title {
-font-size: 1.8em !important; font-weight: bold;
+    font-size: 1.8em !important;
+    font-weight: bold;
 }
+
 /* Pronunciation */
-.pronunciation, .micro-pronunciation { font-size: 1.1em !important; margin: -2px 0 0.6em 0;}
+.pronunciation,
+.micro-pronunciation {
+    font-size: 1.1em !important;
+    margin: -2px 0 0.6em 0;
+}
 
 
 
 /* Context/Parts of Speech */
-.context-type, .part-of-speech {
-    font-size: 1.05em !important;
+.context-type,
+.part-of-speech {
+    font-size: 1em !important;
 }
 
 /* Definitions */
-.def-text, .definition-text, .meaning, .definition {
-    font-size: 1.05em !important;
+.def-text,
+.definition-text,
+.meaning,
+.definition {
+    font-size: 1em !important;
 }
 
 /* Examples - Simple left-aligned style, scales proportionally */
-.example, .example-text, .usage-example {
-    font-size: 1.04em !important;
+.example,
+.example-text,
+.usage-example {
+    font-size: 1em !important;
     font-style: italic;
     color: var(--text-sub);
 
@@ -117,15 +146,108 @@ font-size: 1.8em !important; font-weight: bold;
 }
 
 /* Tags & Labels - Scale tags, but keep label fixed and stable */
-.tag, .syn-tag, .ant-tag, .tags-label{
+.tag,
+.syn-tag,
+.ant-tag,
+.tags-label {
     font-size: 1em !important;
 }
 
 
+body:not(.home-state) .antonyms-container .tag,
+body:not(.home-state) .ant-tag {
+    color: #910c0c !important;
+}
+
+body.dark-mode:not(.home-state) .tag {
+    background: #1e1e1e !important;
+    border-color: #444 !important;
+}
+
+body:not(.home-state) .academic-tag-label {
+    font-weight:bold !important;
+    color: var(--text-main) !important;
+    align-items: center !important;
+    text-transform: none !important;
+}
+
+body:not(.home-state) .tags-label {
+    color: var(--text-main) !important;
+    align-items: center !important;
+    text-transform: capitalize !important;
+}
+
+body.dark-mode:not(.home-state) .academic-tag-label {
+}
+
+/* Reset specific background colors for tags on search page to force standard style */
+body:not(.home-state) .tag.ielts-match {
+    background: white !important;
+    color: #124ea1 !important;
+    border-color: #c7c7c7 !important;
+    font-weight: normal !important;
+    font-family: inherit !important;
+}
+
+body.dark-mode:not(.home-state) .tag.ielts-match {
+    color: #99bbe9 !important;
+    background: #1e1e1e !important;
+    border: 1px solid #636363 !important;
+}
+
+/* Maintain red color for opposite/near tags even if they have match classes */
+body:not(.home-state) .antonyms-container .tag.ielts-match,
+body:not(.home-state) .ant-tag {
+color: #cb8686 !important;
+}
+
+
+
+
+/* Tag in Header */
+.ielts-header-tag {
+    background-color: #e1364f;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 1em !important;
+    font-weight: bold;
+    margin-left: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgb(255 106 106 / 84%);
+    display: inline-block;
+    vertical-align: middle;
+    font-family: Arial, Helvetica, sans-serif !important;
+}
+
+body.dark-mode .ielts-header-tag {
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.academic-tag-label {
+    font-size: 1em;
+    margin-right: 4px;
+    font-weight: bold;
+    color: #e1364f;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
 /* SETTINGS MODAL: Fixed, No Scale */
-#text-scale-control, .full-lang-list { font-size: 16px !important; }
-#text-scale-control * { font-size: 14px; }
-#text-scale-control .scale-label { font-size: 18px !important; }
+#text-scale-control,
+.full-lang-list {
+    font-size: 16px !important;
+}
+
+#text-scale-control * {
+    font-size: 14px;
+}
+
+#text-scale-control .scale-label {
+    font-size: 18px !important;
+}
 
 /* Word Origin - Matches Example size and color, no italics */
 .origin-card .definition {
@@ -134,9 +256,9 @@ font-size: 1.8em !important; font-weight: bold;
     color: var(--text-sub) !important;
 }
 
-.origin-card .context-type { 
+.origin-card .context-type {
     color: black;
-    font-size: 1.3em !important;
+    font-size: 1em !important;
 }
 
 body.modal-open {
@@ -160,19 +282,26 @@ main {
     border: 1px solid var(--border-color);
     color: var(--text-main);
 }
-#wordInput::placeholder { color: var(--text-sub); }
+
+#wordInput::placeholder {
+    color: var(--text-sub);
+}
 
 .loading-overlay {
     display: none;
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(255,255,255,0.95);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
     z-index: 3000;
     justify-content: center;
     align-items: center;
     font-size: 20px;
     flex-direction: column;
 }
+
 .spinner {
     width: 60px;
     height: 60px;
@@ -181,11 +310,24 @@ main {
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
 .backdrop {
     display: none;
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: var(--dim-bg);
     z-index: 2500;
 }
@@ -193,7 +335,10 @@ main {
 #scaleDimmer {
     display: none;
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: rgba(0, 0, 0, 0.2);
     z-index: 2499;
 }
@@ -218,13 +363,13 @@ body.dark-mode footer {
     background-color: #1e1e1e !important;
 }
 
-.rights{
- margin: 0;
- color: var(--text-sub);
- font-size: 13px;
+.rights {
+    margin: 0;
+    color: var(--text-sub);
+    font-size: 13px;
 }
 
-.powered{
+.powered {
     margin: 0;
     color: var(--text-sub);
     font-size: 13px;
@@ -323,11 +468,12 @@ body.home-state #appHeader {
 }
 
 body.home-state main {
-    background: transparent; /* Match background on home screen */
+    background: transparent;
+    /* Match background on home screen */
 }
 
 body.home-state .search-container {
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-color);
     width: 95%;
     max-width: 800px;
@@ -336,7 +482,7 @@ body.home-state .search-container {
 
 body.home-state .search-container:hover,
 body.home-state .search-container:focus-within {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .home-lists-container {
@@ -404,12 +550,12 @@ body.home-state .search-container:focus-within {
 }
 
 .home-list-remove-btn:hover {
-    background: rgba(0,0,0,0.1);
+    background: rgba(0, 0, 0, 0.1);
     opacity: 1;
 }
 
 body.dark-mode .home-list-remove-btn:hover {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* WIDE SCREENS: Logo on the left */
@@ -434,3 +580,19 @@ body.dark-mode .home-list-remove-btn:hover {
         min-width: 450px;
     }
 }
+
+body.dark-mode #ss {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: #3d3d3d;
+    cursor: pointer;
+    color: white;
+}
+
+#ss {padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: #cccccc;
+    cursor: pointer;
+    color: black;}

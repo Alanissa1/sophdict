@@ -2,6 +2,9 @@ window.ModalManager = {
     win: null,
     dim: null,
     content: null,
+    settings: {
+        slidingEnabled: false
+    },
 
     lastTriggerElement: null,
 
@@ -10,10 +13,38 @@ window.ModalManager = {
         this.dim = document.getElementById('microDimmer');
         this.content = document.getElementById('microContent');
 
+        const saved = localStorage.getItem('modalSettings');
+        if (saved) {
+            try {
+                this.settings = { ...this.settings, ...JSON.parse(saved) };
+            } catch (e) {}
+        }
+        this.applySettings();
+
         const closeBtn = document.querySelector('.micro-close');
         if (closeBtn) {
             closeBtn.onclick = () => this.hide();
         }
+    },
+
+    applySettings() {
+        if (!this.win) this.win = document.getElementById('microWindow');
+        if (!this.win) return;
+
+        if (this.settings.slidingEnabled) {
+            this.win.classList.add('sliding-enabled');
+            this.win.style.display = 'flex'; // Needed for transition to work from hidden state
+        } else {
+            this.win.classList.remove('sliding-enabled');
+            this.win.classList.remove('show');
+            this.win.style.display = 'none';
+        }
+    },
+
+    toggleSliding(enabled) {
+        this.settings.slidingEnabled = enabled;
+        localStorage.setItem('modalSettings', JSON.stringify(this.settings));
+        this.applySettings();
     },
 
     async show(word, targetContext = null, isHistoryNav = false) {
@@ -26,7 +57,38 @@ window.ModalManager = {
 
         if (window.updateMetadata) window.updateMetadata(word);
 
-        if (this.win) this.win.style.display = 'flex';
+        // Pre-render header with word to ensure it shows even if offline/loading
+        const headerTop = document.querySelector('.micro-header-top');
+        if (headerTop) {
+            headerTop.innerHTML = `
+                <div class="micro-pron-row" style="flex-shrink: 0; display: flex; align-items: center;"></div>
+                <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; overflow-x: auto; overflow-y: hidden;">
+                    <div style="display: flex; width: max-content;">
+                        <h2 class="micro-title" style="margin:0; line-height:1.2;">${word}</h2>
+                    </div>
+                    <div style="display: flex; gap: 5px; font-size: 0.9em; width: max-content;">
+                        <span class="micro-pronunciation" style="line-height:1.2;">//</span>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap: 8px; flex-shrink: 0; margin-left: 10px;">
+                    <div id="microPin"></div>
+                </div>
+            `;
+            const pronRow = headerTop.querySelector('.micro-pron-row');
+            if (pronRow && window.TTSManager) pronRow.appendChild(TTSManager.createButton(word));
+        }
+
+        const oldTitleRow = document.querySelector('.micro-title-row');
+        if (oldTitleRow) oldTitleRow.style.display = 'none';
+        const mInfo = document.getElementById('microInfo');
+        if (mInfo) mInfo.style.display = 'none';
+
+        if (this.settings.slidingEnabled) {
+            this.win.classList.add('show');
+        } else {
+            if (this.win) this.win.style.display = 'flex';
+        }
+
         UIUtils.updateSharedDimmer();
         if (this.dim) UIUtils.setupQuickClose(this.dim);
 
@@ -37,7 +99,12 @@ window.ModalManager = {
     },
 
     hide(fromHistory = false) {
-        if (this.win) this.win.style.display = 'none';
+        if (this.settings.slidingEnabled) {
+            this.win.classList.remove('show');
+        } else {
+            if (this.win) this.win.style.display = 'none';
+        }
+
         UIUtils.updateSharedDimmer();
 
         if (window.StatsManager) window.StatsManager.recordTagClose();

@@ -31,7 +31,10 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
             if (window.HistoryManager && !isHistoryNav) window.HistoryManager.addToRAM(word);
             return true;
         } else if (!isSilent) {
-            alert('Word not found.');
+            const sc = document.querySelector('.search-container'), h = document.getElementById('appHeader');
+            if (sc && h && sc.parentElement !== h) h.appendChild(sc);
+            document.body.classList.remove('home-state');
+            await UIEntry.render({ ...(data || {}), word: word });
             UIUtils.updateSharedDimmer();
             if (isHistoryNav) window.AppClearSearch();
         } else if (isSilent && !isHistoryNav) {
@@ -79,7 +82,13 @@ window.AppClearSearch = (skipPush = false) => {
     const wordInput = document.getElementById('wordInput'), rc = document.getElementById('results-container'), mw = document.getElementById('microWindow'), pp = document.getElementById('pinnedPanel'), md = document.getElementById('microDimmer'), sc = document.querySelector('.search-container');
     if (wordInput) wordInput.value = '';
     if (rc) {
-        rc.innerHTML = `<div class="welcome-screen"><img src="SophDict.png" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">Search for definitions, synonyms, and more</div><div id="home-lists-root" class="home-lists-container"></div></div>`;
+        rc.innerHTML = `
+            <div style="width: 100%; display: flex; justify-content: flex-start; gap: 10px; padding: 15px 0 0 0; flex-wrap: wrap;">
+                <button id="academic-list-btn" class="academic-list-trigger" onclick="AcademicList.open('academic')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #e1364f; background: #fff; color: #e1364f; font-weight: bold; cursor: pointer; font-size: 13px;">570 Academic Words</button>
+            </div>
+            <div class="welcome-screen" style="padding-top: 5vh;">
+                <img src="SophDict.png" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">Search for definitions, synonyms, and more</div><div id="home-lists-root" class="home-lists-container"></div>
+            </div>`;
         const ws = rc.querySelector('.welcome-screen'), wt = rc.querySelector('.welcome-text');
         if (ws && sc && wt) ws.insertBefore(sc, wt);
         window.renderHomeLists();
@@ -200,4 +209,7 @@ window.AppClearSearch = (skipPush = false) => {
     if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
         window.AppClearSearch();
     }
+
+    // Always init AcademicList so it's ready for clicks from home and handles routing
+    if (window.AcademicList) AcademicList.init();
 })();

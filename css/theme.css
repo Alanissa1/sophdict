@@ -2,7 +2,7 @@
 body.dark-mode {
     --bg-color: #0b0b0b;
     --card-bg: #1e1e1e;
-    --text-main: #e8eaed;
+    --text-main: #fff;
     --text-sub: #bdc1c6;
     --border-color: #3c4043;
     --header-bg: #1f2937;
@@ -35,7 +35,8 @@ body.dark-mode #text-scale-control svg:not(.ignore-dark-override) path {
 
 body.dark-mode svg:not(.ignore-dark-override),
 body.dark-mode svg:not(.ignore-dark-override) path {
-    fill: #bbbbbb; /* Removed !important to allow hover overrides */
+    fill: #bbbbbb;
+    /* Removed !important to allow hover overrides */
 }
 
 body.dark-mode .icon-btn:hover svg,
@@ -71,7 +72,8 @@ body.dark-mode .tts-btn svg,
 body.dark-mode .tts-btn svg path,
 body.dark-mode .tts-inline-target svg,
 body.dark-mode .tts-inline-target svg path {
-    fill: #798ea1; /* Removed !important to allow hover overrides */
+    fill: #798ea1;
+    /* Removed !important to allow hover overrides */
 }
 
 body.dark-mode .tts-btn:hover svg,
@@ -84,25 +86,24 @@ body.dark-mode .tts-btn.speaking svg path {
 }
 
 body.dark-mode .tts-btn:hover,
-body.dark-mode .tts-btn.nav-focus {
-}
+body.dark-mode .tts-btn.nav-focus {}
 
 /* 4. Search Container: Dark background ONLY in dark mode */
 body.dark-mode .search-container {
     background: #1e1e1e;
     color: white;
     border-color: #3c4043;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 body.dark-mode .search-container:focus-within {
     background: var(--bg-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
     border-color: #8ab4f8;
 }
 
 body.dark-mode .example {
-    color: #999999;
+    color: #b1b1b1;
 }
 
 body.dark-mode #wordInput {
@@ -148,7 +149,7 @@ body.dark-mode .micro-header {
 body.dark-mode .view-full-btn {
     background: #7ba8e3 !important;
     color: #2d2d2d !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 /* 8. Theme Selection Buttons */
@@ -239,7 +240,8 @@ body.dark-mode .history-word-count {
 body.dark-mode .history-list-item div[style*="color:#888"],
 body.dark-mode .history-list-item div[style*="color:#666"],
 body.dark-mode .clickable-stat div[style*="color:#666"] {
-    color: #a9a9a9 !important; /* Enhanced contrast for small gray text */
+    color: #a9a9a9 !important;
+    /* Enhanced contrast for small gray text */
 }
 
 /* 13. Stats Icons Dark Mode */
@@ -292,6 +294,11 @@ body.dark-mode .icon-btn:hover {
 }
 
 
+body.dark-mode .tags-label,
+body.dark-mode .academic-tag-label {
+    color: #fff !important;
+}
+
 /* 10. History List & Details */
 body.dark-mode #historyDetailPanel {
     background-color: #1e1e1e !important;
@@ -304,9 +311,7 @@ body.dark-mode .history-item {
     border-bottom: 1px solid #3c4043;
 }
 
-body.dark-mode .history-item:hover {
-    background-color: #333333 !important;
-}
+
 
 body.dark-mode .history-header {
     background-color: #2d3748 !important;
@@ -331,10 +336,19 @@ body.dark-mode ddd {
     box-shadow: none !important;
 }
 
-body.dark-mode.home-state main {
-    background: #000000b0 !important;
+
+body.dark-mode .ttdd svg:not(.ignore-dark-override) path {
+    fill: unset;
 }
 
-body.dark-mode .ttdd svg:not(.ignore-dark-override) path{
-fill:unset;
+body.dark-mode .academic-list-trigger {
+    filter: brightness(1.2) saturate(1.2);
+    text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+body.dark-mode button#academic-list-btn {
+    background-color: #e1364fb5 !important;
+    border: 1px solid #e1364fb5 !important;
+    color: #ffffff !important;
 }

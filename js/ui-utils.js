@@ -82,7 +82,7 @@ window.UIUtils = {
                                 const sData = sen[1];
                                 if (sData) {
                                     ['syn_list', 'ant_list', 'rel_list', 'near_list', 'sim_list', 'opp_list'].forEach(k => {
-                                        if (sData[k]) sData[k].flat().forEach(sw => words.add(sw.wd));
+                                        if (sData[k]) sData[k].flat().forEach(sw => { if (sw?.wd) words.add(sw.wd); });
                                     });
                                 }
                             });
@@ -190,12 +190,40 @@ window.UIUtils = {
         }
     },
 
+    getTagClass(word) {
+        if (!word) return "";
+        const clean = word.toLowerCase().trim();
+        const classes = [];
+        if (window.IELTS_WORDS && window.IELTS_WORDS.has(clean)) {
+            classes.push("ielts-match");
+        }
+        if (window.SAT_WORDS && window.SAT_WORDS.has(clean)) {
+            classes.push("sat-match");
+        }
+        if (window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean)) {
+            classes.push("ielts-match");
+        }
+        if (window.PRE_A1_WORDS && window.PRE_A1_WORDS.has(clean)) {
+            classes.push("pre-a1-match");
+        }
+        return classes.join(" ");
+    },
+
     updateSharedDimmer() {
         const dimmer = document.getElementById('microDimmer');
         const loader = document.getElementById('loader');
+        const microWin = document.getElementById('microWindow');
         if (!dimmer) return;
 
-        const isModalOpen = document.getElementById('microWindow')?.style.display === 'flex';
+        let isModalOpen = false;
+        if (microWin) {
+            if (microWin.classList.contains('sliding-enabled')) {
+                isModalOpen = microWin.classList.contains('show');
+            } else {
+                isModalOpen = microWin.style.display === 'flex';
+            }
+        }
+
         const isStatsOpen = document.getElementById('statsPanel')?.style.display === 'flex';
         const isPinnedOpen = document.getElementById('pinnedPanel')?.style.display === 'block';
 

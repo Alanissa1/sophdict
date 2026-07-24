@@ -1,11 +1,11 @@
-.license-modal {
+div#licenseModal {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0.9);
     background: var(--card-bg, #ffffff);
     color: var(--text-main, #1f1f1f);
-    padding: 24px;
+    padding: 0 !important;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     z-index: 3000;
@@ -15,9 +15,13 @@
     visibility: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid var(--border-color, #e0e0e0);
+    max-height: 70%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.license-modal.active {
+div#licenseModal.active {
     opacity: 1;
     visibility: visible;
     transform: translate(-50%, -50%) scale(1);
@@ -26,20 +30,25 @@
 .license-title {
     font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: 16px;
+    padding: 20px 20px 0 20px;
     border-bottom: 2px solid var(--accent, #1a73e8);
     display: inline-block;
+    flex-shrink: 0;
 }
 
-.license-text {
-    font-size: 0.95rem;
+div#licenseTextContent {
     line-height: 1.6;
-    margin-bottom: 20px;
     color: var(--text-main);
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 0 20px;
 }
 
 .license-footer {
     text-align: right;
+    padding: 0 20px 20px 20px;
+    margin-top: 20px;
+    flex-shrink: 0;
 }
 
 .license-close-btn {
@@ -53,9 +62,6 @@
     transition: opacity 0.2s;
 }
 
-.license-close-btn:hover {
-    opacity: 0.9;
-}
 
 .license-trigger {
     cursor: pointer;

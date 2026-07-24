@@ -21,7 +21,7 @@ window.PreFetcher = {
     addToQueue(words) {
         if (!Array.isArray(words)) return;
 
-        const limit = window.CONFIG?.PREFETCH_LIMIT || 10;
+        const limit = window.CONFIG?.PREFETCH_LIMIT || 1;
         if (this.totalFetched >= limit) return;
 
         let addedCount = 0;
@@ -48,7 +48,7 @@ window.PreFetcher = {
     },
 
     async runWorker(currentSession) {
-        const limit = window.CONFIG?.PREFETCH_LIMIT || 10;
+        const limit = window.CONFIG?.PREFETCH_LIMIT || 1;
 
         while (this.queue.size > 0 && this.sessionID === currentSession) {
             if (this.totalFetched >= limit && !this.isBatchActive) {

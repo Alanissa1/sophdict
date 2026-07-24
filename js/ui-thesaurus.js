@@ -10,11 +10,11 @@ window.UIThesaurus = {
 
         // 1. Group existing thesaurus entries
         entries.forEach(entry => {
-            const entryId = entry.meta?.id?.split(':')[0].toLowerCase() || "";
-            const stems = entry.meta?.stems?.map(s => s.toLowerCase()) || [];
+            const entryId = (entry.meta?.id || "").split(':')[0].toLowerCase();
+            const stems = entry.meta?.stems?.map(s => s?.toLowerCase()) || [];
 
             // Allow if entry ID or stems contain the search term
-            if (entryId && !entryId.includes(searchTerm) && !stems.some(s => s.includes(searchTerm))) return;
+            if (entryId && !entryId.includes(searchTerm) && !stems.some(s => s?.includes(searchTerm))) return;
 
             let type = entry.fl || "other";
 
@@ -34,9 +34,9 @@ window.UIThesaurus = {
             dictionary.forEach(dictEntry => {
                 const type = dictEntry.fl;
                 if (type && type !== 'other' && !existingTypes.has(type.toLowerCase())) {
-                    const entryId = dictEntry.meta?.id?.split(':')[0].toLowerCase() || "";
-                    const stems = dictEntry.meta?.stems?.map(s => s.toLowerCase()) || [];
-                    if (entryId && (entryId.includes(searchTerm) || stems.some(s => s.includes(searchTerm)))) {
+                    const entryId = (dictEntry.meta?.id || "").split(':')[0].toLowerCase();
+                    const stems = dictEntry.meta?.stems?.map(s => s?.toLowerCase()) || [];
+                    if (entryId && (entryId.includes(searchTerm) || stems.some(s => s?.includes(searchTerm)))) {
                         if (!grouped[type]) grouped[type] = [];
                         grouped[type].push(dictEntry);
                         existingTypes.add(type.toLowerCase());
@@ -82,9 +82,32 @@ window.UIThesaurus = {
                             }).join('') : "";
 
                             const getTagData = (list) => list?.flat().map(s => {
-                                const label = s.wsls ? ` <small style="opacity:0.6; font-style:italic;">(${s.wsls.join(', ')})</small>` : "";
-                                return { wd: s.wd, html: `${s.wd}${label}` };
-                            }) || [];
+                                if (!s) return null;
+                                const labels = (s.wsls || []).map(l => l?.toLowerCase()).filter(Boolean);
+                                const labelHtml = labels.length ? ` <small style="opacity:0.6; font-style:italic;">(${s.wsls.join(', ')})</small>` : "";
+                                return { wd: s.wd, html: `${s.wd}${labelHtml}` };
+                            }).filter(Boolean) || [];
+
+                            const renderTags = (list, tagClass) => {
+                                let res = "";
+                                const academic = [];
+                                const others = [];
+
+                                list.forEach(item => {
+                                    const clean = item.wd.toLowerCase().trim();
+                                    const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean);
+
+                                    if (isAcademic) academic.push(item);
+                                    else others.push(item);
+                                });
+
+                                if (academic.length) {
+                                    res += academic.map(s => `<span class="tag ${tagClass} ielts-match" data-word="${s.wd}" tabindex="0">${s.html}</span>`).join('');
+                                    res += `<span class="academic-tag-label">&lt;Academic</span>`;
+                                }
+                                res += others.map(s => `<span class="tag ${tagClass}" data-word="${s.wd}" tabindex="0">${s.html}</span>`).join('');
+                                return res;
+                            };
 
                             const syns = getTagData(sData.syn_list);
                             const sims = getTagData(sData.sim_list);
@@ -92,10 +115,11 @@ window.UIThesaurus = {
                             const nears = getTagData(sData.near_list);
                             const ants = getTagData(sData.ant_list);
                             const opps = getTagData(sData.opp_list);
-                            const phrases = sData.phrase_list?.flat().map(p => ({ wd: p.wd, html: p.wd })) || [];
+                            const phrases = sData.phrase_list?.flat().map(p => (p?.wd ? { wd: p.wd, html: p.wd } : null)).filter(Boolean) || [];
 
                             const mergedSimilar = [...syns, ...sims, ...phrases];
                             const mergedOpposite = [...ants, ...opps];
+
                             const hasTags = mergedSimilar.length || rels.length || mergedOpposite.length || nears.length;
 
                             contextHtml += `
@@ -108,10 +132,10 @@ window.UIThesaurus = {
                                             ${hasTags ? `
                                             <div class="tags-section expandable-wrapper">
                                                 <div class="tags-rows-container">
-                                                    ${mergedSimilar.length ? `<div class="tags-row Similar-row"><span class="tags-label">Similar:</span>${mergedSimilar.map(s => `<span class="tag syn-tag" data-word="${s.wd}" tabindex="0">${s.html}</span>`).join('')}</div>` : ''}
-                                                    ${rels.length ? `<div class="tags-row"><span class="tags-label">Related:</span>${rels.map(r => `<span class="tag syn-tag" data-word="${r.wd}" tabindex="0">${r.html}</span>`).join('')}</div>` : ''}
-                                                    ${mergedOpposite.length ? `<div class="tags-row"><span class="tags-label">Opposite:</span>${mergedOpposite.map(a => `<span class="tag ant-tag" data-word="${a.wd}" tabindex="0">${a.html}</span>`).join('')}</div>` : ''}
-                                                    ${nears.length ? `<div class="tags-row"><span class="tags-label">Near:</span>${nears.map(n => `<span class="tag ant-tag" data-word="${n.wd}" tabindex="0">${n.html}</span>`).join('')}</div>` : ''}
+                                                    ${mergedSimilar.length ? `<div class="tags-row Similar-row"><span class="tags-label">similar:</span>${renderTags(mergedSimilar, 'syn-tag')}</div>` : ''}
+                                                    ${rels.length ? `<div class="tags-row"><span class="tags-label">related:</span>${renderTags(rels, 'syn-tag')}</div>` : ''}
+                                                    ${mergedOpposite.length ? `<div class="tags-row"><span class="tags-label">opposite:</span>${renderTags(mergedOpposite, 'ant-tag')}</div>` : ''}
+                                                    ${nears.length ? `<div class="tags-row"><span class="tags-label">near:</span>${renderTags(nears, 'ant-tag')}</div>` : ''}
                                                     <button class="tag-expand-btn" onclick="UIThesaurus.toggleExpand(this)" aria-label="Expand tags">
                                                         <svg class="ignore-dark-override" xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="currentColor"><path d="m480-347.33 175.33-175.34-47.66-46.66L480-441.67 352.33-569.33l-47.66 46.66L480-347.33ZM480-80q-82.33 0-155.33-31.5-73-31.5-127.34-85.83Q143-251.67 111.5-324.67T80-480q0-83 31.5-156t85.83-127q54.34-54 127.34-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82.33-31.5 155.33-31.5 73-85.5 127.34Q709-143 636-111.5T480-80Zm0-66.67q139.33 0 236.33-97.33t97-236q0-139.33-97-236.33t-236.33-97q-138.67 0-236 97-97.33 97-97.33 236.33 0 138.67 97.33 236 97.33 97.33 236 97.33ZM480-480Z"/></svg>
                                                     </button>
@@ -135,7 +159,7 @@ window.UIThesaurus = {
             html += `<div class="context-card suggestions-card">
                 <div class="context-type">Related</div>
                 <div class="tags-row" style="padding: 10px 0;">
-                    ${suggestions.map(s => `<span class="tag syn-tag" data-word="${s}" tabindex="0">${s}</span>`).join('')}
+                    ${suggestions.map(s => `<span class="tag syn-tag ${UIUtils.getTagClass(s)}" data-word="${s}" tabindex="0">${s}</span>`).join('')}
                 </div>
             </div>`;
         }

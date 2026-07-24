@@ -5,12 +5,16 @@ window.LicenseManager = {
         modal.className = 'license-modal';
         modal.innerHTML = `
             <div class="license-title">License Agreement</div>
-            <div class="license-text">
+            <div id="licenseTextContent" class="license-text">
                 <strong>Copyright (c) 2026 SophDict</strong><br><br>
                 All Rights Reserved.<br><br>
                 This software and all associated files are the exclusive property of SophDict.<br><br>
                 Unauthorized copying, distribution, modification, public display, or performance of this software, via any medium, is strictly prohibited.<br><br>
-                This code is provided for private use only. No part of this project may be reused, republished, or integrated into other software without the express written permission of the copyright holder.
+                This code is provided for private use only. No part of this project may be reused, republished, or integrated into other software without the express written permission of the copyright holder.<br><br>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">
+                <strong>Word List Attributions:</strong><br><br>
+                Word lists utilized in this application are sourced and curated from educational resources including:<br>
+                • Academic Word List: 570 Academic Words (A. Coxhead)
             </div>
             <div class="license-footer">
                 <button class="license-close-btn" onclick="LicenseManager.hide()">Close</button>

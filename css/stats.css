@@ -5,16 +5,17 @@
     left: 50%;
     transform: translateX(-50%);
     top: 18%;
-max-height:70%;
+    max-height:70%;
     width: 94%;
     max-width: 500px;
     background: white;
     border-radius: 20px;
-    padding: 24px;
+    padding: 0 !important;
     z-index: 2501;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
     flex-direction: column;
     align-items: center;
+    overflow: hidden;
 }
 
 .stats-header {
@@ -22,7 +23,9 @@ max-height:70%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 24px 24px 0 24px;
     margin-bottom: 20px;
+    box-sizing: border-box;
 }
 
 .stats-title {
@@ -182,9 +185,9 @@ max-height:70%;
 }
 
 .reset-stats-btn {
-    margin-top: 25px;
+    margin: 20px 24px 24px 24px;
     padding: 10px;
-    width: 100%;
+    width: calc(100% - 48px);
     background: #f5526e;
     border: 1px solid #ff4b6b;
     color: #5b0010;
@@ -192,6 +195,7 @@ max-height:70%;
     font-size: 14px;
     cursor: pointer;
     transition: background 0.2s;
+    flex-shrink: 0;
 }
 
 .reset-stats-btn:active {

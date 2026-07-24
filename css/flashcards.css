@@ -190,7 +190,11 @@
 
 .tag-expand-btn svg, .tag-expand-btn svg path {
     fill: #858585bd !important;
+}
 
+/* Hide the expand button if there is only one tags-row */
+.tags-section.expandable-wrapper:has(.tags-row:only-of-type) .tag-expand-btn {
+    display: none !important;
 }
 
 .expandable-wrapper:not(.expanded) .tag-expand-btn {

@@ -5,7 +5,30 @@ window.UIEntry = {
             if (!targetContainer) return;
 
             if (data.error) {
-                targetContainer.innerHTML = `<div style="padding:40px; text-align:center;">Word not found</div>`;
+                const word = data.word || "";
+                if (containerId === 'results-container') {
+                    targetContainer.innerHTML = `
+                        <div class="word-header">
+                            <div class="title-row">
+                                <div class="word-info">
+                                    <div style="display: flex; align-items: center; ">
+                                        <div class="pron-row"></div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <h1 class="word-title">${word}</h1>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding:40px; text-align:center; color:var(--text-sub);">
+                            ${data.error === 'Network error' ? 'Network error. Please check your connection.' : 'Word not found in dictionary.'}
+                        </div>
+                    `;
+                    const pronRow = targetContainer.querySelector('.pron-row');
+                    if (pronRow && word) pronRow.appendChild(TTSManager.createButton(word));
+                } else {
+                    targetContainer.innerHTML = `<div style="padding:40px; text-align:center;">Word not found</div>`;
+                }
                 return;
             }
 
@@ -14,6 +37,7 @@ window.UIEntry = {
             const mainEntry = dictArr.find(e => e.meta?.id?.split(':')[0] === word) || dictArr[0];
             const pronunciation = mainEntry?.hwi?.prs?.[0]?.mw || '';
             const isPinned = await DBManager.isPinned(word);
+            const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(word.toLowerCase());
 
             if (containerId === 'results-container') {
                 targetContainer.innerHTML = `
@@ -23,7 +47,10 @@ window.UIEntry = {
                                 <div style="display: flex; align-items: center; ">
                                     <div class="pron-row"></div>
                                     <div style="display: flex; flex-direction: column;">
-                                        <h1 class="word-title">${word}</h1>
+                                        <div style="display: flex; align-items: center;">
+                                            <h1 class="word-title">${word}</h1>
+                                            ${isAcademic ? `<span class="ielts-header-tag header-tag-academic" style="background-color:#e1364f; box-shadow: 0 2px 4px rgba(225, 54, 79, 0.3);">Academic</span>` : ''}
+                                        </div>
                                         <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px;">
                                             <span class="pronunciation">/${pronunciation}/</span>
                                             ${this.renderHeaderVariants(mainEntry)}
@@ -34,7 +61,7 @@ window.UIEntry = {
                             </div>
                             <div style="display:flex; flex-direction:column; align-items:flex-end;">
                                 <div id="offline-status-container" style="display:flex; align-items:baseline; gap:5px;">
-                                    <div id="page-fetch-status" class="fetch-progress-meter" style="font-weight: bold; font-size: 14px;"></div>
+                                    <div id="page-fetch-status" class="fetch-progress-meter" style="font-weight: bold; font-size: 10px; margin: -10px 0 -10px 0"></div>
                                     <span style="font-size:12px; color:var(--text-sub);">words offline</span>
                                 </div>
                                 <div style="display:flex; align-items:center;">
@@ -119,7 +146,7 @@ window.UIEntry = {
                         mPin.setAttribute('tabindex', '0');
                         mPin.style.color = isPinned ? '#ff4b6b' : '#8b8b8b';
                         const heartEmpty = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
-                        const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>`;
+                        const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
                         mPin.innerHTML = isPinned ? heartFilled : heartEmpty;
                         mPin.onclick = async () => {
                             const active = await PinManager.togglePin(word);

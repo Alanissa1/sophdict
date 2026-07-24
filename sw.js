@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sophdict-v39';
+const CACHE_NAME = 'sophdict-v45';
 
 // Essential files for the app to function
 const REQUIRED_ASSETS = [
@@ -24,6 +24,13 @@ const REQUIRED_ASSETS = [
   './css/translation.css',
   './css/wallpaper.css',
   './js/config.js',
+  './js/ielts-words.js',
+  './js/sat.js',
+  './js/pre-a1-words.js',
+  './js/a2-words.js',
+  './js/b1.js',
+  './js/b2.js',
+  './js/academic-list.js',
   './js/db-manager.js',
   './js/tts-manager.js',
   './js/pin-manager.js',
@@ -53,7 +60,6 @@ const REQUIRED_ASSETS = [
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.allSettled(
@@ -76,35 +82,39 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Network First strategy for everything except API calls and translation
+// Cache First strategy for everything except API calls and translation
 self.addEventListener('fetch', (event) => {
-  // Only cache GET requests
+  // Only handle GET requests
   if (event.request.method !== 'GET') return;
+
+  // Skip API calls and translation - always go to network
   if (event.request.url.includes('/api/') || event.request.url.includes('translate.googleapis.com')) return;
 
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If successful, update the cache
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // If network fails, try the cache
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            return cachedResponse;
+    caches.match(event.request).then((cachedResponse) => {
+      // Return from cache if found
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // Otherwise fetch from network
+      return fetch(event.request)
+        .then((response) => {
+          // If successful, update the cache for future use
+          if (response && response.status === 200 && response.type === 'basic') {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
           }
-          // If it's a navigation request and we're offline, return index.html
+          return response;
+        })
+        .catch(() => {
+          // If network fails and no cache, return index.html for navigation requests
           if (event.request.mode === 'navigate') {
             return caches.match('./index.html');
           }
         });
-      })
+    })
   );
 });

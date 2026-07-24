@@ -7,14 +7,24 @@
     border-radius: 18px;
     width: 94%;
     max-width: 500px;
-    padding: 15px;
+    padding: 0 !important;
     border: 1px solid var(--border-color);
     top: 15%;
     left: 50%;
     transform: translateX(-50%);
     max-height: 80%;
     flex-direction: column;
+    overflow: hidden;
+}
+
+.settings-scroll-area {
+    width: 100%;
     overflow-y: auto;
+    flex-grow: 1;
+    padding: 15px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 #language-section-container {
@@ -152,17 +162,25 @@
     background: white;
     z-index: 2501;
     border-radius: 18px;
-    padding: 15px;
+    padding: 0 !important;
     flex-direction: column;
+    overflow: hidden;
 }
 
 .full-lang-list.show {
     display: flex;
 }
 
-.lang-list-content {
+.full-lang-list > div:first-child {
+    padding: 15px 15px 5px 15px;
+    box-sizing: border-box;
+}
+
+.lang-list-content, .remove-list-content {
     overflow-y: auto;
     flex-grow: 1;
+    padding: 0 15px 15px 15px;
+    box-sizing: border-box;
 }
 
 .lang-item {

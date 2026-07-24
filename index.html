@@ -127,6 +127,7 @@
 <div id="scaleDimmer"></div>
 
 <script src="js/config.js"></script>
+<script src="js/academic-list.js"></script>
 <script src="js/db-manager.js"></script>
 <script src="js/tts-manager.js"></script>
 <script src="js/audio-observer.js"></script>
@@ -162,6 +163,8 @@
             navigator.serviceWorker.register('/sw.js')
                 .then(reg => {
                     console.log('[SW] Registered');
+                    // Check for updates in the background
+                    reg.update();
                 })
                 .catch(err => console.error('[SW] Registration failed', err));
         });

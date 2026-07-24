@@ -69,8 +69,10 @@ window.StatsManager = {
         const arrowIcon = `<div class="arrow-icon-container"><svg class="ignore-dark-override" xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="currentColor"><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6-1.41-1.41z"/></svg></div>`;
         panel.innerHTML = `
             <div class="stats-header"><span class="stats-title">Usage Statistics</span><button class="stats-close-btn" onclick="StatsManager.togglePanel()">&times;</button></div>
-            <div class="stat-card" style="width:100%; margin-bottom:15px;"><div class="stat-info-group"><span class="stat-value">${this.getTotalTimeDisplay()}</span><span class="stat-label">Total Time Spent</span></div>${trophyIcon}</div>
-            <div style="width:100%; overflow-y:auto; flex-grow:1; display:flex; flex-direction:column; gap:10px;">
+            <div style="padding: 0 24px; width: 100%; box-sizing: border-box; flex-shrink: 0;">
+                <div class="stat-card" style="width:100%; margin-bottom:15px;"><div class="stat-info-group"><span class="stat-value">${this.getTotalTimeDisplay()}</span><span class="stat-label">Total Time Spent</span></div>${trophyIcon}</div>
+            </div>
+            <div style="width:100%; overflow-y:auto; flex-grow:1; display:flex; flex-direction:column; gap:10px; padding: 0 24px; box-sizing: border-box;">
                 <div class="stat-card clickable-stat" onclick="StatsManager.toggleSection('words')"><div class="stat-info-group"><span class="stat-value">${words.length}</span><span class="stat-label">Words Searched</span></div>${arrowIcon}</div>
                 ${this.currentOpenSection === 'words' ? `<div class="stats-list" style="padding:0 10px 10px 10px;">${words.map(([w, c]) => `<div class="history-list-item" onclick="window.AppSearch('${w}'); StatsManager.togglePanel();"><div class="history-word-info"><span style="font-weight:600;">${w}</span><span class="history-word-count">(${c}x, ${this.getFormattedTime(this.stats.wordTime[w])})</span></div><button class="remove-history-btn" onclick="StatsManager.removeWord('${w}', event)">&times;</button></div>`).join('')}</div>` : ''}
                 <div class="stat-card clickable-stat" onclick="StatsManager.toggleSection('tags')"><div class="stat-info-group"><span class="stat-value">${tags.length}</span><span class="stat-label">Tags Opened</span></div>${arrowIcon}</div>

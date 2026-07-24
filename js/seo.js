@@ -64,16 +64,8 @@
             if (word && !isSilent) {
                 // Update URL to /word if not a history navigation
                 if (!isHistoryNav) {
-                    const pathname = window.location.pathname;
-                    // Check if we're in a /word/modal/word2 state
-                    if (pathname.includes('/modal/')) {
-                        // Keep the modal part, just update the main word. Removed trailing slashes defensively.
-                        const modalWord = pathname.split('/modal/')[1].replace(/\/$/, "");
-                        window.history.pushState({ word }, "", `/${encodeURIComponent(word)}/modal/${modalWord}`);
-                    } else {
-                        // Regular word search
-                        window.history.pushState({ word }, "", `/${encodeURIComponent(word)}`);
-                    }
+                    // Regular word search - AppSearch clears modals when !isSilent
+                    window.history.pushState({ word }, "", `/${encodeURIComponent(word)}`);
                 }
                 
                 // FIXED: Update metadata AFTER pushState so og:url pulls the new, correct location.pathname
@@ -102,11 +94,32 @@
                     const result = originalShow ? originalShow.apply(this, arguments) : undefined;
                     
                     if (!isHistoryNav) {
-                        const mainWord = localStorage.getItem('lastWord');
-                        if (mainWord) {
-                            window.history.pushState({ modal: true, word }, "", `/${encodeURIComponent(mainWord)}/modal/${encodeURIComponent(word)}`);
+                        const pathname = window.location.pathname;
+                        const isAlreadyInModal = pathname.includes('/modal/');
+
+                        if (pathname.startsWith('/570academic')) {
+                            // Support /570academic/1/modal/word
+                            const base = pathname.split('/modal/')[0];
+                            if (isAlreadyInModal) {
+                                window.history.replaceState({ modal: true, word, academic: true }, "", `${base}/modal/${encodeURIComponent(word)}`);
+                            } else {
+                                window.history.pushState({ modal: true, word, academic: true }, "", `${base}/modal/${encodeURIComponent(word)}`);
+                            }
                         } else {
-                            window.history.pushState({ modal: true, word }, "", `/modal/${encodeURIComponent(word)}`);
+                            const mainWord = localStorage.getItem('lastWord');
+                            if (isAlreadyInModal) {
+                                if (mainWord) {
+                                    window.history.replaceState({ modal: true, word }, "", `/${encodeURIComponent(mainWord)}/modal/${encodeURIComponent(word)}`);
+                                } else {
+                                    window.history.replaceState({ modal: true, word }, "", `/modal/${encodeURIComponent(word)}`);
+                                }
+                            } else {
+                                if (mainWord) {
+                                    window.history.pushState({ modal: true, word }, "", `/${encodeURIComponent(mainWord)}/modal/${encodeURIComponent(word)}`);
+                                } else {
+                                    window.history.pushState({ modal: true, word }, "", `/modal/${encodeURIComponent(word)}`);
+                                }
+                            }
                         }
                     }
                     return result;
@@ -120,13 +133,19 @@
                         if (window.history.state?.modal) {
                             window.history.back();
                         } else {
-                            const mainWord = localStorage.getItem('lastWord');
-                            if (mainWord) {
-                                window.history.pushState({ word: mainWord }, "", `/${encodeURIComponent(mainWord)}`);
-                                window.updateMetadata(mainWord);
+                            const pathname = window.location.pathname;
+                            if (pathname.includes('/modal/')) {
+                                const newPath = pathname.split('/modal/')[0];
+                                window.history.pushState({}, "", newPath);
                             } else {
-                                window.history.pushState({}, "", "/");
-                                document.title = 'SophDict - The Sophisticated Dictionary';
+                                const mainWord = localStorage.getItem('lastWord');
+                                if (mainWord) {
+                                    window.history.pushState({ word: mainWord }, "", `/${encodeURIComponent(mainWord)}`);
+                                    window.updateMetadata(mainWord);
+                                } else {
+                                    window.history.pushState({}, "", "/");
+                                    document.title = 'SophDict - The Sophisticated Dictionary';
+                                }
                             }
                         }
                     }
@@ -140,6 +159,11 @@
     const handleRouting = () => {
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
+
+        if (path.startsWith('570academic')) {
+            if (window.AcademicList) window.AcademicList.handleRoute();
+            return;
+        }
 
         // Open empty page first as requested
         if (window.AppClearSearch) window.AppClearSearch(true);
@@ -178,6 +202,12 @@
     // Handle back/forward buttons
     window.addEventListener('popstate', (e) => {
         const path = window.location.pathname.substring(1);
+
+        if (path.startsWith('570academic')) {
+            if (window.AcademicList) window.AcademicList.handleRoute();
+            return;
+        }
+
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
         const currentMainWord = localStorage.getItem('lastWord');
