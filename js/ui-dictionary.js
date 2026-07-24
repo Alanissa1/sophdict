@@ -484,53 +484,65 @@ window.UIDictionary = {
             const renderTags = (list, tagClass) => {
                 let res = "";
                 const academic = [];
+                const slang = [];
                 const others = [];
-                list.forEach(w => {
-                    if (!w || typeof w !== 'string') return;
-                    const clean = w.toLowerCase().trim();
+                list.forEach(item => {
+                    const word = typeof item === 'string' ? item : item.wd;
+                    const isSlang = typeof item === 'object' && item.isSlang;
+                    if (!word) return;
+
+                    const clean = word.toLowerCase().trim();
                     const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean);
 
-                    if (isAcademic) academic.push(w);
-                    else others.push(w);
+                    if (isAcademic) academic.push(word);
+                    else if (isSlang) slang.push(word);
+                    else others.push(word);
                 });
 
                 if (academic.length) {
                     res += academic.map(w => `<span class="tag ${tagClass} ielts-match" data-word="${w}" tabindex="0">${w}</span>`).join('');
                     res += `<span class="academic-tag-label">&lt;academic</span>`;
                 }
-                res += others.filter(w => {
-                    const clean = w.toLowerCase().trim();
-                    return !((window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean)));
-                }).map(w => `<span class="tag ${tagClass}" data-word="${w}" tabindex="0">${w}</span>`).join('');
+                res += others.map(w => `<span class="tag ${tagClass}" data-word="${w}" tabindex="0">${w}</span>`).join('');
+                res += slang.map(w => `<span class="tag ${tagClass}" data-word="${w}" tabindex="0">${w}</span>`).join('');
                 return res;
             };
 
+            const mapTagData = (list) => {
+                if (!list) return [];
+                return list.flat().map(s => {
+                    if (!s || !s.wd) return null;
+                    const labels = (s.wsls || []).map(l => l.toLowerCase());
+                    return { wd: s.wd, isSlang: labels.includes('slang') };
+                }).filter(Boolean);
+            };
+
             if (sData.syn_list) {
-                const syns = sData.syn_list.flat().map(s => s?.wd).filter(Boolean);
+                const syns = mapTagData(sData.syn_list);
                 if (syns.length) {
                     tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">similar:</span>${renderTags(syns, 'syn-tag')}</div>`;
                 }
             }
             if (sData.rel_list) {
-                const rels = sData.rel_list.flat().map(r => r?.wd).filter(Boolean);
+                const rels = mapTagData(sData.rel_list);
                 if (rels.length) {
                     tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">related:</span>${renderTags(rels, 'syn-tag')}</div>`;
                 }
             }
             if (sData.phrase_list) {
-                const phrases = sData.phrase_list.flat().map(p => p?.wd).filter(Boolean);
+                const phrases = mapTagData(sData.phrase_list);
                 if (phrases.length) {
                     tagsHtml += `<div class="tags-row synonyms-container"><span class="tags-label">phrases:</span>${renderTags(phrases, 'syn-tag')}</div>`;
                 }
             }
             if (sData.near_list) {
-                const nears = sData.near_list.flat().map(n => n?.wd).filter(Boolean);
+                const nears = mapTagData(sData.near_list);
                 if (nears.length) {
                     tagsHtml += `<div class="tags-row antonyms-container"><span class="tags-label">near:</span>${renderTags(nears, 'ant-tag')}</div>`;
                 }
             }
             if (sData.ant_list) {
-                const ants = sData.ant_list.flat().map(a => a?.wd).filter(Boolean);
+                const ants = mapTagData(sData.ant_list);
                 if (ants.length) {
                     tagsHtml += `<div class="tags-row antonyms-container"><span class="tags-label">opposite:</span>${renderTags(ants, 'ant-tag')}</div>`;
                 }

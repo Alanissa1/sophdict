@@ -84,13 +84,15 @@ window.UIThesaurus = {
                             const getTagData = (list) => list?.flat().map(s => {
                                 if (!s) return null;
                                 const labels = (s.wsls || []).map(l => l?.toLowerCase()).filter(Boolean);
+                                const isSlang = labels.includes('slang');
                                 const labelHtml = labels.length ? ` <small style="opacity:0.6; font-style:italic;">(${s.wsls.join(', ')})</small>` : "";
-                                return { wd: s.wd, html: `${s.wd}${labelHtml}` };
+                                return { wd: s.wd, html: `${s.wd}${labelHtml}`, isSlang };
                             }).filter(Boolean) || [];
 
                             const renderTags = (list, tagClass) => {
                                 let res = "";
                                 const academic = [];
+                                const slang = [];
                                 const others = [];
 
                                 list.forEach(item => {
@@ -98,6 +100,7 @@ window.UIThesaurus = {
                                     const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean);
 
                                     if (isAcademic) academic.push(item);
+                                    else if (item.isSlang) slang.push(item);
                                     else others.push(item);
                                 });
 
@@ -106,6 +109,7 @@ window.UIThesaurus = {
                                     res += `<span class="academic-tag-label">&lt;Academic</span>`;
                                 }
                                 res += others.map(s => `<span class="tag ${tagClass}" data-word="${s.wd}" tabindex="0">${s.html}</span>`).join('');
+                                res += slang.map(s => `<span class="tag ${tagClass}" data-word="${s.wd}" tabindex="0">${s.html}</span>`).join('');
                                 return res;
                             };
 
@@ -115,7 +119,7 @@ window.UIThesaurus = {
                             const nears = getTagData(sData.near_list);
                             const ants = getTagData(sData.ant_list);
                             const opps = getTagData(sData.opp_list);
-                            const phrases = sData.phrase_list?.flat().map(p => (p?.wd ? { wd: p.wd, html: p.wd } : null)).filter(Boolean) || [];
+                            const phrases = getTagData(sData.phrase_list);
 
                             const mergedSimilar = [...syns, ...sims, ...phrases];
                             const mergedOpposite = [...ants, ...opps];
