@@ -1,0 +1,164 @@
+/* Custom Lists Styles */
+
+.custom-list-trigger {
+    padding: 8px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+#create-list-btn {
+    height: 32.358px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    width: 32.358px;
+}
+
+#create-list-btn svg {
+  height: 24px;
+  width: 24px;
+}
+
+
+.list-creation-container {
+    padding: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.list-option-btn {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-main);
+    cursor: pointer;
+    font-weight: 500;
+    text-align: left;
+}
+
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: var(--text-sub);
+}
+
+.input-group input:not([type="checkbox"]) {
+    width: 100%;
+    padding: 2px 18px;
+    height: 42px;
+    border-radius: 28px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-main);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    outline: none;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.input-group input:not([type="checkbox"]):focus {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+
+.input-group.checkbox-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.input-group.checkbox-row label {
+    margin: 0;
+    cursor: pointer;
+    flex: 1;
+}
+
+.input-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    appearance: checkbox;
+    -webkit-appearance: checkbox;
+    cursor: pointer;
+    margin: 0 0 0 10px;
+    border: none;
+    box-shadow: none;
+    outline: none;
+}
+
+.action-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.action-btn:disabled {
+    background: var(--border-color);
+    cursor: not-allowed;
+}
+
+.heart-menu {
+    position: absolute;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 2900;
+    min-width: 150px;
+    overflow: hidden;
+}
+
+.heart-menu-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.heart-menu-item:last-child {
+    border-bottom: none;
+}
+
+
+
+.password-prompt {
+    padding: 20px;
+    text-align: center;
+}
+
+/* Dark mode specific overrides if needed */
+body.dark-mode .custom-list-trigger {
+    fill: #e1e1e1;
+}
+
+.list-name-display {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: var(--text-main);
+}

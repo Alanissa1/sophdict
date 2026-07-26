@@ -465,7 +465,6 @@ window.TextScaler = {
 
     performRemoveLanguage(locale) {
         if (this.addedLocales.length <= 1) {
-            alert("Cannot remove the last language.");
             return;
         }
 
@@ -684,10 +683,19 @@ window.TextScaler = {
 
                 <div id="language-section-container"></div>
 
+                <div class="settings-section-divider"></div>
+                <div class="input-group checkbox-row" style="margin-bottom: 10px;">
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:bold; color:var(--text-main); font-size:14px;">Offline First</span>
+                        <span style="font-size:11px; color:var(--text-sub);">Prioritize local cache for speed. (Updates disabled while ON)</span>
+                    </div>
+                    <input type="checkbox" id="offlineFirstToggle">
+                </div>
+
                 <div id="theme-settings-container"></div>
 
                 <div class="settings-section-translation" style="margin-top: 10px; display:none;">
-                    <div class="translation-toggle-row">
+                    <div class="input-group checkbox-row">
                         <span style="font-weight:bold; color:var(--text-main); font-size:14px;">Modal Sliding</span>
                         <label class="switch">
                             <input type="checkbox" id="modalSlidingToggle" ${window.ModalManager && window.ModalManager.settings.slidingEnabled ? 'checked' : ''}>
@@ -737,5 +745,19 @@ window.TextScaler = {
         if (btn) btn.onclick = () => this.show();
 
         this.updateUI();
+
+        // Offline First Toggle Logic
+        const offlineToggle = document.getElementById('offlineFirstToggle');
+        if (offlineToggle) {
+            const isOfflineFirst = localStorage.getItem('offline_first') === 'true';
+            offlineToggle.checked = isOfflineFirst;
+            offlineToggle.onchange = (e) => {
+                const val = e.target.checked;
+                localStorage.setItem('offline_first', val);
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'SET_OFFLINE_FIRST', value: val });
+                }
+            };
+        }
     }
 };

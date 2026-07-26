@@ -439,7 +439,7 @@ window.UIRenderer = {
         const cleanEt = this.cleanMWText(etymology);
 
         return `
-            <div class="context-card origin-card" style="margin-top: 20px; border-left: 4px solid var(--accent);">
+            <div class="context-card origin-card">
                 <div class="context-type">Word Origin</div>
                 <div class="definition">${cleanEt}</div>
             </div>

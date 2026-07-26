@@ -1,6 +1,8 @@
 {
-  "name": "assets",
+  "name": "sphdict",
   "version": "1.0.0",
   "type": "module",
-  "dependencies": {}
+  "dependencies": {
+    "@upstash/redis": "^1.28.4"
+  }
 }

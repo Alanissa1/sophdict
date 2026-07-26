@@ -50,3 +50,12 @@ body.dark-mode .stat-card.clickable-stat.nav-focus {
 .translate-btn.nav-focus:hover {
     box-shadow: 0 0 10px rgba(26, 115, 232, 0.5);
 }
+
+p{
+margin:0;
+font-size:13px !important;
+}
+a{
+color:#1a73e8;
+}
+

@@ -7,6 +7,27 @@ body.dark-mode {
     --border-color: #3c4043;
     --header-bg: #1f2937;
     --primary-color: #88bcff;
+    color-scheme: dark;
+}
+
+/* Dark scrollbars */
+body.dark-mode *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+body.dark-mode *::-webkit-scrollbar-track {
+    background: #0b0b0b;
+}
+
+body.dark-mode *::-webkit-scrollbar-thumb {
+    background: #3c4043;
+    border-radius: 10px;
+    border: 2px solid #0b0b0b;
+}
+
+body.dark-mode *::-webkit-scrollbar-thumb:hover {
+    background: #4c5055;
 }
 
 /* Logo swap for dark mode */
@@ -106,10 +127,47 @@ body.dark-mode .example {
     color: #b1b1b1;
 }
 
-body.dark-mode #wordInput {
-    background: transparent;
+/* General Inputs in Dark Mode */
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select {
+    background: #2a2a2a;
     border-color: #3c4043;
     color: #e8eaed;
+    border: none;
+    height: 45px;
+}
+
+body.dark-mode #wordInput,
+body.dark-mode #manualWordInput {
+    background: transparent;
+    color: #e8eaed;
+}
+
+/* Autofill Fix for All Modes */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+body.dark-mode input:-webkit-autofill,
+body.dark-mode input:-webkit-autofill:hover,
+body.dark-mode input:-webkit-autofill:focus,
+body.dark-mode textarea:-webkit-autofill,
+body.dark-mode textarea:-webkit-autofill:hover,
+body.dark-mode textarea:-webkit-autofill:focus,
+body.dark-mode select:-webkit-autofill,
+body.dark-mode select:-webkit-autofill:hover,
+body.dark-mode select:-webkit-autofill:focus {
+    -webkit-text-fill-color: #e8eaed !important;
+    box-shadow: 0 0 0px 1000px #1e1e1e inset !important;
 }
 
 body.dark-mode .context-card {
@@ -291,12 +349,6 @@ body.dark-mode .icon-btn:active,
 body.dark-mode .icon-btn:hover {
     background-color: rgba(255, 255, 255, 0.1) !important;
     opacity: 1;
-}
-
-
-body.dark-mode .tags-label,
-body.dark-mode .academic-tag-label {
-    color: #fff !important;
 }
 
 /* 10. History List & Details */

@@ -92,7 +92,6 @@ window.WallpaperManager = {
 
         // Basic check for image
         if (!file.type.startsWith('image/')) {
-            alert('Please select an image file.');
             return;
         }
 

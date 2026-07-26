@@ -9,11 +9,28 @@
       "destination": "/api/$1"
     },
     {
+      "source": "/feedbackandsupport",
+      "destination": "/api/feedback"
+    },
+    {
       "source": "/((?!api|js|css|SophDict|Merriam|manifest|robots.txt|index.html|favicon|.*\\.).*)",
       "destination": "/api/render"
     }
   ],
   "headers": [
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        }
+      ]
+    },
     {
       "source": "/api/(.*)",
       "headers": [

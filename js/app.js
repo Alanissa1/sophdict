@@ -5,6 +5,16 @@
     }
 })();
 
+window.RestoreSearchUI = () => {
+    const sc = document.querySelector('.search-container'), h = document.getElementById('appHeader');
+    if (!sc || !h) return;
+    sc.classList.remove('input-focused');
+    if (sc.parentElement !== h) h.appendChild(sc);
+    const wi = document.getElementById('wordInput'), st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn'), bx = document.getElementById('suggestions-box');
+    if (st && wi) sc.insertBefore(st, wi);
+    if (ts) sc.appendChild(ts); if (pt) sc.appendChild(pt); if (bx) sc.appendChild(bx);
+};
+
 window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
     const wordInput = document.getElementById('wordInput');
     const word = (target || wordInput?.value || "").trim().toLowerCase();
@@ -21,8 +31,7 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
     try {
         const data = await APIClient.fetchWordData(word);
         if (data && !data.error) {
-            const sc = document.querySelector('.search-container'), h = document.getElementById('appHeader');
-            if (sc && h && sc.parentElement !== h) h.appendChild(sc);
+            window.RestoreSearchUI();
             if (window.StatsManager) window.StatsManager.recordSearch(word);
             document.body.classList.remove('home-state');
             await UIEntry.render(data);
@@ -31,8 +40,7 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
             if (window.HistoryManager && !isHistoryNav) window.HistoryManager.addToRAM(word);
             return true;
         } else if (!isSilent) {
-            const sc = document.querySelector('.search-container'), h = document.getElementById('appHeader');
-            if (sc && h && sc.parentElement !== h) h.appendChild(sc);
+            window.RestoreSearchUI();
             document.body.classList.remove('home-state');
             await UIEntry.render({ ...(data || {}), word: word });
             UIUtils.updateSharedDimmer();
@@ -79,18 +87,47 @@ window.AppClearSearch = (skipPush = false) => {
         window.PreFetcher.stopBatch();
         window.PreFetcher.reset();
     }
-    const wordInput = document.getElementById('wordInput'), rc = document.getElementById('results-container'), mw = document.getElementById('microWindow'), pp = document.getElementById('pinnedPanel'), md = document.getElementById('microDimmer'), sc = document.querySelector('.search-container');
+    const wordInput = document.getElementById('wordInput'),
+          rc = document.getElementById('results-container'),
+          mw = document.getElementById('microWindow'),
+          pp = document.getElementById('pinnedPanel'),
+          md = document.getElementById('microDimmer');
+
+    window.RestoreSearchUI();
+
     if (wordInput) wordInput.value = '';
     if (rc) {
+        const customListsHtml = Object.entries(window.CustomLists?.lists || {})
+            .filter(([_, list]) => !list.hidden)
+            .map(([name]) => `
+                <button class="academic-list-trigger" onclick="window.history.pushState({}, '', '/listname/${encodeURIComponent(name)}'); CustomLists.handleRoute();" style="padding: 8px 16px; border-radius: 20px; border: 1px solid var(--accent); background: var(--card-bg); color: var(--accent); font-weight: bold; cursor: pointer; font-size: 13px;">${name}</button>
+            `).join('');
+
         rc.innerHTML = `
-            <div style="width: 100%; display: flex; justify-content: flex-start; gap: 10px; padding: 15px 0 0 0; flex-wrap: wrap;">
-                <button id="academic-list-btn" class="academic-list-trigger" onclick="AcademicList.open('academic')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #e1364f; background: #fff; color: #e1364f; font-weight: bold; cursor: pointer; font-size: 13px;">570 Academic Words</button>
+            <div style="width: 100%; display: flex; justify-content: flex-start; gap: 10px; padding: 15px 0 0 0; flex-wrap: wrap; align-items: center;">
+                <button id="academic-list-btn" class="academic-list-trigger" onclick="AcademicList.open('academic')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #d32f2f; background: #fff; color: #d32f2f; font-weight: bold; cursor: pointer; font-size: 13px;">570 Academic Words</button>
+                ${customListsHtml}
+                <button id="create-list-btn" class="custom-list-trigger" onclick="window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();" title="Create Custom List">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+                </button>
+                <div class="home-settings-bar"></div>
             </div>
             <div class="welcome-screen" style="padding-top: 5vh;">
                 <img src="SophDict.png" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">Search for definitions, synonyms, and more</div><div id="home-lists-root" class="home-lists-container"></div>
             </div>`;
-        const ws = rc.querySelector('.welcome-screen'), wt = rc.querySelector('.welcome-text');
-        if (ws && sc && wt) ws.insertBefore(sc, wt);
+
+        const ws = rc.querySelector('.welcome-screen'), currentSc = document.querySelector('.search-container');
+        if (ws && currentSc) {
+            const logo = ws.querySelector('.welcome-logo');
+            if (logo) logo.after(currentSc);
+            let sb = document.querySelector('.home-settings-bar');
+            if (sb) {
+                const st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn');
+                if (st) { sb.appendChild(st); st.style.display = ''; }
+                if (ts) { sb.appendChild(ts); ts.style.display = ''; }
+                if (pt) { sb.appendChild(pt); pt.style.display = ''; }
+            }
+        }
         window.renderHomeLists();
     }
     localStorage.removeItem('lastWord');
@@ -101,6 +138,7 @@ window.AppClearSearch = (skipPush = false) => {
     if (window.StatsManager) window.StatsManager.stopAllTracking();
     if (mw) mw.style.display = 'none';
     if (pp) pp.style.display = 'none';
+    if (window.CustomLists) window.CustomLists.closeSettings();
     UIUtils.updateSharedDimmer();
     document.body.classList.add('home-state');
     if (window.ScrollFixer) window.ScrollFixer.restore();
@@ -111,6 +149,10 @@ window.AppClearSearch = (skipPush = false) => {
     if (window.TextScaler) window.TextScaler.init();
     if (window.WallpaperManager) await window.WallpaperManager.init();
     if (window.ThemeManager) window.ThemeManager.init();
+
+    // Init CustomLists BEFORE AppClearSearch so buttons appear
+    if (window.CustomLists) await window.CustomLists.init();
+
     TTSManager.init(); ModalManager.init(); KeyboardNavigator.init(); ScrollManager.init();
     const wi = document.getElementById('wordInput'), sb = document.getElementById('search-button'), ll = document.querySelector('.logo-link'), pt = document.getElementById('pinnedToggleBtn'), st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn');
 
@@ -212,4 +254,5 @@ window.AppClearSearch = (skipPush = false) => {
 
     // Always init AcademicList so it's ready for clicks from home and handles routing
     if (window.AcademicList) AcademicList.init();
+    if (window.FeedbackSupport) FeedbackSupport.init();
 })();

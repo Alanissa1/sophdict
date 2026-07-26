@@ -50,8 +50,7 @@ window.AcademicList = Object.assign(window.AcademicList || {}, {
         this.currentType = type;
 
         document.body.classList.remove('home-state');
-        const sc = document.querySelector('.search-container'), h = document.getElementById('appHeader');
-        if (sc && h && sc.parentElement !== h) h.appendChild(sc);
+        if (window.RestoreSearchUI) window.RestoreSearchUI();
 
         let list = this.words;
         let title = '570 Academic Words';

@@ -9,6 +9,7 @@
     --header-bg: #ffffff;
     --dim-bg: rgba(0, 0, 0, 0.75);
     --font-scale: 1.0;
+    --accent: #e1364f;
 }
 
 * {
@@ -16,6 +17,7 @@
     -webkit-tap-highlight-color: transparent;
     cursor: inherit;
     caret-color: transparent;
+    transition: none !important;
 }
 
 
@@ -96,7 +98,6 @@ main,
     font-size: calc(16px * var(--font-scale)) !important;
 }
 
-/* PROPORTIONAL HIERARCHY (em scales with container) */
 
 /* Words & Titles */
 .word-title {
@@ -132,79 +133,6 @@ main,
     font-size: 1em !important;
 }
 
-/* Examples - Simple left-aligned style, scales proportionally */
-.example,
-.example-text,
-.usage-example {
-    font-size: 1em !important;
-    font-style: italic;
-    color: var(--text-sub);
-
-    display: block;
-    padding-left: 0;
-    border-left: none;
-}
-
-/* Tags & Labels - Scale tags, but keep label fixed and stable */
-.tag,
-.syn-tag,
-.ant-tag,
-.tags-label {
-    font-size: 1em !important;
-}
-
-
-body:not(.home-state) .antonyms-container .tag,
-body:not(.home-state) .ant-tag {
-    color: #910c0c !important;
-}
-
-body.dark-mode:not(.home-state) .tag {
-    background: #1e1e1e !important;
-    border-color: #444 !important;
-}
-
-body:not(.home-state) .academic-tag-label {
-    font-weight:bold !important;
-    color: var(--text-main) !important;
-    align-items: center !important;
-    text-transform: none !important;
-}
-
-body:not(.home-state) .tags-label {
-    color: var(--text-main) !important;
-    align-items: center !important;
-    text-transform: capitalize !important;
-}
-
-body.dark-mode:not(.home-state) .academic-tag-label {
-}
-
-/* Reset specific background colors for tags on search page to force standard style */
-body:not(.home-state) .tag.ielts-match {
-    background: white !important;
-    color: #124ea1 !important;
-    border-color: #c7c7c7 !important;
-    font-weight: normal !important;
-    font-family: inherit !important;
-}
-
-body.dark-mode:not(.home-state) .tag.ielts-match {
-    color: #99bbe9 !important;
-    background: #1e1e1e !important;
-    border: 1px solid #636363 !important;
-}
-
-/* Maintain red color for opposite/near tags even if they have match classes */
-body:not(.home-state) .antonyms-container .tag.ielts-match,
-body:not(.home-state) .ant-tag {
-color: #cb8686 !important;
-}
-
-
-
-
-/* Tag in Header */
 .ielts-header-tag {
     background-color: #e1364f;
     color: white;
@@ -227,15 +155,12 @@ body.dark-mode .ielts-header-tag {
 }
 
 .academic-tag-label {
-    font-size: 1em;
-    margin-right: 4px;
+    color: var(--text-sub);
     font-weight: bold;
-    color: #e1364f;
     font-family: Arial, Helvetica, sans-serif;
 }
 
 
-/* SETTINGS MODAL: Fixed, No Scale */
 #text-scale-control,
 .full-lang-list {
     font-size: 16px !important;
@@ -249,9 +174,8 @@ body.dark-mode .ielts-header-tag {
     font-size: 18px !important;
 }
 
-/* Word Origin - Matches Example size and color, no italics */
 .origin-card .definition {
-    font-size: 1.05em !important;
+    font-size: 1em !important;
     font-style: normal !important;
     color: var(--text-sub) !important;
 }
@@ -275,6 +199,7 @@ main {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    background: color-mix(in srgb, var(--card-bg) 85%, transparent);
 }
 
 #wordInput {
@@ -416,6 +341,7 @@ body.dark-mode footer {
     flex: 1;
     width: 100%;
     padding-top: 12vh;
+    position: relative;
 }
 
 .welcome-logo {
@@ -453,11 +379,6 @@ body.dark-mode footer {
     box-shadow: none !important;
 }
 
-.nav-focus {
-    outline: 2px solid var(--primary-color) !important;
-    outline-offset: 2px;
-}
-
 .nav-inactive {
     outline-color: #bdc1c6 !important;
 }
@@ -465,6 +386,10 @@ body.dark-mode footer {
 /* HOME STATE STYLES */
 body.home-state #appHeader {
     display: none;
+}
+
+body.home-state .logo-link {
+    visibility: hidden; /* Hide header logo on home to avoid redundancy */
 }
 
 body.home-state main {
@@ -476,13 +401,28 @@ body.home-state .search-container {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid var(--border-color);
     width: 95%;
-    max-width: 800px;
-    margin-top: 35px;
+    max-width: 600px;
+    margin-top: 25px;
 }
 
 body.home-state .search-container:hover,
 body.home-state .search-container:focus-within {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.home-settings-bar {
+  display: none;
+  position: static;
+  top: 0px;
+  align-self: flex-end;
+  margin: 0px 0px 0px auto;
+  gap: 10px;
+  z-index: 2001;
+}
+
+body.home-state .home-settings-bar {
+  display: flex;
+  vertical-align: middle;
 }
 
 .home-lists-container {
@@ -530,17 +470,11 @@ body.home-state .search-container:focus-within {
     gap: 8px;
 }
 
-.home-list-item:hover {
-    background: #00144f;
-    color: white;
-    border-color: var(--primary-color);
-}
-
 .home-list-remove-btn {
     font-size: 18px;
     line-height: 1;
     opacity: 0.6;
-    margin-right: -4px;
+    margin:0 -6px 0 10px;
     display: flex;
     align-items: center;
     justify-content: center;

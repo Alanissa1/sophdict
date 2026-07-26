@@ -1,10 +1,11 @@
- 	 .word-header {
-    margin: 10px 0 0 0;
+.word-header {
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 15px;
+    border-bottom: 1px solid #85858566;
+    background: color-mix(in srgb, var(--card-bg) 85%, transparent);
+    PADDING: 0 20px 0 20px;
+    margin: 0 -20px 0 -20px;
+    border-radius: 8px;
 }
 
 .word-header .pin-btn svc {
@@ -45,8 +46,7 @@
 .context-card {
     background: var(--card-bg);
     border-bottom: 1px solid var(--border-color);
-    padding: 20px 0;
-    margin-bottom: 15px;
+    padding: 10px 0 10px 0;
 }
 
 .context-type {
@@ -55,6 +55,11 @@
     font-weight: 500;
     font-size: 18px;
     margin-bottom: 10px;
+    font-style: italic;
+    background: color-mix(in srgb, var(--card-bg) 85%, transparent);
+    PADDING: 3px 20px 3px 20px;
+    margin: 0 -20px 7px -20px;
+    border-radius: 8px;
 }
 
 .sense-block {
@@ -76,6 +81,10 @@
     font-weight: 500;
     display: flex;
     align-items: flex-start;
+    background: color-mix(in srgb, var(--card-bg) 85%, transparent);
+    PADDING: 4px 20px 7px 20px;
+    margin: 0px -20px 0px -20px;
+    border-radius: 8px;
 }
 
 .sense-num {
@@ -128,12 +137,16 @@
     flex-direction: column;
 }
 
-.example {
+.example,
+.example-text,
+.usage-example {
     color: #6a6a6a;
-    font-size: 16px;
     font-weight: 400;
-    margin: 0 0 0.8em 0;
+    z-index: 1;
+    font-size: 1em !important;
+    font-style: italic;
 }
+
 
 .tags-section {
     margin: 0 0 0 0;
@@ -176,37 +189,29 @@
     border: none;
     padding: 0;
     cursor: pointer;
-    color: #8585857d !important;
     justify-content: center;
     flex-shrink: 0;
-    position: absolute;
-    left: -45px;
-    bottom: 10px;
-    height: 35px;
-    width: 35px;
     display: flex;
-    margin: -10px 0 0 0;
+    transition: transform 0.3s ease;
+    align-items: center;
+    border-radius: 40%;
 }
 
 .tag-expand-btn svg, .tag-expand-btn svg path {
     fill: #858585bd !important;
+    background: color-mix(in srgb, var(--card-bg) 85%, transparent);
+    border-radius: 50%;
 }
 
-/* Hide the expand button if there is only one tags-row */
 .tags-section.expandable-wrapper:has(.tags-row:only-of-type) .tag-expand-btn {
     display: none !important;
 }
 
-.expandable-wrapper:not(.expanded) .tag-expand-btn {
-}
-
-.expandable-wrapper.expanded .tag-expand-btn {
-}
 
 .tags-row {
     display: flex;
-    flex-wrap: wrap; /* Allows tags to wrap to the next line */
-    align-items: center; /* Better vertical alignment for label and tags */
+    flex-wrap: wrap;
+    align-items: center;
     margin: 0.7em 0 0px 0;
     gap: 0.6em;
     width: 100%;
@@ -216,7 +221,7 @@
     color: var(--text-sub);
     flex-shrink: 0;
     padding: 0;
-    font-size: 9.5em;
+    font-size: 1em;
     font-weight: 400;
     margin-right: 5px;
 }
@@ -233,17 +238,12 @@
     padding: 0.5em 1em;
     border-radius: 200px;
     cursor: pointer;
-    border: 1px solid #c7c7c7;
+    border: 1px solid #8787877d;
     color: #124ea1;
-    outline: none;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .tag:hover {
-    border-color: #e4e4e4;
+    border-color: #8585854f;
 }
 
 .ant-tag {
@@ -251,7 +251,7 @@
 }
 
 .ant-tag:hover {
-    border-color: #ccc;
+    border-color: #8383833a;
 }
 
 .pin-btn {

@@ -30,8 +30,8 @@ div#licenseModal.active {
 .license-title {
     font-size: 1.25rem;
     font-weight: 700;
-    padding: 20px 20px 0 20px;
-    border-bottom: 2px solid var(--accent, #1a73e8);
+    padding: 10px 0 10px 16px;
+    border-bottom: 1px solid #858585;
     display: inline-block;
     flex-shrink: 0;
 }
@@ -46,13 +46,13 @@ div#licenseTextContent {
 
 .license-footer {
     text-align: right;
-    padding: 0 20px 20px 20px;
-    margin-top: 20px;
+    padding: 10px 11px 10px 10px;
     flex-shrink: 0;
+    border-top: 1px solid #898989;
 }
 
 .license-close-btn {
-    background: var(--accent, #1a73e8);
+    background: #1a73e8;
     color: white;
     border: none;
     padding: 8px 20px;
@@ -65,7 +65,7 @@ div#licenseTextContent {
 
 .license-trigger {
     cursor: pointer;
-    color: var(--accent, #1a73e8);
+    color: #1a73e8;
     text-decoration: underline;
     background: none;
     border: none;

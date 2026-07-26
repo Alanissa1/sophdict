@@ -89,11 +89,8 @@ window.UIEntry = {
                     const heartEmpty = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
                     const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>`;
                     pinBtn.innerHTML = isPinned ? heartFilled : heartEmpty;
-                    pinBtn.onclick = async () => {
-                        const active = await PinManager.togglePin(word);
-                        pinBtn.classList.toggle('active', active);
-                        pinBtn.style.color = active ? '#ff4b6b' : '#8b8b8b';
-                        pinBtn.innerHTML = active ? heartFilled : heartEmpty;
+                    pinBtn.onclick = (e) => {
+                        CustomLists.showHeartMenu(word, pinBtn);
                     };
                     pinMain.appendChild(pinBtn);
                 }
@@ -148,11 +145,8 @@ window.UIEntry = {
                         const heartEmpty = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
                         const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
                         mPin.innerHTML = isPinned ? heartFilled : heartEmpty;
-                        mPin.onclick = async () => {
-                            const active = await PinManager.togglePin(word);
-                            mPin.classList.toggle('active', active);
-                            mPin.style.color = active ? '#ff4b6b' : '#8b8b8b';
-                            mPin.innerHTML = active ? heartFilled : heartEmpty;
+                        mPin.onclick = (e) => {
+                            CustomLists.showHeartMenu(word, mPin);
                         };
                     }
                     UIUtils.attachInlineTTS(headerTop);
@@ -204,7 +198,7 @@ window.UIEntry = {
         if (!entry?.vrs) return "";
         return entry.vrs.map(v => {
             const label = v.vl ? `<span style="color:var(--text-sub); margin-right:4px;">${v.vl}</span>` : "";
-            const style = isMicro ? "font-weight:500; color:var(--text-main);" : "font-weight:600; color:var(--accent);";
+            const style = isMicro ? "font-weight:500; color:var(--text-main);" : "font-weight:600; color:var(--text-sub);";
             return `<span style="${style}">${label}${v.va}</span>`;
         }).join(" ");
     },
@@ -213,7 +207,7 @@ window.UIEntry = {
         if (!entry?.ins) return "";
         return entry.ins.map(i => {
             const label = i.il ? `<span style="color:var(--text-sub); margin-right:4px;">${i.il}</span>` : "";
-            return `<span style="color:var(--text-main); font-weight:500;">${label}${i.if}</span>`;
+            return `<span style="color:var(--text-sub); font-weight:500;">${label}${i.if}</span>`;
         }).join(", ");
     },
 

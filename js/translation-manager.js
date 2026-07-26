@@ -88,6 +88,13 @@ window.TranslationManager = {
             return;
         }
 
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        // Redirect to popup if offline and no cache
+        if (!navigator.onLine && isAndroid) {
+            this.openAndroidPopup(text, buttonEl);
+            return;
+        }
+
         buttonEl.innerHTML = '<span class="translation-loading"></span>';
 
         try {
@@ -123,9 +130,13 @@ window.TranslationManager = {
             }
         } catch (e) {
             console.error("Translation error:", e);
-            buttonEl.innerHTML = this.getIcon();
-            // Show a brief error toast or status if possible, or just reset button
-            buttonEl.classList.remove('active');
+            // Fallback to popup if the request fails (e.g., connection lost)
+            if (isAndroid) {
+                this.openAndroidPopup(text, buttonEl);
+            } else {
+                buttonEl.innerHTML = this.getIcon();
+                buttonEl.classList.remove('active');
+            }
         }
     },
 
@@ -222,6 +233,35 @@ window.TranslationManager = {
                 }
             }
         });
+    },
+
+    openAndroidPopup(text, buttonEl) {
+        const encodedText = encodeURIComponent(text);
+        const targetLang = this.targetLanguage || 'tr';
+
+        console.log("SophDict: Triggering Android 15-style Floating Intent...");
+
+        if (buttonEl) {
+            buttonEl.innerHTML = this.getIcon();
+            buttonEl.classList.remove('active');
+        }
+
+        // This Intent uses the 'PROCESS_TEXT' action which is the closest
+        // web-to-native bridge for the new On-Device Translation features.
+        // We add the 'launch_windowing_mode' flag hint (2 is FREEFORM) for supported devices.
+        const intentUrl = `intent:#Intent;action=android.intent.action.PROCESS_TEXT;type=text/plain;S.android.intent.extra.PROCESS_TEXT=${encodedText};S.android.intent.extra.PROCESS_TEXT_READONLY=true;i.android.app.extra.WINDOWING_MODE=2;end`;
+
+        const fallbackUrl = `googletranslate://translate?sl=auto&tl=${targetLang}&text=${encodedText}`;
+
+        // Attempt the modern floating intent
+        window.location.href = intentUrl;
+
+        // Fast fallback to the app if the intent isn't intercepted by a local model
+        setTimeout(() => {
+            if (document.hasFocus()) {
+                window.location.href = fallbackUrl;
+            }
+        }, 500);
     },
 
     async prefetchFromCache(text, targetElement, buttonEl) {

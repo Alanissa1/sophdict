@@ -122,7 +122,7 @@ window.UIUtils = {
         }
         if (!etymology) return "";
         return `
-            <div class="context-card origin-card" style="margin-top: 20px; border-left: 4px solid var(--accent);">
+            <div class="context-card origin-card">
                 <div class="context-type">Word Origin</div>
                 <div class="definition">${this.cleanMWText(etymology)}</div>
             </div>
@@ -160,6 +160,10 @@ window.UIUtils = {
         element.onclick = (e) => {
             if (e.target === element) {
                 e.preventDefault();
+                // Close any open heart menu first
+                const heartMenu = document.querySelector('.heart-menu');
+                if (heartMenu) heartMenu.remove();
+
                 e.stopPropagation();
                 if (callback) callback();
                 else {
@@ -226,8 +230,9 @@ window.UIUtils = {
 
         const isStatsOpen = document.getElementById('statsPanel')?.style.display === 'flex';
         const isPinnedOpen = document.getElementById('pinnedPanel')?.style.display === 'block';
+        const isListSettingsOpen = document.getElementById('listSettingsPanel')?.classList.contains('active');
 
-        if (isModalOpen || isStatsOpen || isPinnedOpen) {
+        if (isModalOpen || isStatsOpen || isPinnedOpen || isListSettingsOpen) {
             dimmer.style.display = 'block';
             document.body.classList.add('modal-open');
             // Ensure the dimmer is always clickable when shown

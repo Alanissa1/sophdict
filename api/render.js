@@ -29,31 +29,6 @@ export default async function handler(req) {
         let desc = `Discover the meaning, pronunciation, synonyms, and antonyms of "${word}" on SophDict. Your go-to sophisticated dictionary.`;
 
         // 3. Try to fetch specific word data from Upstash
-        const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-        const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-
-        if (upstashUrl && upstashToken) {
-            const cacheKey = `dict:${word}`;
-            const cleanUpstashUrl = upstashUrl.replace(/\/$/, "");
-
-            try {
-                const cacheRes = await fetch(`${cleanUpstashUrl}/get/${cacheKey}`, {
-                    headers: { Authorization: `Bearer ${upstashToken}` }
-                });
-
-                if (cacheRes.ok) {
-                    const cacheData = await cacheRes.json();
-                    if (cacheData && cacheData.result) {
-                        const data = JSON.parse(cacheData.result);
-                        if (Array.isArray(data) && data.length > 0 && data[0].shortdef) {
-                            desc = `Meaning of ${word}: ${data[0].shortdef[0]}. Discover more definitions and synonyms on SophDict.`;
-                        }
-                    }
-                }
-            } catch (cacheErr) {
-                console.error('Cache Fetch Error:', cacheErr);
-            }
-        }
 
         // 4. Inject metadata into HTML
         html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);

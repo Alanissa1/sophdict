@@ -1,20 +1,29 @@
 window.LicenseManager = {
-    init() {
+    async init() {
         const modal = document.createElement('div');
         modal.id = 'licenseModal';
         modal.className = 'license-modal';
+
+        let licenseContent = 'Loading license...';
+        try {
+            const resp = await fetch('LICENSE');
+            if (resp.ok) {
+                const text = await resp.text();
+                licenseContent = text.split('\n\n').map(para => {
+                    if (para.includes('Copyright')) return para;
+                    if (para.includes('Word List Attributions:')) return `<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">${para}`;
+                    return para;
+                }).join('<br><br>').replace(/\n/g, '<br>');
+            }
+        } catch (e) {
+            console.error('License load error:', e);
+            licenseContent = 'Failed to load license content.';
+        }
+
         modal.innerHTML = `
             <div class="license-title">License Agreement</div>
             <div id="licenseTextContent" class="license-text">
-                <strong>Copyright (c) 2026 SophDict</strong><br><br>
-                All Rights Reserved.<br><br>
-                This software and all associated files are the exclusive property of SophDict.<br><br>
-                Unauthorized copying, distribution, modification, public display, or performance of this software, via any medium, is strictly prohibited.<br><br>
-                This code is provided for private use only. No part of this project may be reused, republished, or integrated into other software without the express written permission of the copyright holder.<br><br>
-                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">
-                <strong>Word List Attributions:</strong><br><br>
-                Word lists utilized in this application are sourced and curated from educational resources including:<br>
-                • Academic Word List: 570 Academic Words (A. Coxhead)
+                ${licenseContent}
             </div>
             <div class="license-footer">
                 <button class="license-close-btn" onclick="LicenseManager.hide()">Close</button>

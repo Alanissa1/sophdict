@@ -1,11 +1,13 @@
-const CACHE_NAME = 'sophdict-v45';
+const CACHE_NAME = 'sophdict-v51';
+const SETTINGS_CACHE = 'sophdict-settings';
 
 // Essential files for the app to function
 const REQUIRED_ASSETS = [
   './',
+  './?source=pwa',
   './index.html',
   './manifest.json',
-  './SophDicta.png',
+  './sophdicta.png',
   './SophDict.png',
   './Merriam-Webster_logo.svg.webp',
   './css/base.css',
@@ -23,6 +25,7 @@ const REQUIRED_ASSETS = [
   './css/seo.css',
   './css/translation.css',
   './css/wallpaper.css',
+  './css/custom-lists.css',
   './js/config.js',
   './js/ielts-words.js',
   './js/sat.js',
@@ -31,8 +34,11 @@ const REQUIRED_ASSETS = [
   './js/b1.js',
   './js/b2.js',
   './js/academic-list.js',
+  './js/custom-lists.js',
+  './js/feedback-support.js',
   './js/db-manager.js',
   './js/tts-manager.js',
+  './js/audio-observer.js',
   './js/pin-manager.js',
   './js/dictionary-api.js',
   './js/thesaurus-api.js',
@@ -46,6 +52,7 @@ const REQUIRED_ASSETS = [
   './js/keyboard-navigator.js',
   './js/scroll-manager.js',
   './js/scroll-fixer.js',
+  './js/voice-filter.js',
   './js/text-scaler.js',
   './js/history-manager.js',
   './js/stats.js',
@@ -59,7 +66,22 @@ const REQUIRED_ASSETS = [
   './js/vercel-speed-insights.js'
 ];
 
+let offlineFirst = false;
+
+// Try to initialize setting from settings cache
+const initSettings = async () => {
+    try {
+        const cache = await caches.open(SETTINGS_CACHE);
+        const response = await cache.match('offline_first');
+        if (response) {
+            const data = await response.json();
+            offlineFirst = data.value;
+        }
+    } catch (e) {}
+};
+
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return Promise.allSettled(
@@ -73,48 +95,66 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
+    Promise.all([
+        initSettings(),
+        caches.keys().then((keys) => {
+          return Promise.all(
+            keys.filter((key) => key !== CACHE_NAME && key !== SETTINGS_CACHE).map((key) => caches.delete(key))
+          );
+        })
+    ])
   );
   return self.clients.claim();
 });
 
-// Cache First strategy for everything except API calls and translation
-self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
-
-  // Skip API calls and translation - always go to network
-  if (event.request.url.includes('/api/') || event.request.url.includes('translate.googleapis.com')) return;
-
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // Return from cache if found
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      // Otherwise fetch from network
-      return fetch(event.request)
-        .then((response) => {
-          // If successful, update the cache for future use
-          if (response && response.status === 200 && response.type === 'basic') {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // If network fails and no cache, return index.html for navigation requests
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
+// Handle messages from main thread
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SET_OFFLINE_FIRST') {
+        offlineFirst = event.data.value;
+        // Persist in settings cache
+        caches.open(SETTINGS_CACHE).then(cache => {
+            cache.put('offline_first', new Response(JSON.stringify({ value: offlineFirst })));
         });
-    })
-  );
+    }
+});
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+  if (event.request.url.includes('translate.googleapis.com')) return;
+
+  if (offlineFirst) {
+      // CACHE FIRST Strategy
+      event.respondWith(
+        caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          return fetch(event.request).then((response) => {
+            if (response && response.status === 200 && response.type === 'basic') {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+            }
+            return response;
+          }).catch(() => {
+            if (event.request.mode === 'navigate') return caches.match('./index.html');
+          });
+        })
+      );
+  } else {
+      // NETWORK FIRST Strategy (Default)
+      event.respondWith(
+        fetch(event.request)
+          .then((response) => {
+            if (response && response.status === 200 && response.type === 'basic') {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
+            }
+            return response;
+          })
+          .catch(() => {
+            return caches.match(event.request).then((cachedResponse) => {
+              if (cachedResponse) return cachedResponse;
+              if (event.request.mode === 'navigate') return caches.match('./index.html');
+            });
+          })
+      );
+  }
 });
