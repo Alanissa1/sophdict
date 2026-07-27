@@ -1,4 +1,5 @@
 window.LicenseManager = {
+    content: '',
     async init() {
         const modal = document.createElement('div');
         modal.id = 'licenseModal';
@@ -9,11 +10,12 @@ window.LicenseManager = {
             const resp = await fetch('LICENSE');
             if (resp.ok) {
                 const text = await resp.text();
-                licenseContent = text.split('\n\n').map(para => {
+                this.content = text.split('\n\n').map(para => {
                     if (para.includes('Copyright')) return para;
-                    if (para.includes('Word List Attributions:')) return `<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">${para}`;
+                    if (para.includes('Word List Attributions:') || para.includes('Data and Service Attributions:')) return `<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">${para}`;
                     return para;
                 }).join('<br><br>').replace(/\n/g, '<br>');
+                licenseContent = this.content;
             }
         } catch (e) {
             console.error('License load error:', e);
@@ -43,6 +45,8 @@ window.LicenseManager = {
         const modal = document.getElementById('licenseModal');
         const dimmer = document.getElementById('microDimmer');
         if (modal && dimmer) {
+            modal.querySelector('.license-title').innerText = 'License Agreement';
+            modal.querySelector('#licenseTextContent').innerHTML = this.content;
             modal.classList.add('active');
             dimmer.style.display = 'block';
             dimmer.style.opacity = '1';
@@ -65,17 +69,13 @@ window.LicenseManager = {
 };
 
 window.PrivacyManager = {
+    content: '',
     async init() {
-        const modal = document.createElement('div');
-        modal.id = 'privacyModal';
-        modal.className = 'license-modal';
-
-        let privacyContent = 'Loading privacy policy...';
         try {
             const resp = await fetch('PRIVACY.md');
             if (resp.ok) {
                 const text = await resp.text();
-                privacyContent = text.split('\n\n').map(para => {
+                this.content = text.split('\n\n').map(para => {
                     if (para.includes('SophDict')) return para;
                     if (para.includes('Services:') || para.includes('Attributions:')) return `<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">${para}`;
                     return para;
@@ -83,32 +83,16 @@ window.PrivacyManager = {
             }
         } catch (e) {
             console.error('Privacy load error:', e);
-            privacyContent = 'Failed to load privacy policy.';
+            this.content = 'Failed to load privacy policy.';
         }
-
-        modal.innerHTML = `
-            <div class="license-title">Privacy Policy</div>
-            <div id="privacyTextContent" class="license-text">
-                ${privacyContent}
-            </div>
-            <div class="license-footer">
-                <button class="license-close-btn" onclick="PrivacyManager.hide()">Close</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        // Listen for Esc key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal.classList.contains('active')) {
-                this.hide();
-            }
-        });
     },
 
     show() {
-        const modal = document.getElementById('privacyModal');
+        const modal = document.getElementById('licenseModal');
         const dimmer = document.getElementById('microDimmer');
         if (modal && dimmer) {
+            modal.querySelector('.license-title').innerText = 'Privacy Policy';
+            modal.querySelector('#licenseTextContent').innerHTML = this.content;
             modal.classList.add('active');
             dimmer.style.display = 'block';
             dimmer.style.opacity = '1';
@@ -119,14 +103,7 @@ window.PrivacyManager = {
     },
 
     hide() {
-        const modal = document.getElementById('privacyModal');
-        const dimmer = document.getElementById('microDimmer');
-        if (modal && dimmer) {
-            modal.classList.remove('active');
-            dimmer.style.display = 'none';
-            dimmer.style.zIndex = '';
-            document.body.classList.remove('modal-open');
-        }
+        LicenseManager.hide();
     }
 };
 
