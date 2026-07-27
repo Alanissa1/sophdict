@@ -214,7 +214,7 @@ window.AppClearSearch = (skipPush = false) => {
         document.addEventListener('click', hideOnOutside);
         document.addEventListener('focusin', hideOnOutside);
     }
-    async function getOnlineSuggestions(q) { try { const res = await fetch(`https://api.datamuse.com/sug?s=${q}&max=7`); const d = await res.json(); return d.map(i => i.word); } catch (e) { return []; } }
+    async function getOnlineSuggestions(q) { try { const res = await fetch(`/api/suggestions?q=${encodeURIComponent(q)}`); return await res.json(); } catch (e) { return []; } }
     window.showSuggestions = (words) => {
         const box = document.getElementById('suggestions-box');
         if (!box || words.length === 0) { window.hideSuggestions(); return; }

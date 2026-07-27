@@ -36,11 +36,39 @@ export default async function handler(req, res) {
             return res.status(404).json({ error: 'Not in cache' });
         }
 
-        // 2. Fetch from Google
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Translation API failed');
-        const data = await response.json();
+        // 2. Fetch from Microsoft Azure Translator
+        const azureKey = process.env.AZURE_TRANSLATOR_KEY;
+        const azureRegion = process.env.AZURE_TRANSLATOR_REGION || 'global';
+        const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
+
+        if (!azureKey) {
+            throw new Error('Azure Translator key not configured');
+        }
+
+        const url = `${azureEndpoint}/translate?api-version=3.0&to=${lang}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Ocp-Apim-Subscription-Key': azureKey,
+                'Ocp-Apim-Subscription-Region': azureRegion,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify([{ text: text }])
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('[Azure] API Error:', errorText);
+            throw new Error('Translation API failed');
+        }
+
+        const azureData = await response.json();
+
+        // Transform Azure response format to match the existing frontend expectation if possible,
+        // or just return the Azure format. The current frontend expects: [[["translated", "original"]]]
+        // Let's transform it to maintain compatibility:
+        const translatedText = azureData[0]?.translations[0]?.text || "";
+        const data = [[[translatedText, text]]];
 
         // 3. Save to Upstash Cache (1 year)
         if (upstashUrl && upstashToken && data) {

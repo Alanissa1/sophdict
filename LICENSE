@@ -8,6 +8,14 @@ Unauthorized copying, distribution, modification, public display, or performance
 
 This code is provided for private use only. No part of this project may be reused, republished, or integrated into other software without the express written permission of the copyright holder.
 
+Data and Service Attributions:
+This application utilizes the following third-party services and data sources:
+
+• Dictionary and Thesaurus Data: Powered by Merriam-Webster (dictionaryapi.com).
+• Translation Services: Powered by Microsoft Azure AI Translator.
+• Search Suggestions: Powered by Datamuse API.
+• Infrastructure and Caching: Powered by Vercel and Upstash Redis.
+
 Word List Attributions:
 Word lists utilized in this application are sourced and curated from educational resources including:
 • Academic Word List: 570 Academic Words (A. Coxhead)

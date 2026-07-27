@@ -117,33 +117,8 @@ window.TTSManager = {
             return;
         }
 
-        console.log("[TTS] Attempting to speak (Google fallback):", cleanText, "Lang:", lang);
-
-        const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(cleanText)}&tl=${lang}&client=tw-ob`;
-        const audio = new Audio(url);
-        this.audio = audio;
-
-        audio.onplay = () => {
-            if (buttonEl && this.activeButton === buttonEl) {
-                buttonEl.classList.add('speaking');
-            }
-        };
-
-        audio.onended = () => {
-            if (buttonEl) buttonEl.classList.remove('speaking');
-            if (this.activeButton === buttonEl) this.clearActive();
-        };
-
-        audio.onerror = (e) => {
-            console.error("[TTS] Audio error:", e);
-            if (buttonEl) buttonEl.classList.remove('speaking');
-            if (this.activeButton === buttonEl) this.clearActive();
-        };
-
-        audio.play().catch(err => {
-            console.error("[TTS] Play failed:", err);
-            this.clearActive();
-        });
+        console.warn("[TTS] Native Speech Synthesis not supported in this browser.");
+        this.clearActive();
     },
 
     stop() {
