@@ -3,7 +3,6 @@ window.CustomLists = {
 
     async init() {
         this.loadLocalLists();
-        this.createSettingsPanel();
         window.addEventListener('popstate', () => this.handleRoute());
 
         // If on home page, refresh to show list buttons
@@ -30,13 +29,7 @@ window.CustomLists = {
     },
 
     createSettingsPanel() {
-        const p = document.createElement('div');
-        p.id = 'listSettingsPanel';
-        p.className = 'license-modal'; // Reuse license-modal or statsPanel style
-        p.style.display = 'none';
-        p.style.flexDirection = 'column';
-        p.style.zIndex = '100';
-        document.body.appendChild(p);
+        // Now using standard licenseModal from LicenseManager
     },
 
     handleRoute() {
@@ -334,15 +327,15 @@ window.CustomLists = {
     },
 
     renderSettingsUI(name) {
-        const panel = document.getElementById('listSettingsPanel');
+        const modal = document.getElementById('licenseModal');
         const dimmer = document.getElementById('microDimmer');
-        if (!panel || !dimmer) return;
+        if (!modal || !dimmer) return;
 
         const list = this.lists[name];
 
-        panel.innerHTML = `
-            <div class="license-title">List Settings: ${name}</div>
-            <div class="settings-scroll-area" style="padding: 20px; flex-grow: 1; overflow-y: auto;">
+        modal.querySelector('.license-title').innerText = `List Settings: ${name}`;
+        modal.querySelector('#licenseTextContent').innerHTML = `
+            <div style="padding-top: 20px;">
                 <div class="input-group">
                     <label>Password</label>
                     <input type="password" id="editListPass" value="${list.password || ''}" autocomplete="off">
@@ -357,8 +350,8 @@ window.CustomLists = {
                     <input type="checkbox" id="editListLock" ${list.locked ? 'checked' : ''}>
                 </div>` : ''}
 
-                <div style="margin-top: 30px;">
-                    <h3 style="color: var(--text-main); font-size: 16px;">Manage Words</h3>
+                <div style="margin-top: 30px; margin-bottom: 20px;">
+                    <h3 style="color: var(--text-main); font-size: 16px; margin-bottom: 10px;">Manage Words</h3>
                     <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; background: var(--bg-color);">
                         ${list.words.length === 0 ? '<div style="color: var(--text-sub); text-align: center;">No words in list.</div>' :
                             list.words.map(w => `
@@ -370,16 +363,17 @@ window.CustomLists = {
                     </div>
                 </div>
             </div>
+        `;
 
-            <div class="license-footer" style="display: flex; gap: 10px; padding: 20px; border-top: 1px solid var(--border-color);">
+        modal.querySelector('.license-footer').innerHTML = `
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
                 <button class="action-btn" onclick="CustomLists.saveSettings('${name}')">Save</button>
                 <button class="action-btn" style="background: #ff4b6b;" onclick="CustomLists.deleteList('${name}')">Delete</button>
                 <button class="license-close-btn" style="margin: 0;" onclick="CustomLists.closeSettings()">Close</button>
             </div>
         `;
 
-        panel.style.display = 'flex';
-        panel.classList.add('active');
+        modal.classList.add('active');
         dimmer.style.display = 'block';
         dimmer.style.opacity = '1';
         dimmer.style.zIndex = '2900';
@@ -388,11 +382,9 @@ window.CustomLists = {
     },
 
     closeSettings() {
-        const panel = document.getElementById('listSettingsPanel');
-        const dimmer = document.getElementById('microDimmer');
-        if (panel) {
-            panel.style.display = 'none';
-            panel.classList.remove('active');
+        const modal = document.getElementById('licenseModal');
+        if (modal) {
+            modal.classList.remove('active');
         }
         UIUtils.updateSharedDimmer();
     },

@@ -50,7 +50,8 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Translation service not configured' });
         }
 
-        const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&to=${lang}`;
+        // IMPROVEMENT: Force from=en and textType=plain for higher quality dictionary translations
+        const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&from=en&to=${lang}&textType=plain`;
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -82,7 +83,8 @@ export default async function handler(req, res) {
         // Safety check for Azure response structure
         const translatedText = azureData?.[0]?.translations?.[0]?.text;
         if (!translatedText) {
-            throw new Error('Invalid response structure from Azure');
+            console.error('[Azure] Invalid response structure:', azureData);
+            return res.status(502).json({ error: 'Invalid response from Azure' });
         }
 
         const data = [[[translatedText, text]]];

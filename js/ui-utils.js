@@ -230,9 +230,9 @@ window.UIUtils = {
 
         const isStatsOpen = document.getElementById('statsPanel')?.style.display === 'flex';
         const isPinnedOpen = document.getElementById('pinnedPanel')?.style.display === 'block';
-        const isListSettingsOpen = document.getElementById('listSettingsPanel')?.classList.contains('active');
+        const isStandardModalOpen = document.getElementById('licenseModal')?.classList.contains('active');
 
-        if (isModalOpen || isStatsOpen || isPinnedOpen || isListSettingsOpen) {
+        if (isModalOpen || isStatsOpen || isPinnedOpen || isStandardModalOpen) {
             dimmer.style.display = 'block';
             document.body.classList.add('modal-open');
             // Ensure the dimmer is always clickable when shown
