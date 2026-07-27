@@ -70,7 +70,7 @@ window.CustomLists = {
                     </div>
                     <div class="input-group">
                         <label>Password (optional)</label>
-                        <input type="password" id="newListPass" placeholder="Leave empty for no password" autocomplete="off">
+                        <input type="password" id="newListPass" placeholder="Leave empty for no password" autocomplete="new-password">
                     </div>
                     <div class="input-group checkbox-row">
                         <label for="newListHide">Hide list completely</label>
@@ -101,7 +101,7 @@ window.CustomLists = {
 
         if (type === 'local') {
             pathGroup.style.display = 'block'; // Changed to allow name
-            lockGroup.style.display = 'none';
+            lockGroup.style.display = 'flex';
             document.getElementById('newListPath').value = `Local List ${Object.keys(this.lists).length + 1}`;
         } else {
             pathGroup.style.display = 'block';
@@ -199,7 +199,7 @@ window.CustomLists = {
         }
     },
 
-    renderListView(name) {
+    async renderListView(name) {
         const container = document.getElementById('results-container');
         if (!container) return;
 
@@ -208,18 +208,17 @@ window.CustomLists = {
 
         let list = this.lists[name];
 
-        // If not in local cache, try fetching online
-        if (!list) {
-            this.fetchOnlineList(name).then(list => {
-                if (list) {
-                    this.lists[name] = list;
-                    this.saveLocalLists();
-                    this.renderListView(name);
-                }
-            });
-            // Show loading or not found while waiting
-            container.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--text-sub);">Loading list...</div>`;
-            return;
+        // If not in local cache OR it's an online list, try fetching fresh data
+        if (!list || list.type === 'online') {
+            if (!list) {
+                container.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--text-sub);">Loading list...</div>`;
+            }
+            const fresh = await this.fetchOnlineList(name);
+            if (fresh) {
+                this.lists[name] = fresh;
+                list = fresh;
+                this.saveLocalLists();
+            }
         }
 
         if (!list) {
@@ -227,9 +226,10 @@ window.CustomLists = {
             return;
         }
 
-        if (list.hidden || list.locked || list.password) {
+        // Only require password to VIEW if it's hidden OR if it's not locked (editable)
+        if (list.password && (list.hidden || !list.locked)) {
             const authenticated = sessionStorage.getItem(`auth_${name}`);
-            if (!authenticated && list.password) {
+            if (!authenticated) {
                 this.renderPasswordPrompt(name, list);
                 return;
             }
@@ -243,6 +243,7 @@ window.CustomLists = {
                     <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
                 </div>
 
+                ${list.locked ? '' : `
                 <div class="search-container manual-add-container" style="width: 100%; max-width: 100%; margin-bottom: 30px;">
                     <input type="text" id="manualWordInput" placeholder="Add word manually..." autocomplete="off" style="flex: 1;">
                     <button class="icon-btn" onclick="CustomLists.addManualWord('${name}')" aria-label="Add Word">
@@ -250,10 +251,11 @@ window.CustomLists = {
                     </button>
                     <div id="manual-suggestions-box" class="suggestions-container"></div>
                 </div>
+                `}
 
                 <div style="margin-bottom: 20px; color: var(--text-sub);">
                     Type: ${list.type} | Words: ${list.words.length}
-                    ${list.locked ? ' | <span style="color: #ff4b6b;">Locked</span>' : ''}
+                    ${list.locked ? ' | <span style="color: #ff4b6b; font-weight: bold;">READ ONLY</span>' : ''}
                 </div>
                 <div class="tags-row">
                     ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
@@ -261,7 +263,7 @@ window.CustomLists = {
                 </div>
             </div>
         `;
-        this.setupManualInput(name);
+        if (!list.locked) this.setupManualInput(name);
     },
 
     setupManualInput(name) {
@@ -312,13 +314,13 @@ window.CustomLists = {
         this.renderListView(name);
     },
 
-    removeWordFromList(word, name, event) {
+    async removeWordFromList(word, name, event) {
         if (event) event.stopPropagation();
         const list = this.lists[name];
-        if (!list) return;
+        if (!list || list.locked) return;
         list.words = list.words.filter(w => w !== word);
         this.saveLocalLists();
-        if (list.type === 'online') this.saveOnlineList(name, list);
+        if (list.type === 'online') await this.saveOnlineList(name, list);
 
         // Only refresh UI if we are currently viewing this list
         if (window.location.pathname === `/listname/${encodeURIComponent(name)}`) {
@@ -333,22 +335,26 @@ window.CustomLists = {
 
         const list = this.lists[name];
 
+        if (list.password && !sessionStorage.getItem(`auth_${name}`)) {
+            this.renderSettingsPasswordUI(name, modal, dimmer);
+            return;
+        }
+
         modal.querySelector('.license-title').innerText = `List Settings: ${name}`;
         modal.querySelector('#licenseTextContent').innerHTML = `
             <div style="padding-top: 20px;">
                 <div class="input-group">
                     <label>Password</label>
-                    <input type="password" id="editListPass" value="${list.password || ''}" autocomplete="off">
+                    <input type="password" id="editListPass" value="${list.password || ''}" autocomplete="new-password">
                 </div>
                 <div class="input-group checkbox-row">
                     <label for="editListHide">Hide list completely</label>
                     <input type="checkbox" id="editListHide" ${list.hidden ? 'checked' : ''}>
                 </div>
-                ${list.type === 'online' ? `
                 <div class="input-group checkbox-row">
                     <label for="editListLock">Lock list (Read-only)</label>
                     <input type="checkbox" id="editListLock" ${list.locked ? 'checked' : ''}>
-                </div>` : ''}
+                </div>
 
                 <div style="margin-top: 30px; margin-bottom: 20px;">
                     <h3 style="color: var(--text-main); font-size: 16px; margin-bottom: 10px;">Manage Words</h3>
@@ -357,7 +363,7 @@ window.CustomLists = {
                             list.words.map(w => `
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border-color);">
                                     <span style="color: var(--text-main); font-weight: 500;">${w}</span>
-                                    <button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.removeWordFromList('${w}', '${name}', event); CustomLists.renderSettingsUI('${name}');">Remove</button>
+                                    ${list.locked ? '' : `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.removeWordFromList('${w}', '${name}', event); CustomLists.renderSettingsUI('${name}');">Remove</button>`}
                                 </div>
                             `).join('')}
                     </div>
@@ -386,16 +392,54 @@ window.CustomLists = {
         UIUtils.updateSharedDimmer();
     },
 
-    saveSettings(name) {
+    renderSettingsPasswordUI(name, modal, dimmer) {
+        modal.querySelector('.license-title').innerText = `Authenticate: ${name}`;
+        modal.querySelector('#licenseTextContent').innerHTML = `
+            <div style="padding: 20px 0;">
+                <p style="color: var(--text-sub); margin-bottom: 15px;">Enter password to manage this list.</p>
+                <div class="input-group">
+                    <input type="password" id="modalPassInput" placeholder="Password" autocomplete="current-password">
+                </div>
+                <div id="modal-pass-error" style="color: #ff4b6b; font-size: 14px; margin-top: 10px; display: none;">Incorrect password.</div>
+            </div>
+        `;
+        modal.querySelector('.license-footer').innerHTML = `
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button class="action-btn" onclick="CustomLists.checkModalPassword('${name}')">Unlock</button>
+                <button class="license-close-btn" style="margin: 0;" onclick="CustomLists.closeSettings()">Close</button>
+            </div>
+        `;
+        modal.classList.add('active');
+        UIUtils.updateSharedDimmer();
+        UIUtils.setupQuickClose(dimmer, () => this.closeSettings());
+
+        const input = modal.querySelector('#modalPassInput');
+        if (input) {
+            input.onkeydown = (e) => { if (e.key === 'Enter') this.checkModalPassword(name); };
+            setTimeout(() => input.focus(), 100);
+        }
+    },
+
+    checkModalPassword(name) {
+        const input = document.getElementById('modalPassInput').value;
+        const list = this.lists[name];
+        if (input === list.password) {
+            sessionStorage.setItem(`auth_${name}`, 'true');
+            this.renderSettingsUI(name);
+        } else {
+            const err = document.getElementById('modal-pass-error');
+            if (err) err.style.display = 'block';
+        }
+    },
+
+    async saveSettings(name) {
         const list = this.lists[name];
         list.password = document.getElementById('editListPass').value;
         list.hidden = document.getElementById('editListHide').checked;
-        if (list.type === 'online') {
-            list.locked = document.getElementById('editListLock').checked;
-        }
+        list.locked = document.getElementById('editListLock').checked;
 
         this.saveLocalLists();
-        if (list.type === 'online') this.saveOnlineList(name, list);
+        if (list.type === 'online') await this.saveOnlineList(name, list);
         this.closeSettings();
         this.renderListView(name);
     },
@@ -412,10 +456,10 @@ window.CustomLists = {
         const container = document.getElementById('results-container');
         container.innerHTML = `
             <div class="password-prompt">
-                <h3 style="color: var(--text-main);">${list.hidden ? 'Private List' : 'Locked List'}</h3>
+                <h3 style="color: var(--text-main);">${list.hidden ? 'Private List' : 'Password Protected'}</h3>
                 <p style="color: var(--text-sub);">This list is protected. Enter password to view.</p>
                 <div class="input-group" style="max-width: 300px; margin: 20px auto;">
-                    <input type="password" id="listPassInput" placeholder="Password" autocomplete="off">
+                    <input type="password" id="listPassInput" placeholder="Password" autocomplete="current-password">
                 </div>
                 <button class="action-btn" onclick="CustomLists.checkPassword('${name}')">Unlock</button>
             </div>
@@ -464,10 +508,12 @@ window.CustomLists = {
         } else {
             listHtml = listNames.map(name => {
                 const inList = this.lists[name].words.includes(cleanWord);
+                const isLocked = this.lists[name].locked;
+
                 if (inList) {
-                    return `<div class="heart-menu-item" style="color: #ff4b6b;" onclick="CustomLists.removeWordFromList('${cleanWord}', '${name}'); document.querySelector('.heart-menu')?.remove();">Remove from ${name}</div>`;
+                    return `<div class="heart-menu-item" style="color: #ff4b6b;" onclick="${isLocked ? '' : `CustomLists.removeWordFromList('${cleanWord}', '${name}');`} document.querySelector('.heart-menu')?.remove();">Remove from ${name}${isLocked ? ' (Locked)' : ''}</div>`;
                 } else {
-                    return `<div class="heart-menu-item" onclick="CustomLists.addWordToList('${cleanWord}', '${name}')">${name}</div>`;
+                    return `<div class="heart-menu-item" style="${isLocked ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="${isLocked ? '' : `CustomLists.addWordToList('${cleanWord}', '${name}')`}">${name}${isLocked ? ' (Locked)' : ''}</div>`;
                 }
             }).join('');
         }
