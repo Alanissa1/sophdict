@@ -1,5 +1,5 @@
 window.VideoExplanationManager = {
-    videoUrl: 'https://www.youtube.com/watch?v=sbjy6xYVDtk', // TODO: Replace with actual tutorial video URL
+    videoUrl: 'https://www.youtube.com/embed/sbjy6xYVDtk',
     init() {
         if (localStorage.getItem('sophdict_video_seen')) return;
 
@@ -10,7 +10,7 @@ window.VideoExplanationManager = {
         modal.innerHTML = `
             <div class="license-title">Welcome to SophDict!</div>
             <div id="videoContent" class="license-text" style="padding: 0; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; min-height: 225px;">
-                <iframe width="100%" height="225" src="${this.videoUrl}" title="SophDict Tutorial" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                <iframe width="100%" height="225" src="${this.videoUrl}" title="SophDict Tutorial" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
             </div>
             <div class="license-footer">
                 <button class="license-close-btn" onclick="VideoExplanationManager.hide()">Start Exploring</button>
