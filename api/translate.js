@@ -7,7 +7,10 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing parameters' });
     }
 
-    if (upstashUrl && upstashUrl.endsWith('/')) upstashUrl = upstashUrl.slice(0, -1);
+    if (upstashUrl) {
+        if (!upstashUrl.startsWith('http')) upstashUrl = `https://${upstashUrl}`;
+        if (upstashUrl.endsWith('/')) upstashUrl = upstashUrl.slice(0, -1);
+    }
 
     // Use Hex encoding and limit length to ensure key is URL-safe and compatible with Redis
     const textHash = Buffer.from(text).toString('hex').substring(0, 120);
@@ -22,12 +25,14 @@ export default async function handler(req, res) {
                     headers: { Authorization: `Bearer ${upstashToken}` },
                     body: JSON.stringify(["GET", cacheKey])
                 });
-                const cacheData = await cacheRes.json();
-                if (cacheData && cacheData.result) {
-                    return res.status(200).json(JSON.parse(cacheData.result));
+                if (cacheRes.ok) {
+                    const cacheData = await cacheRes.json();
+                    if (cacheData && cacheData.result) {
+                        return res.status(200).json(JSON.parse(cacheData.result));
+                    }
                 }
             } catch (e) {
-                console.error('[Cache] Read error:', e);
+                console.error('[Cache] Read error:', e.message);
             }
         }
 
@@ -64,10 +69,11 @@ export default async function handler(req, res) {
             const errorBody = response ? await response.text() : 'No response from Azure';
             console.error(`[Azure] API Error (${status}):`, errorBody);
 
-            // If it's a 401 or 403, it's definitely a Key/Region issue
-            return res.status(502).json({
+            // Provide a very clear error to the user
+            return res.status(status === 401 || status === 403 ? 401 : 502).json({
                 error: 'Translation API failed',
-                details: status === 401 || status === 403 ? 'Check Azure Key and Region' : 'Upstream Error'
+                message: errorBody,
+                suggestion: 'Check your AZURE_TRANSLATOR_KEY and AZURE_TRANSLATOR_REGION'
             });
         }
 
@@ -88,16 +94,16 @@ export default async function handler(req, res) {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${upstashToken}` },
                     body: JSON.stringify(["SET", cacheKey, JSON.stringify(data), "EX", 31536000])
-                });
+                }).catch(() => null); // Silent fail for cache write
             } catch (e) {
-                console.error('[Cache] Write error:', e);
+                console.error('[Cache] Write error:', e.message);
             }
         }
 
         res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
-        res.status(200).json(data);
+        return res.status(200).json(data);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Translation failed' });
+        console.error('[Translate Error]:', error.message);
+        return res.status(500).json({ error: 'Translation failed', message: error.message });
     }
 }
