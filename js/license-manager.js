@@ -48,17 +48,23 @@ window.LicenseManager = {
             modal.querySelector('.license-title').innerText = 'License Agreement';
             modal.querySelector('#licenseTextContent').innerHTML = this.content;
             modal.classList.add('active');
-            UIUtils.updateSharedDimmer();
+            dimmer.style.display = 'block';
+            dimmer.style.opacity = '1';
+            dimmer.style.zIndex = '2900';
+            document.body.classList.add('modal-open');
             UIUtils.setupQuickClose(dimmer, () => this.hide());
         }
     },
 
     hide() {
         const modal = document.getElementById('licenseModal');
-        if (modal) {
+        const dimmer = document.getElementById('microDimmer');
+        if (modal && dimmer) {
             modal.classList.remove('active');
+            dimmer.style.display = 'none';
+            dimmer.style.zIndex = '';
+            document.body.classList.remove('modal-open');
         }
-        UIUtils.updateSharedDimmer();
     }
 };
 

@@ -230,23 +230,16 @@ window.UIUtils = {
 
         const isStatsOpen = document.getElementById('statsPanel')?.style.display === 'flex';
         const isPinnedOpen = document.getElementById('pinnedPanel')?.style.display === 'block';
-        const isStandardModalOpen = document.getElementById('licenseModal')?.classList.contains('active');
+        const isListSettingsOpen = document.getElementById('listSettingsPanel')?.classList.contains('active');
 
-        if (isModalOpen || isStatsOpen || isPinnedOpen || isStandardModalOpen) {
-            // Set dimmer z-index based on highest active modal
-            let maxZ = 2500;
-            if (isStandardModalOpen) maxZ = 3000;
-            else if (isModalOpen || isStatsOpen) maxZ = 2600;
-
-            dimmer.style.zIndex = maxZ - 1;
+        if (isModalOpen || isStatsOpen || isPinnedOpen || isListSettingsOpen) {
             dimmer.style.display = 'block';
-            dimmer.style.opacity = '1';
             document.body.classList.add('modal-open');
+            // Ensure the dimmer is always clickable when shown
             this.setupQuickClose(dimmer);
         } else {
             dimmer.style.display = 'none';
-            dimmer.style.opacity = '0';
-            dimmer.style.zIndex = '';
+            // Only remove modal-open if the loader isn't active either
             if (!loader || loader.style.display !== 'flex') {
                 document.body.classList.remove('modal-open');
             }
