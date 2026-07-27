@@ -42,7 +42,8 @@ export default async function handler(req, res) {
         const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
 
         if (!azureKey) {
-            throw new Error('Azure Translator key not configured');
+            console.error('[Azure] Missing API Key');
+            return res.status(500).json({ error: 'Translation service not configured' });
         }
 
         const url = `${azureEndpoint}/translate?api-version=3.0&to=${lang}`;
@@ -54,20 +55,25 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify([{ text: text }])
+        }).catch(err => {
+            console.error('[Azure] Fetch error:', err);
+            return null;
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
+        if (!response || !response.ok) {
+            const errorText = response ? await response.text() : 'Network error';
             console.error('[Azure] API Error:', errorText);
-            throw new Error('Translation API failed');
+            return res.status(502).json({ error: 'Translation API failed' });
         }
 
         const azureData = await response.json();
 
-        // Transform Azure response format to match the existing frontend expectation if possible,
-        // or just return the Azure format. The current frontend expects: [[["translated", "original"]]]
-        // Let's transform it to maintain compatibility:
-        const translatedText = azureData[0]?.translations[0]?.text || "";
+        // Safety check for Azure response structure
+        const translatedText = azureData?.[0]?.translations?.[0]?.text;
+        if (!translatedText) {
+            throw new Error('Invalid response structure from Azure');
+        }
+
         const data = [[[translatedText, text]]];
 
         // 3. Save to Upstash Cache (1 year)
