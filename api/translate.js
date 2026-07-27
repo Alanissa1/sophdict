@@ -36,17 +36,16 @@ export default async function handler(req, res) {
             return res.status(404).json({ error: 'Not in cache' });
         }
 
-        // 2. Fetch from Microsoft Azure Translator
         const azureKey = process.env.AZURE_TRANSLATOR_KEY;
         const azureRegion = process.env.AZURE_TRANSLATOR_REGION || 'global';
         const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
 
         if (!azureKey) {
-            console.error('[Azure] Missing API Key');
+            console.error('[Azure] Missing API Key in Environment Variables');
             return res.status(500).json({ error: 'Translation service not configured' });
         }
 
-        const url = `${azureEndpoint}/translate?api-version=3.0&to=${lang}`;
+        const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&to=${lang}`;
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -56,14 +55,20 @@ export default async function handler(req, res) {
             },
             body: JSON.stringify([{ text: text }])
         }).catch(err => {
-            console.error('[Azure] Fetch error:', err);
+            console.error('[Azure] Fetch network error:', err.message);
             return null;
         });
 
         if (!response || !response.ok) {
-            const errorText = response ? await response.text() : 'Network error';
-            console.error('[Azure] API Error:', errorText);
-            return res.status(502).json({ error: 'Translation API failed' });
+            const status = response ? response.status : 'Network Error';
+            const errorBody = response ? await response.text() : 'No response from Azure';
+            console.error(`[Azure] API Error (${status}):`, errorBody);
+
+            // If it's a 401 or 403, it's definitely a Key/Region issue
+            return res.status(502).json({
+                error: 'Translation API failed',
+                details: status === 401 || status === 403 ? 'Check Azure Key and Region' : 'Upstream Error'
+            });
         }
 
         const azureData = await response.json();
