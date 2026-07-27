@@ -231,8 +231,10 @@ window.UIUtils = {
         const isStatsOpen = document.getElementById('statsPanel')?.style.display === 'flex';
         const isPinnedOpen = document.getElementById('pinnedPanel')?.style.display === 'block';
         const isListSettingsOpen = document.getElementById('listSettingsPanel')?.classList.contains('active');
+        const isVideoModalOpen = document.getElementById('videoModal')?.classList.contains('active');
+        const isLicenseModalOpen = document.getElementById('licenseModal')?.classList.contains('active');
 
-        if (isModalOpen || isStatsOpen || isPinnedOpen || isListSettingsOpen) {
+        if (isModalOpen || isStatsOpen || isPinnedOpen || isListSettingsOpen || isVideoModalOpen || isLicenseModalOpen) {
             dimmer.style.display = 'block';
             document.body.classList.add('modal-open');
             // Ensure the dimmer is always clickable when shown

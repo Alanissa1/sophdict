@@ -1,4 +1,4 @@
-div#licenseModal {
+.license-modal {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -21,7 +21,7 @@ div#licenseModal {
     overflow: hidden;
 }
 
-div#licenseModal.active {
+.license-modal.active {
     opacity: 1;
     visibility: visible;
     transform: translate(-50%, -50%) scale(1);
@@ -36,7 +36,7 @@ div#licenseModal.active {
     flex-shrink: 0;
 }
 
-div#licenseTextContent {
+.license-text {
     line-height: 1.6;
     color: var(--text-main);
     flex-grow: 1;
