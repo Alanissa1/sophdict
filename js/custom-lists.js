@@ -203,13 +203,21 @@ window.CustomLists = {
         const container = document.getElementById('results-container');
         if (!container) return;
 
-        this.closeSettings();
+        // Only close settings if we are navigating TO this list from somewhere else
+        if (window.location.pathname !== `/listname/${encodeURIComponent(name)}`) {
+            this.closeSettings();
+        }
+
         if (window.RestoreSearchUI) window.RestoreSearchUI();
 
         let list = this.lists[name];
 
         // If not in local cache OR it's an online list, try fetching fresh data
-        if (!list || list.type === 'online') {
+        // Added a small delay check to prevent overwriting just-saved data (sync race condition)
+        const lastSave = this._lastSaveTime || 0;
+        const recentlySaved = (Date.now() - lastSave) < 2000;
+
+        if (!list || (list.type === 'online' && !recentlySaved)) {
             if (!list) {
                 container.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--text-sub);">Loading list...</div>`;
             }
@@ -320,10 +328,15 @@ window.CustomLists = {
         if (!list || list.locked) return;
         list.words = list.words.filter(w => w !== word);
         this.saveLocalLists();
+
+        this._lastSaveTime = Date.now();
         if (list.type === 'online') await this.saveOnlineList(name, list);
 
-        // Only refresh UI if we are currently viewing this list
-        if (window.location.pathname === `/listname/${encodeURIComponent(name)}`) {
+        // Only refresh UI if we are currently viewing this list AND settings modal is NOT open
+        const modal = document.getElementById('licenseModal');
+        const isSettingsOpen = modal && modal.classList.contains('active');
+
+        if (!isSettingsOpen && window.location.pathname === `/listname/${encodeURIComponent(name)}`) {
             this.renderListView(name);
         }
     },
@@ -334,11 +347,6 @@ window.CustomLists = {
         if (!modal || !dimmer) return;
 
         const list = this.lists[name];
-
-        if (list.password && !sessionStorage.getItem(`auth_${name}`)) {
-            this.renderSettingsPasswordUI(name, modal, dimmer);
-            return;
-        }
 
         modal.querySelector('.license-title').innerText = `List Settings: ${name}`;
         modal.querySelector('#licenseTextContent').innerHTML = `
@@ -363,7 +371,7 @@ window.CustomLists = {
                             list.words.map(w => `
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border-color);">
                                     <span style="color: var(--text-main); font-weight: 500;">${w}</span>
-                                    ${list.locked ? '' : `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.removeWordFromList('${w}', '${name}', event); CustomLists.renderSettingsUI('${name}');">Remove</button>`}
+                                    ${list.locked ? '' : `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.handleRemoveFromSettings('${w}', '${name}', event)">Remove</button>`}
                                 </div>
                             `).join('')}
                     </div>
@@ -392,46 +400,6 @@ window.CustomLists = {
         UIUtils.updateSharedDimmer();
     },
 
-    renderSettingsPasswordUI(name, modal, dimmer) {
-        modal.querySelector('.license-title').innerText = `Authenticate: ${name}`;
-        modal.querySelector('#licenseTextContent').innerHTML = `
-            <div style="padding: 20px 0;">
-                <p style="color: var(--text-sub); margin-bottom: 15px;">Enter password to manage this list.</p>
-                <div class="input-group">
-                    <input type="password" id="modalPassInput" placeholder="Password" autocomplete="current-password">
-                </div>
-                <div id="modal-pass-error" style="color: #ff4b6b; font-size: 14px; margin-top: 10px; display: none;">Incorrect password.</div>
-            </div>
-        `;
-        modal.querySelector('.license-footer').innerHTML = `
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="action-btn" onclick="CustomLists.checkModalPassword('${name}')">Unlock</button>
-                <button class="license-close-btn" style="margin: 0;" onclick="CustomLists.closeSettings()">Close</button>
-            </div>
-        `;
-        modal.classList.add('active');
-        UIUtils.updateSharedDimmer();
-        UIUtils.setupQuickClose(dimmer, () => this.closeSettings());
-
-        const input = modal.querySelector('#modalPassInput');
-        if (input) {
-            input.onkeydown = (e) => { if (e.key === 'Enter') this.checkModalPassword(name); };
-            setTimeout(() => input.focus(), 100);
-        }
-    },
-
-    checkModalPassword(name) {
-        const input = document.getElementById('modalPassInput').value;
-        const list = this.lists[name];
-        if (input === list.password) {
-            sessionStorage.setItem(`auth_${name}`, 'true');
-            this.renderSettingsUI(name);
-        } else {
-            const err = document.getElementById('modal-pass-error');
-            if (err) err.style.display = 'block';
-        }
-    },
-
     async saveSettings(name) {
         const list = this.lists[name];
         list.password = document.getElementById('editListPass').value;
@@ -439,9 +407,15 @@ window.CustomLists = {
         list.locked = document.getElementById('editListLock').checked;
 
         this.saveLocalLists();
+        this._lastSaveTime = Date.now();
         if (list.type === 'online') await this.saveOnlineList(name, list);
         this.closeSettings();
         this.renderListView(name);
+    },
+
+    async handleRemoveFromSettings(word, name, event) {
+        await this.removeWordFromList(word, name, event);
+        this.renderSettingsUI(name);
     },
 
     deleteList(name) {
@@ -479,7 +453,8 @@ window.CustomLists = {
 
     async fetchOnlineList(name) {
          try {
-            const resp = await fetch(`/api/custom-lists?action=get&name=${encodeURIComponent(name)}`);
+            // Added timestamp to prevent browser caching of the GET request
+            const resp = await fetch(`/api/custom-lists?action=get&name=${encodeURIComponent(name)}&t=${Date.now()}`);
             if (resp.ok) return await resp.json();
         } catch (e) {}
         return null;
@@ -601,6 +576,13 @@ window.CustomLists = {
         }
 
         this.saveLocalLists();
+        this._lastSaveTime = Date.now();
+
+        // Refresh UI if we are currently viewing this list
+        if (window.location.pathname === `/listname/${encodeURIComponent(listName)}`) {
+            this.renderListView(listName);
+        }
+
         document.querySelector('.heart-menu')?.remove();
     }
 };
