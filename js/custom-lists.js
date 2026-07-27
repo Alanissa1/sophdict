@@ -374,10 +374,7 @@ window.CustomLists = {
         `;
 
         modal.classList.add('active');
-        dimmer.style.display = 'block';
-        dimmer.style.opacity = '1';
-        dimmer.style.zIndex = '2900';
-        document.body.classList.add('modal-open');
+        UIUtils.updateSharedDimmer();
         UIUtils.setupQuickClose(dimmer, () => this.closeSettings());
     },
 

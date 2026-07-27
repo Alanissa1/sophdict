@@ -3,7 +3,7 @@
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    z-index: 2501;
+    z-index: 2600;
     background: white;
     box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     border-radius: 10px;
