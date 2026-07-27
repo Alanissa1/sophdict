@@ -1,5 +1,5 @@
 window.VideoExplanationManager = {
-    videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ', // TODO: Replace with actual tutorial video URL
+    videoUrl: 'https://youtu.be/sbjy6xYVDtk?si=x52gaIKE-SxXTC_e', // TODO: Replace with actual tutorial video URL
     init() {
         if (localStorage.getItem('sophdict_video_seen')) return;
 
