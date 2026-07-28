@@ -255,7 +255,8 @@ window.CustomLists = {
             return;
         }
 
-        if (list.password && (list.hidden || !list.locked)) {
+        // Only lock list view if explicitly hidden (private)
+        if (list.password && list.hidden) {
             const authenticated = sessionStorage.getItem(`auth_${name}`);
             if (!authenticated) {
                 this.renderPasswordPrompt(name, list);
@@ -374,11 +375,18 @@ window.CustomLists = {
     },
 
     renderSettingsUI(name) {
+        const list = this.lists[name];
+        if (!list) return;
+
+        // Lock settings if list has a password and user is not authenticated
+        if (list.password && sessionStorage.getItem(`auth_${name}`) !== 'true') {
+            this.renderPasswordPrompt(name, list);
+            return;
+        }
+
         const modal = document.getElementById('licenseModal');
         const dimmer = document.getElementById('microDimmer');
         if (!modal || !dimmer) return;
-
-        const list = this.lists[name];
 
         modal.querySelector('.license-title').innerText = `List Settings: ${name}`;
         modal.querySelector('#licenseTextContent').innerHTML = `
