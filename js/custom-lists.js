@@ -1,4 +1,4 @@
-Window.CustomLists = {
+window.CustomLists = {
     lists: {}, // name -> { type: 'local'|'online', words: [], locked: bool, hidden: bool, password: string }
 
     async init() {
@@ -26,26 +26,6 @@ Window.CustomLists = {
 
     saveLocalLists() {
         localStorage.setItem('sophdict_custom_lists', JSON.stringify(this.lists));
-    },
-
-    // --- NEW HELPER: Check if current user can edit ---
-    canEditList(name) {
-        const list = this.lists[name];
-        if (!list) return false;
-        
-        // If it's not locked, anyone (or anyone who unlocked a private list) can edit
-        if (!list.locked) return true;
-        
-        // If it's locked AND has a password, check if the user is authenticated in this session
-        return list.locked && list.password && sessionStorage.getItem(`auth_${name}`) === 'true';
-    },
-
-    // --- NEW HELPER: Trigger unlock modal for owners ---
-    triggerUnlock(name) {
-        const list = this.lists[name];
-        if (list) {
-            this.renderPasswordPrompt(name, list);
-        }
     },
 
     createSettingsPanel() {
@@ -120,7 +100,7 @@ Window.CustomLists = {
         const lockGroup = document.getElementById('lockInputGroup');
 
         if (type === 'local') {
-            pathGroup.style.display = 'block'; 
+            pathGroup.style.display = 'block'; // Changed to allow name
             lockGroup.style.display = 'flex';
             document.getElementById('newListPath').value = `Local List ${Object.keys(this.lists).length + 1}`;
         } else {
@@ -182,11 +162,7 @@ Window.CustomLists = {
 
         this.saveLocalLists();
 
-        // Automatically authenticate the creator if they set a password
-        if (pass) {
-            sessionStorage.setItem(`auth_${name}`, 'true');
-        }
-
+        // Refresh home screen if we are on it
         if (document.body.classList.contains('home-state')) {
             window.AppClearSearch(true);
         }
@@ -198,7 +174,7 @@ Window.CustomLists = {
     async checkOnlineName(name) {
         try {
             const resp = await fetch(`/api/custom-lists?action=check&name=${encodeURIComponent(name)}`);
-            if (!resp.ok) return true; 
+            if (!resp.ok) return true; // Let saveOnlineList handle the descriptive error
             const data = await resp.json();
             return data.available !== false;
         } catch (e) {
@@ -227,6 +203,7 @@ Window.CustomLists = {
         const container = document.getElementById('results-container');
         if (!container) return;
 
+        // Only close settings if we are navigating TO this list from somewhere else
         if (window.location.pathname !== `/listname/${encodeURIComponent(name)}`) {
             this.closeSettings();
         }
@@ -235,6 +212,8 @@ Window.CustomLists = {
 
         let list = this.lists[name];
 
+        // If not in local cache OR it's an online list, try fetching fresh data
+        // Added a small delay check to prevent overwriting just-saved data (sync race condition)
         const lastSave = this._lastSaveTime || 0;
         const recentlySaved = (Date.now() - lastSave) < 2000;
 
@@ -255,6 +234,7 @@ Window.CustomLists = {
             return;
         }
 
+        // Only require password to VIEW if it's hidden OR if it's not locked (editable)
         if (list.password && (list.hidden || !list.locked)) {
             const authenticated = sessionStorage.getItem(`auth_${name}`);
             if (!authenticated) {
@@ -263,25 +243,15 @@ Window.CustomLists = {
             }
         }
 
-        const canEdit = this.canEditList(name);
-        const isAuth = sessionStorage.getItem(`auth_${name}`) === 'true';
-
-        // Unlock button for owner to edit read-only lists
-        const unlockBtn = (list.locked && list.password && !isAuth) ? 
-            `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px;" onclick="CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
-
         document.body.classList.remove('home-state');
         container.innerHTML = `
             <div style="padding: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <div class="list-name-display" style="margin: 0;">${name}</div>
-                    <div style="display: flex;">
-                        ${unlockBtn}
-                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
-                    </div>
+                    <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
                 </div>
 
-                ${canEdit ? `
+                ${list.locked ? '' : `
                 <div class="search-container manual-add-container" style="width: 100%; max-width: 100%; margin-bottom: 30px;">
                     <input type="text" id="manualWordInput" placeholder="Add word manually..." autocomplete="off" style="flex: 1;">
                     <button class="icon-btn" onclick="CustomLists.addManualWord('${name}')" aria-label="Add Word">
@@ -289,11 +259,11 @@ Window.CustomLists = {
                     </button>
                     <div id="manual-suggestions-box" class="suggestions-container"></div>
                 </div>
-                ` : ''}
+                `}
 
                 <div style="margin-bottom: 20px; color: var(--text-sub);">
                     Type: ${list.type} | Words: ${list.words.length}
-                    ${list.locked ? (canEdit ? ' | <span style="color: #ff4b6b; font-weight: bold;">READ ONLY (UNLOCKED FOR EDITING)</span>' : ' | <span style="color: #ff4b6b; font-weight: bold;">READ ONLY</span>') : ''}
+                    ${list.locked ? ' | <span style="color: #ff4b6b; font-weight: bold;">READ ONLY</span>' : ''}
                 </div>
                 <div class="tags-row">
                     ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
@@ -301,7 +271,7 @@ Window.CustomLists = {
                 </div>
             </div>
         `;
-        if (canEdit) this.setupManualInput(name);
+        if (!list.locked) this.setupManualInput(name);
     },
 
     setupManualInput(name) {
@@ -355,16 +325,14 @@ Window.CustomLists = {
     async removeWordFromList(word, name, event) {
         if (event) event.stopPropagation();
         const list = this.lists[name];
-        
-        // Changed to use Edit permission check
-        if (!list || !this.canEditList(name)) return;
-        
+        if (!list || list.locked) return;
         list.words = list.words.filter(w => w !== word);
         this.saveLocalLists();
 
         this._lastSaveTime = Date.now();
         if (list.type === 'online') await this.saveOnlineList(name, list);
 
+        // Only refresh UI if we are currently viewing this list AND settings modal is NOT open
         const modal = document.getElementById('licenseModal');
         const isSettingsOpen = modal && modal.classList.contains('active');
 
@@ -403,7 +371,7 @@ Window.CustomLists = {
                             list.words.map(w => `
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border-color);">
                                     <span style="color: var(--text-main); font-weight: 500;">${w}</span>
-                                    ${this.canEditList(name) ? `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.handleRemoveFromSettings('${w}', '${name}', event)">Remove</button>` : ''}
+                                    ${list.locked ? '' : `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.handleRemoveFromSettings('${w}', '${name}', event)">Remove</button>`}
                                 </div>
                             `).join('')}
                     </div>
@@ -454,6 +422,7 @@ Window.CustomLists = {
         delete this.lists[name];
         this.saveLocalLists();
         this.closeSettings();
+        // In a real app, you might want to delete from Upstash too
         window.AppClearSearch();
     },
 
@@ -462,14 +431,11 @@ Window.CustomLists = {
         container.innerHTML = `
             <div class="password-prompt">
                 <h3 style="color: var(--text-main);">${list.hidden ? 'Private List' : 'Password Protected'}</h3>
-                <p style="color: var(--text-sub);">This list is protected. Enter password to ${list.hidden ? 'view' : 'edit'}.</p>
+                <p style="color: var(--text-sub);">This list is protected. Enter password to view.</p>
                 <div class="input-group" style="max-width: 300px; margin: 20px auto;">
                     <input type="password" id="listPassInput" placeholder="Password" autocomplete="current-password">
                 </div>
-                <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button class="action-btn" onclick="CustomLists.checkPassword('${name}')">Unlock</button>
-                    ${!list.hidden ? `<button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderListView('${name}')">Cancel</button>` : ''}
-                </div>
+                <button class="action-btn" onclick="CustomLists.checkPassword('${name}')">Unlock</button>
             </div>
         `;
     },
@@ -481,12 +447,13 @@ Window.CustomLists = {
             sessionStorage.setItem(`auth_${name}`, 'true');
             this.renderListView(name);
         } else {
-            alert("Incorrect password"); // Added slight feedback
+            // Incorrect password - messageless
         }
     },
 
     async fetchOnlineList(name) {
          try {
+            // Added timestamp to prevent browser caching of the GET request
             const resp = await fetch(`/api/custom-lists?action=get&name=${encodeURIComponent(name)}&t=${Date.now()}`);
             if (resp.ok) return await resp.json();
         } catch (e) {}
@@ -498,6 +465,7 @@ Window.CustomLists = {
         const cleanWord = (word || "").trim().toLowerCase();
         const isPinned = await DBManager.isPinned(cleanWord);
 
+        // Remove existing menu
         const existing = document.querySelector('.heart-menu');
         if (existing) existing.remove();
 
@@ -515,12 +483,12 @@ Window.CustomLists = {
         } else {
             listHtml = listNames.map(name => {
                 const inList = this.lists[name].words.includes(cleanWord);
-                const canEdit = this.canEditList(name);
+                const isLocked = this.lists[name].locked;
 
                 if (inList) {
-                    return `<div class="heart-menu-item" style="color: #ff4b6b;" onclick="${!canEdit ? '' : `CustomLists.removeWordFromList('${cleanWord}', '${name}');`} document.querySelector('.heart-menu')?.remove();">Remove from ${name}${!canEdit ? ' (Locked)' : ''}</div>`;
+                    return `<div class="heart-menu-item" style="color: #ff4b6b;" onclick="${isLocked ? '' : `CustomLists.removeWordFromList('${cleanWord}', '${name}');`} document.querySelector('.heart-menu')?.remove();">Remove from ${name}${isLocked ? ' (Locked)' : ''}</div>`;
                 } else {
-                    return `<div class="heart-menu-item" style="${!canEdit ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="${!canEdit ? '' : `CustomLists.addWordToList('${cleanWord}', '${name}')`}">${name}${!canEdit ? ' (Locked)' : ''}</div>`;
+                    return `<div class="heart-menu-item" style="${isLocked ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="${isLocked ? '' : `CustomLists.addWordToList('${cleanWord}', '${name}')`}">${name}${isLocked ? ' (Locked)' : ''}</div>`;
                 }
             }).join('');
         }
@@ -551,6 +519,7 @@ Window.CustomLists = {
 
     async toggleFavorite(word) {
         const active = await PinManager.togglePin(word);
+        // Refresh heart icons in UI
         const pins = document.querySelectorAll('.pin-btn, #microPin');
         const heartEmpty = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
         const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>`;
@@ -590,12 +559,11 @@ Window.CustomLists = {
         if (!cleanWord) return;
 
         const list = this.lists[listName];
-        
-        // Changed to use Edit permission check
-        if (!list || !this.canEditList(listName)) return;
+        if (!list || list.locked) return;
 
         if (list.words.includes(cleanWord)) return;
 
+        // Verify word exists and has content
         const data = await APIClient.fetchWordData(cleanWord);
         if (!data || data.error || !data.dictionary || data.dictionary.length === 0) {
             return;
@@ -610,6 +578,7 @@ Window.CustomLists = {
         this.saveLocalLists();
         this._lastSaveTime = Date.now();
 
+        // Refresh UI if we are currently viewing this list
         if (window.location.pathname === `/listname/${encodeURIComponent(listName)}`) {
             this.renderListView(listName);
         }
