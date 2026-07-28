@@ -28,11 +28,15 @@ export default async function handler(req, res) {
             const keys = await redis.keys('list:*');
             const publicLists = [];
             for (const key of keys) {
-                const data = await redis.get(key);
+                let data = await redis.get(key);
+                // Ensure data is an object
+                if (typeof data === 'string') {
+                    try { data = JSON.parse(data); } catch(e) { continue; }
+                }
                 if (data && data.visibility === 'public') {
                     publicLists.push({
                         name: key.replace('list:', ''),
-                        wordCount: data.words ? data.words.length : 0
+                        wordCount: (data.words && Array.isArray(data.words)) ? data.words.length : 0
                     });
                 }
             }

@@ -97,16 +97,38 @@ window.AppClearSearch = (skipPush = false) => {
 
     if (wordInput) wordInput.value = '';
     if (rc) {
+        const isDeleteMode = window.CustomLists?.deleteMode;
         const customListsHtml = Object.entries(window.CustomLists?.lists || {})
             .filter(([_, list]) => !list.hidden)
-            .map(([name]) => `
-                <button class="academic-list-trigger" onclick="window.history.pushState({}, '', '/listname/${encodeURIComponent(name)}'); CustomLists.handleRoute();" style="padding: 8px 16px; border-radius: 20px; border: 1px solid var(--accent); background: var(--card-bg); color: var(--accent); font-weight: bold; cursor: pointer; font-size: 13px;">${name}</button>
-            `).join('');
+            .map(([name]) => {
+                if (isDeleteMode) {
+                    return `
+                        <button class="academic-list-trigger" onclick="CustomLists.deleteList('${name}')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #ff4b6b; background: #fff5f7; color: #ff4b6b; font-weight: bold; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                            ${name} <span style="font-size: 16px;">&times;</span>
+                        </button>
+                    `;
+                }
+                return `
+                    <button class="academic-list-trigger" onclick="window.history.pushState({}, '', '/listname/${encodeURIComponent(name)}'); CustomLists.handleRoute();" style="padding: 8px 16px; border-radius: 20px; border: 1px solid var(--accent); background: var(--card-bg); color: var(--accent); font-weight: bold; cursor: pointer; font-size: 13px;">${name}</button>
+                `;
+            }).join('');
+
+        const deleteControl = isDeleteMode ? `
+            <div style="display: flex; gap: 5px;">
+                <button class="action-btn" onclick="CustomLists.toggleDeleteMode()" style="padding: 6px 12px; font-size: 11px; background: var(--accent); border-radius: 15px;">Save</button>
+                <button class="action-btn" onclick="CustomLists.toggleDeleteMode()" style="padding: 6px 12px; font-size: 11px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 15px;">Cancel</button>
+            </div>
+        ` : `
+            <button class="custom-list-trigger" onclick="CustomLists.toggleDeleteMode()" title="Remove Lists" style="background: transparent; border: none; color: var(--text-sub); display: flex; align-items: center; justify-content: center; padding: 4px; cursor: pointer;">
+                ${window.CustomLists?.icons?.trash || ''}
+            </button>
+        `;
 
         rc.innerHTML = `
             <div style="width: 100%; display: flex; justify-content: flex-start; gap: 10px; padding: 15px 0 0 0; flex-wrap: wrap; align-items: center;">
                 <button id="academic-list-btn" class="academic-list-trigger" onclick="AcademicList.open('academic')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #d32f2f; background: #fff; color: #d32f2f; font-weight: bold; cursor: pointer; font-size: 13px;">570 Academic Words</button>
                 ${customListsHtml}
+                ${deleteControl}
                 <button id="create-list-btn" class="custom-list-trigger" onclick="window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();" title="Create Custom List">
                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                 </button>

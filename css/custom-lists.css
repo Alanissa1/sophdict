@@ -124,8 +124,8 @@
 }
 
 .visibility-chip svg {
-    margin-right: 8px;
     flex-shrink: 0;
+    margin: -7px 0 -7px 0;
 }
 
 .visibility-chip input[type="radio"] {

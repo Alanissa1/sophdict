@@ -4,9 +4,11 @@ window.CustomLists = {
         link: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-280H280q-83 0-141.5-58.5T80-480q0-83 58.5-141.5T280-680h160v80H280q-50 0-85 35t-35 85q0 50 35 85t85 35h160v80ZM320-440v-80h320v80H320Zm200 160v-80h160q50 0 85-35t35-85q0-50-35-85t-85-35H520v-80h160q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H520Z"/></svg>`,
         private: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm296.5-143.5Q560-327 560-360t-23.5-56.5Q513-440 480-440t-56.5 23.5Q400-393 400-360t23.5 56.5Q447-280 480-280t56.5-23.5ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/></svg>`,
         editOnly: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m604.69-469.92-42.15-42.16 97.38-97.38-50.46-50.46-97.38 97.38-42.16-42.15 197.7-198.08q8.92-8.92 19.96-13.07 11.04-4.16 23.19-4.16 11.77 0 23.11 4.27 11.35 4.27 20.04 13.58l48.85 49.46q9.31 8.69 13.27 20.04 3.96 11.34 3.96 22.88 0 11.77-4.16 22.81-4.15 11.04-13.07 19.96L604.69-469.92ZM200-200h50.46l212.31-212.31-24.92-25.54-25.54-24.92L200-250.46V-200ZM791.23-84.46l-285.69-284.7L275.38-140H140v-134.77l229.77-230.15L84.46-791.23 127.23-834 834-127.23l-42.77 42.77Zm-30.85-625.69-50.23-50.23 50.23 50.23Zm-150.92 50.23 50.46 50.46-50.46-50.46ZM437.85-437.85l-25.54-24.92 50.46 50.46-24.92-25.54Z"/></svg>`,
-        explore: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m300-300 280-80 80-280-280 80-80 280Zm180-120q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420Zm0 340q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z"/></svg>`
+        explore: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m300-300 280-80 80-280-280 80-80 280Zm180-120q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420Zm0 340q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z"/></svg>`,
+        trash: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`
     },
     lists: {}, // name -> { type: 'local'|'online', words: [], locked: bool, hidden: bool, password: string, visibility: 'public'|'link' }
+    deleteMode: false,
 
     async init() {
         this.loadLocalLists();
@@ -43,8 +45,8 @@ window.CustomLists = {
         // If it's not locked, anyone (or anyone who unlocked a private list) can edit
         if (!list.locked) return true;
         
-        // If it's locked AND has a password, check if the user is authenticated in this session
-        return list.locked && list.password && sessionStorage.getItem(`auth_${name}`) === 'true';
+        // If it's locked AND has a password, check if the user is authenticated
+        return list.locked && list.password && localStorage.getItem(`auth_${name}`) === 'true';
     },
 
     // --- NEW HELPER: Trigger unlock modal for owners ---
@@ -63,7 +65,7 @@ window.CustomLists = {
         const path = window.location.pathname;
         if (path === '/create-list') {
             this.renderCreationUI();
-        } else if (path === '/explore') {
+        } else if (path === '/list/explore') {
             if (window.ExploreLists) window.ExploreLists.renderExploreUI();
         } else if (path.startsWith('/listname/')) {
             const listName = decodeURIComponent(path.replace('/listname/', ''));
@@ -91,7 +93,7 @@ window.CustomLists = {
                         <strong>Online</strong><br>
                         <span style="font-size: 12px; color: var(--text-sub);">Saved on Upstash, accessible anywhere.</span>
                     </button>
-                    <button class="list-option-btn" onclick="window.history.pushState({}, '', '/explore'); CustomLists.handleRoute();" style="border-color: var(--accent); margin-top: 10px;">
+                    <button class="list-option-btn" onclick="window.history.pushState({}, '', '/list/explore'); CustomLists.handleRoute();" style="border-color: var(--accent); margin-top: 10px;">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--accent);">
                             ${this.icons.explore} <strong>Explore Lists</strong>
                         </div>
@@ -100,7 +102,7 @@ window.CustomLists = {
                 <div id="creation-step-2" style="display: none;">
                     <div class="input-group" id="pathInputGroup">
                         <label>List Name</label>
-                        <input type="text" id="newListPath" placeholder="my-awesome-list" autocomplete="off">
+                        <input type="text" id="newListPath" name="sophdict_list_name" placeholder="my-awesome-list" autocomplete="chrome-off">
                     </div>
                     <div id="visibilityInputGroup" style="display: none;">
                         ${window.ExploreLists ? window.ExploreLists.renderSetting('link', true) : ''}
@@ -203,7 +205,7 @@ window.CustomLists = {
 
         // Automatically authenticate the creator if they set a password
         if (pass) {
-            sessionStorage.setItem(`auth_${name}`, 'true');
+            localStorage.setItem(`auth_${name}`, 'true');
         }
 
         if (document.body.classList.contains('home-state')) {
@@ -276,7 +278,7 @@ window.CustomLists = {
 
         // Only lock list view if explicitly hidden (private)
         if (list.password && list.hidden) {
-            const authenticated = sessionStorage.getItem(`auth_${name}`);
+            const authenticated = localStorage.getItem(`auth_${name}`);
             if (!authenticated) {
                 this.renderPasswordPrompt(name, list);
                 return;
@@ -284,7 +286,7 @@ window.CustomLists = {
         }
 
         const canEdit = this.canEditList(name);
-        const isAuth = sessionStorage.getItem(`auth_${name}`) === 'true';
+        const isAuth = localStorage.getItem(`auth_${name}`) === 'true';
 
         // Unlock button for owner to edit read-only lists
         const unlockBtn = (list.locked && list.password && !isAuth) ? 
@@ -306,7 +308,7 @@ window.CustomLists = {
 
                 ${canEdit ? `
                 <div class="search-container manual-add-container" style="width: 100%; max-width: 100%; margin-bottom: 30px;">
-                    <input type="text" id="manualWordInput" placeholder="Add word manually..." autocomplete="off" style="flex: 1;">
+                    <input type="text" id="manualWordInput" name="sophdict_word_entry" placeholder="Add word manually..." autocomplete="chrome-off" style="flex: 1;">
                     <button class="icon-btn" onclick="CustomLists.addManualWord('${name}')" aria-label="Add Word">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                     </button>
@@ -401,7 +403,7 @@ window.CustomLists = {
         if (!list) return;
 
         // Lock settings if list has a password and user is not authenticated
-        if (list.password && sessionStorage.getItem(`auth_${name}`) !== 'true') {
+        if (list.password && localStorage.getItem(`auth_${name}`) !== 'true') {
             this.renderPasswordPrompt(name, list);
             return;
         }
@@ -415,7 +417,7 @@ window.CustomLists = {
             <div style="padding-top: 20px;">
                 <div class="input-group">
                     <label>Password</label>
-                    <input type="password" id="editListPass" value="${list.password || ''}" autocomplete="new-password">
+                    <input type="password" id="editListPass" name="sophdict_list_password" value="${list.password || ''}" autocomplete="new-password">
                 </div>
                 <div class="input-group checkbox-row">
                     <label for="editListLock">Lock list (Read-only)</label>
@@ -487,7 +489,12 @@ window.CustomLists = {
         delete this.lists[name];
         this.saveLocalLists();
         this.closeSettings();
-        window.AppClearSearch();
+        if (window.AppClearSearch) window.AppClearSearch(true);
+    },
+
+    toggleDeleteMode() {
+        this.deleteMode = !this.deleteMode;
+        if (window.AppClearSearch) window.AppClearSearch(true);
     },
 
     renderPasswordPrompt(name, list) {
@@ -511,7 +518,7 @@ window.CustomLists = {
         const input = document.getElementById('listPassInput').value;
         const list = this.lists[name];
         if (input === list.password) {
-            sessionStorage.setItem(`auth_${name}`, 'true');
+            localStorage.setItem(`auth_${name}`, 'true');
             this.renderListView(name);
         } else {
             alert("Incorrect password"); // Added slight feedback
