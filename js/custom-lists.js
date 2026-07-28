@@ -109,10 +109,6 @@ window.CustomLists = {
                         <label>Password (optional)</label>
                         <input type="password" id="newListPass" placeholder="Leave empty for no password" autocomplete="new-password">
                     </div>
-                    <div class="input-group checkbox-row">
-                        <label for="newListHide">Hide list completely</label>
-                        <input type="checkbox" id="newListHide">
-                    </div>
                     <div class="input-group checkbox-row" id="lockInputGroup">
                         <label for="newListLock">Lock list (Read-only)</label>
                         <input type="checkbox" id="newListLock">
@@ -153,9 +149,9 @@ window.CustomLists = {
     async confirmCreate() {
         const name = document.getElementById('newListPath').value.trim();
         const pass = document.getElementById('newListPass').value;
-        const hide = document.getElementById('newListHide').checked;
         const lock = document.getElementById('newListLock').checked;
         const visibility = document.querySelector('input[name="newListVisibility"]:checked')?.value || 'link';
+        const hide = (visibility === 'private');
         const errorDiv = document.getElementById('creation-error');
 
         if (!name) {
@@ -297,9 +293,9 @@ window.CustomLists = {
         document.body.classList.remove('home-state');
         container.innerHTML = `
             <div style="padding: 20px;">
-                <div style="display: flex; justify-content: space-between;">
+                <div style="display: flex; justify-content: space-between; margin: 0 0 20px 0;">
                     <div class="list-name-display" style="margin: 0; display: flex; align-items: center; gap: 10px;">
-                        ${list.locked ? this.icons.editOnly : (list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : this.icons.link) : this.icons.private)}
+                        ${list.locked ? this.icons.editOnly : (list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : (list.visibility === 'private' ? this.icons.private : this.icons.link)) : this.icons.private)}
                         ${name}
                     </div>
                     <div style="display: flex;">
@@ -422,10 +418,6 @@ window.CustomLists = {
                     <input type="password" id="editListPass" value="${list.password || ''}" autocomplete="new-password">
                 </div>
                 <div class="input-group checkbox-row">
-                    <label for="editListHide">Hide list completely</label>
-                    <input type="checkbox" id="editListHide" ${list.hidden ? 'checked' : ''}>
-                </div>
-                <div class="input-group checkbox-row">
                     <label for="editListLock">Lock list (Read-only)</label>
                     <input type="checkbox" id="editListLock" ${list.locked ? 'checked' : ''}>
                 </div>
@@ -471,11 +463,13 @@ window.CustomLists = {
     async saveSettings(name) {
         const list = this.lists[name];
         list.password = document.getElementById('editListPass').value;
-        list.hidden = document.getElementById('editListHide').checked;
         list.locked = document.getElementById('editListLock').checked;
 
         const visInput = document.querySelector('input[name="editListVisibility"]:checked');
-        if (visInput) list.visibility = visInput.value;
+        if (visInput) {
+            list.visibility = visInput.value;
+            list.hidden = (visInput.value === 'private');
+        }
 
         this.saveLocalLists();
         this._lastSaveTime = Date.now();

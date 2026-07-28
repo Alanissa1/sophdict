@@ -44,7 +44,6 @@ input,
 textarea {
     cursor: text;
     caret-color: auto;
-    flex-grow: 1;
 }
 
 .header-logo {
