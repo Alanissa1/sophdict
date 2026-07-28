@@ -1,5 +1,12 @@
 window.CustomLists = {
-    lists: {}, // name -> { type: 'local'|'online', words: [], locked: bool, hidden: bool, password: string }
+    icons: {
+        public: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-7-.5-14.5T799-507q-5 29-27 48t-52 19h-80q-33 0-56.5-23.5T560-520v-40H400v-80q0-33 23.5-56.5T480-720h40q0-23 12.5-40.5T563-789q-20-5-40.5-8t-42.5-3q-134 0-227 93t-93 227h200q66 0 113 47t47 113v40H400v110q20 5 39.5 7.5T480-160Z"/></svg>`,
+        link: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-280H280q-83 0-141.5-58.5T80-480q0-83 58.5-141.5T280-680h160v80H280q-50 0-85 35t-35 85q0 50 35 85t85 35h160v80ZM320-440v-80h320v80H320Zm200 160v-80h160q50 0 85-35t35-85q0-50-35-85t-85-35H520v-80h160q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H520Z"/></svg>`,
+        private: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M240-80q-33 0-56.5-23.5T160-160v-400q0-33 23.5-56.5T240-640h40v-80q0-83 58.5-141.5T480-920q83 0 141.5 58.5T680-720v80h40q33 0 56.5 23.5T800-560v400q0 33-23.5 56.5T720-80H240Zm0-80h480v-400H240v400Zm296.5-143.5Q560-327 560-360t-23.5-56.5Q513-440 480-440t-56.5 23.5Q400-393 400-360t23.5 56.5Q447-280 480-280t56.5-23.5ZM360-640h240v-80q0-50-35-85t-85-35q-50 0-85 35t-35 85v80ZM240-160v-400 400Z"/></svg>`,
+        editOnly: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m604.69-469.92-42.15-42.16 97.38-97.38-50.46-50.46-97.38 97.38-42.16-42.15 197.7-198.08q8.92-8.92 19.96-13.07 11.04-4.16 23.19-4.16 11.77 0 23.11 4.27 11.35 4.27 20.04 13.58l48.85 49.46q9.31 8.69 13.27 20.04 3.96 11.34 3.96 22.88 0 11.77-4.16 22.81-4.15 11.04-13.07 19.96L604.69-469.92ZM200-200h50.46l212.31-212.31-24.92-25.54-25.54-24.92L200-250.46V-200ZM791.23-84.46l-285.69-284.7L275.38-140H140v-134.77l229.77-230.15L84.46-791.23 127.23-834 834-127.23l-42.77 42.77Zm-30.85-625.69-50.23-50.23 50.23 50.23Zm-150.92 50.23 50.46 50.46-50.46-50.46ZM437.85-437.85l-25.54-24.92 50.46 50.46-24.92-25.54Z"/></svg>`,
+        explore: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m300-300 280-80 80-280-280 80-80 280Zm180-120q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420Zm0 340q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z"/></svg>`
+    },
+    lists: {}, // name -> { type: 'local'|'online', words: [], locked: bool, hidden: bool, password: string, visibility: 'public'|'link' }
 
     async init() {
         this.loadLocalLists();
@@ -56,6 +63,8 @@ window.CustomLists = {
         const path = window.location.pathname;
         if (path === '/create-list') {
             this.renderCreationUI();
+        } else if (path === '/explore') {
+            if (window.ExploreLists) window.ExploreLists.renderExploreUI();
         } else if (path.startsWith('/listname/')) {
             const listName = decodeURIComponent(path.replace('/listname/', ''));
             this.renderListView(listName);
@@ -82,11 +91,19 @@ window.CustomLists = {
                         <strong>Online</strong><br>
                         <span style="font-size: 12px; color: var(--text-sub);">Saved on Upstash, accessible anywhere.</span>
                     </button>
+                    <button class="list-option-btn" onclick="window.history.pushState({}, '', '/explore'); CustomLists.handleRoute();" style="border-color: var(--accent); margin-top: 10px;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--accent);">
+                            ${this.icons.explore} <strong>Explore Lists</strong>
+                        </div>
+                    </button>
                 </div>
                 <div id="creation-step-2" style="display: none;">
                     <div class="input-group" id="pathInputGroup">
                         <label>List Name</label>
                         <input type="text" id="newListPath" placeholder="my-awesome-list" autocomplete="off">
+                    </div>
+                    <div id="visibilityInputGroup" style="display: none;">
+                        ${window.ExploreLists ? window.ExploreLists.renderSetting('link', true) : ''}
                     </div>
                     <div class="input-group">
                         <label>Password (optional)</label>
@@ -118,14 +135,17 @@ window.CustomLists = {
 
         const pathGroup = document.getElementById('pathInputGroup');
         const lockGroup = document.getElementById('lockInputGroup');
+        const visibilityGroup = document.getElementById('visibilityInputGroup');
 
         if (type === 'local') {
             pathGroup.style.display = 'block'; 
             lockGroup.style.display = 'flex';
+            if (visibilityGroup) visibilityGroup.style.display = 'none';
             document.getElementById('newListPath').value = `Local List ${Object.keys(this.lists).length + 1}`;
         } else {
             pathGroup.style.display = 'block';
             lockGroup.style.display = 'flex';
+            if (visibilityGroup) visibilityGroup.style.display = 'block';
             document.getElementById('newListPath').value = '';
         }
     },
@@ -135,6 +155,7 @@ window.CustomLists = {
         const pass = document.getElementById('newListPass').value;
         const hide = document.getElementById('newListHide').checked;
         const lock = document.getElementById('newListLock').checked;
+        const visibility = document.querySelector('input[name="newListVisibility"]:checked')?.value || 'link';
         const errorDiv = document.getElementById('creation-error');
 
         if (!name) {
@@ -159,7 +180,8 @@ window.CustomLists = {
                 words: [],
                 password: pass,
                 hidden: hide,
-                locked: lock
+                locked: lock,
+                visibility: visibility
             });
 
             if (!result.success) {
@@ -177,7 +199,8 @@ window.CustomLists = {
             words: [],
             password: pass,
             hidden: hide,
-            locked: lock
+            locked: lock,
+            visibility: visibility
         };
 
         this.saveLocalLists();
@@ -274,8 +297,11 @@ window.CustomLists = {
         document.body.classList.remove('home-state');
         container.innerHTML = `
             <div style="padding: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <div class="list-name-display" style="margin: 0;">${name}</div>
+                <div style="display: flex; justify-content: space-between;">
+                    <div class="list-name-display" style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        ${list.locked ? this.icons.editOnly : (list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : this.icons.link) : this.icons.private)}
+                        ${name}
+                    </div>
                     <div style="display: flex;">
                         ${unlockBtn}
                         <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
@@ -404,6 +430,8 @@ window.CustomLists = {
                     <input type="checkbox" id="editListLock" ${list.locked ? 'checked' : ''}>
                 </div>
 
+                ${list.type === 'online' && window.ExploreLists ? window.ExploreLists.renderSetting(list.visibility, false) : ''}
+
                 <div style="margin-top: 30px; margin-bottom: 20px;">
                     <h3 style="color: var(--text-main); font-size: 16px; margin-bottom: 10px;">Manage Words</h3>
                     <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; background: var(--bg-color);">
@@ -445,6 +473,9 @@ window.CustomLists = {
         list.password = document.getElementById('editListPass').value;
         list.hidden = document.getElementById('editListHide').checked;
         list.locked = document.getElementById('editListLock').checked;
+
+        const visInput = document.querySelector('input[name="editListVisibility"]:checked');
+        if (visInput) list.visibility = visInput.value;
 
         this.saveLocalLists();
         this._lastSaveTime = Date.now();

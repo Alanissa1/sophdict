@@ -24,6 +24,21 @@ export default async function handler(req, res) {
             return res.status(200).json({ available: !exists });
         }
 
+        if (method === 'GET' && query.action === 'explore') {
+            const keys = await redis.keys('list:*');
+            const publicLists = [];
+            for (const key of keys) {
+                const data = await redis.get(key);
+                if (data && data.visibility === 'public') {
+                    publicLists.push({
+                        name: key.replace('list:', ''),
+                        wordCount: data.words ? data.words.length : 0
+                    });
+                }
+            }
+            return res.status(200).json(publicLists);
+        }
+
         if (method === 'GET' && query.action === 'get') {
             const data = await redis.get(`list:${name}`);
             if (!data) return res.status(404).json({ error: 'Not found' });
