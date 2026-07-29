@@ -47,7 +47,7 @@ window.ExploreLists = {
         `;
 
         try {
-            const resp = await fetch('/api/custom-lists?action=explore');
+            const resp = await fetch(`/api/custom-lists?action=explore&t=${Date.now()}`);
             const lists = await resp.json();
             this.renderGrid(lists);
         } catch (e) {

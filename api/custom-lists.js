@@ -102,6 +102,11 @@ export default async function handler(req, res) {
     const { method, query, body } = req;
     const { name } = query;
 
+    // Prevent Vercel from aggressively caching this dynamic API
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     try {
         // ===== GET =====
 
@@ -112,14 +117,26 @@ export default async function handler(req, res) {
 
         if (method === 'GET' && query.action === 'explore') {
             const keys = await redis.keys('list:*');
+            if (!keys || keys.length === 0) {
+                return res.status(200).json([]);
+            }
+
             const publicLists = [];
-            for (const key of keys) {
-                const data = parseData(await redis.get(key));
-                if (data && data.visibility === 'public') {
-                    publicLists.push({
-                        name: key.replace('list:', ''),
-                        wordCount: (data.words && Array.isArray(data.words)) ? data.words.length : 0
-                    });
+            const chunkSize = 100;
+            
+            // Fetch keys in chunks to avoid URL length limits and timeouts
+            for (let i = 0; i < keys.length; i += chunkSize) {
+                const chunk = keys.slice(i, i + chunkSize);
+                const values = await redis.mget(...chunk);
+                
+                for (let j = 0; j < chunk.length; j++) {
+                    const data = parseData(values[j]);
+                    if (data && data.visibility === 'public') {
+                        publicLists.push({
+                            name: chunk[j].replace('list:', ''),
+                            wordCount: (data.words && Array.isArray(data.words)) ? data.words.length : 0
+                        });
+                    }
                 }
             }
             return res.status(200).json(publicLists);

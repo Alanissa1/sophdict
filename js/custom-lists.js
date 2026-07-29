@@ -398,13 +398,17 @@ window.CustomLists = {
         const unlockBtn = (list.locked && list.hasPassword && !isAuth) ? 
             `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px;" onclick="CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
 
+        const visIcon = list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : (list.visibility === 'private' ? this.icons.private : this.icons.link)) : this.icons.private;
+        const lockIcon = (list.locked && list.visibility !== 'private') ? `<span style="color: var(--text-sub); opacity: 0.6; display: flex;" title="Read-only">${this.icons.editOnly}</span>` : '';
+
         document.body.classList.remove('home-state');
         container.innerHTML = `
             <div class="list-page" style="padding: 20px 0;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                     <div class="list-name-display" style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 24px;">
-                        ${list.locked ? this.icons.editOnly : (list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : (list.visibility === 'private' ? this.icons.private : this.icons.link)) : this.icons.private)}
+                        ${visIcon}
                         ${name}
+                        ${lockIcon}
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; margin-left: auto; margin-right: 10px;">
                         <div id="offline-status-container" style="display:flex; align-items:baseline; gap:5px;">
