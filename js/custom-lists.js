@@ -69,7 +69,17 @@ window.CustomLists = {
             if (window.ExploreLists) window.ExploreLists.renderExploreUI();
         } else if (path.startsWith('/listname/')) {
             const listName = decodeURIComponent(path.replace('/listname/', ''));
-            this.renderListView(listName);
+            const modalIndex = path.indexOf('/modal/');
+            const actualListName = modalIndex !== -1 ? decodeURIComponent(path.substring(10, modalIndex)) : listName;
+
+            if (!document.querySelector('.list-page') || this._currentLoadedList !== actualListName) {
+                this.renderListView(actualListName);
+            }
+
+            if (modalIndex !== -1) {
+                const modalWord = decodeURIComponent(path.substring(modalIndex + 7));
+                if (window.ModalManager) window.ModalManager.show(modalWord, null, true);
+            }
         }
     },
 
@@ -248,10 +258,6 @@ window.CustomLists = {
         const container = document.getElementById('results-container');
         if (!container) return;
 
-        if (window.location.pathname !== `/listname/${encodeURIComponent(name)}`) {
-            this.closeSettings();
-        }
-
         if (window.RestoreSearchUI) window.RestoreSearchUI();
 
         let list = this.lists[name];
@@ -287,6 +293,7 @@ window.CustomLists = {
 
         const canEdit = this.canEditList(name);
         const isAuth = localStorage.getItem(`auth_${name}`) === 'true';
+        this._currentLoadedList = name;
 
         // Unlock button for owner to edit read-only lists
         const unlockBtn = (list.locked && list.password && !isAuth) ? 
@@ -294,9 +301,9 @@ window.CustomLists = {
 
         document.body.classList.remove('home-state');
         container.innerHTML = `
-            <div style="padding: 20px;">
-                <div style="display: flex; justify-content: space-between; margin: 0 0 20px 0;">
-                    <div class="list-name-display" style="margin: 0; display: flex; align-items: center; gap: 10px;">
+            <div class="list-page" style="padding: 20px 0;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                    <div class="list-name-display" style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 24px;">
                         ${list.locked ? this.icons.editOnly : (list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : (list.visibility === 'private' ? this.icons.private : this.icons.link)) : this.icons.private)}
                         ${name}
                     </div>
@@ -331,12 +338,16 @@ window.CustomLists = {
                     Type: ${list.type} | Words: ${list.words.length}
                     ${list.locked ? (canEdit ? ' | <span style="">READ ONLY (UNLOCKED FOR EDITING)</span>' : ' | <span>READ ONLY</span>') : ''}
                 </div>
-                <div class="tags-row">
+                <div class="tags-row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; margin-top: 20px;">
                     ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
                         list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
                 </div>
             </div>
         `;
+        if (canEdit) this.setupManualInput(name);
+        if (window.PreFetcher) PreFetcher.updatePageStatus();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    },
         if (canEdit) this.setupManualInput(name);
     },
 
@@ -448,7 +459,7 @@ window.CustomLists = {
                     <div>
                         ${list.words.length === 0 ? '<div style="color: var(--text-sub); text-align: center;">No words in list.</div>' :
                             list.words.map(w => `
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1px 0px 1px 0px; border-bottom: 1px solid var(--border-color);">
                                     <span style="color: var(--text-main); font-weight: 500;">${w}</span>
                                     ${this.canEditList(name) ? `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.handleRemoveFromSettings('${w}', '${name}', event)">Remove</button>` : ''}
                                 </div>
