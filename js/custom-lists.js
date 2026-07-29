@@ -95,15 +95,15 @@ window.CustomLists = {
             <div class="list-creation-container">
                 <h2 style="color: var(--text-main); margin-bottom: 20px;">Create New List</h2>
                 <div id="creation-step-1">
-                    <button class="list-option-btn" onclick="CustomLists.showDetailsForm('local')">
+                    <button class="list-option-btn" onclick="window.CustomLists.showDetailsForm('local')">
                         <strong>Locally</strong><br>
                         <span style="font-size: 12px; color: var(--text-sub);">Saved on this device only.</span>
                     </button>
-                    <button class="list-option-btn" onclick="CustomLists.showDetailsForm('online')">
+                    <button class="list-option-btn" onclick="window.CustomLists.showDetailsForm('online')">
                         <strong>Online</strong><br>
                         <span style="font-size: 12px; color: var(--text-sub);">Saved on Upstash, accessible anywhere.</span>
                     </button>
-                    <button class="list-option-btn" onclick="window.history.pushState({}, '', '/list/explore'); CustomLists.handleRoute();" style="border-color: var(--accent); margin-top: 10px;">
+                    <button class="list-option-btn" onclick="window.history.pushState({}, '', '/list/explore'); window.CustomLists.handleRoute();" style="border-color: var(--accent); margin-top: 10px;">
                         <div style="display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--accent);">
                             ${this.icons.explore} <strong>Explore Lists</strong>
                         </div>
@@ -127,8 +127,8 @@ window.CustomLists = {
                     </div>
                     <div id="creation-error" style="color: #ff4b6b; margin-bottom: 10px; font-size: 14px;"></div>
                     <div style="display: flex; gap: 10px;">
-                        <button class="action-btn" id="confirmCreateBtn" onclick="CustomLists.confirmCreate()">Create List</button>
-                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderCreationUI()">Back</button>
+                        <button class="action-btn" id="confirmCreateBtn" onclick="window.CustomLists.confirmCreate()">Create List</button>
+                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="window.CustomLists.renderCreationUI()">Back</button>
                     </div>
                 </div>
             </div>
@@ -219,7 +219,7 @@ window.CustomLists = {
         }
 
         if (document.body.classList.contains('home-state')) {
-            window.AppClearSearch(true);
+            if (window.AppClearSearch) window.AppClearSearch(true);
         }
 
         window.history.pushState({}, "", `/listname/${encodeURIComponent(name)}`);
@@ -297,7 +297,7 @@ window.CustomLists = {
 
         // Unlock button for owner to edit read-only lists
         const unlockBtn = (list.locked && list.password && !isAuth) ? 
-            `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px;" onclick="CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
+            `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px;" onclick="window.CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
 
         document.body.classList.remove('home-state');
         container.innerHTML = `
@@ -313,21 +313,21 @@ window.CustomLists = {
                             <span style=" color:var(--text-sub);">words offline</span>
                         </div>
                         <div id="fetch-ui-container" class="fetch-ui-container">
-                            <button class="icon-btn fetch-btn" title="Download all words from tags" onclick="PreFetcher.showInput()">
+                            <button class="icon-btn fetch-btn" title="Download all words from tags" onclick="if(window.PreFetcher) window.PreFetcher.showInput()">
                                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
                             </button>
                         </div>
                     </div>
                     <div style="display: flex;">
                         ${unlockBtn}
-                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); height: 30px; width: 62px; padding: 0;" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
+                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); height: 30px; width: 62px; padding: 0;" onclick="window.CustomLists.renderSettingsUI('${name}')">Settings</button>
                     </div>
                 </div>
 
                 ${canEdit ? `
                 <div class="search-container manual-add-container" style="width: 100%; max-width: 100%; margin-bottom: 30px;">
                     <input type="text" id="manualWordInput" placeholder="Add word manually..." autocomplete="off" readonly style="flex: 1;">
-                    <button class="icon-btn" onclick="CustomLists.addManualWord('${name}')" aria-label="Add Word">
+                    <button class="icon-btn" onclick="window.CustomLists.addManualWord('${name}')" aria-label="Add Word">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                     </button>
                     <div id="manual-suggestions-box" class="suggestions-container"></div>
@@ -336,16 +336,16 @@ window.CustomLists = {
 
                 <div style="margin-bottom: 20px; color: var(--text-sub);">
                     Type: ${list.type} | Words: ${list.words.length}
-                    ${list.locked ? (canEdit ? ' | <span style="">READ ONLY (UNLOCKED FOR EDITING)</span>' : ' | <span>READ ONLY</span>') : ''}
+                    ${list.locked ? (canEdit ? ' | <span>READ ONLY (UNLOCKED FOR EDITING)</span>' : ' | <span>READ ONLY</span>') : ''}
                 </div>
                 <div class="tags-row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; margin-top: 20px;">
                     ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
-                        list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
+                        list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? window.UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="if(window.ModalManager) window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
                 </div>
             </div>
         `;
         if (canEdit) this.setupManualInput(name);
-        if (window.PreFetcher) PreFetcher.updatePageStatus();
+        if (window.PreFetcher) window.PreFetcher.updatePageStatus();
         window.scrollTo({ top: 0, behavior: 'instant' });
     },
 
@@ -384,7 +384,7 @@ window.CustomLists = {
     showManualSuggestions(words, listName) {
         const box = document.getElementById('manual-suggestions-box');
         if (!box || words.length === 0) { this.hideManualSuggestions(); return; }
-        box.innerHTML = words.map(w => `<div class="suggestion-item" onclick="document.getElementById('manualWordInput').value='${w}'; CustomLists.addManualWord('${listName}'); CustomLists.hideManualSuggestions();"><span>${w}</span></div>`).join('');
+        box.innerHTML = words.map(w => `<div class="suggestion-item" onclick="document.getElementById('manualWordInput').value='${w}'; window.CustomLists.addManualWord('${listName}'); window.CustomLists.hideManualSuggestions();"><span>${w}</span></div>`).join('');
         box.style.display = 'block';
     },
 
@@ -459,7 +459,7 @@ window.CustomLists = {
                             list.words.map(w => `
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0px 5px 0px; border-bottom: 1px solid var(--border-color);">
                                     <span style="color: var(--text-main); font-weight: 500;">${w}</span>
-                                    ${this.canEditList(name) ? `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.handleRemoveFromSettings('${w}', '${name}', event)">Remove</button>` : ''}
+                                    ${this.canEditList(name) ? `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="window.CustomLists.handleRemoveFromSettings('${w}', '${name}', event)">Remove</button>` : ''}
                                 </div>
                             `).join('')}
                     </div>
@@ -469,15 +469,17 @@ window.CustomLists = {
 
         modal.querySelector('.license-footer').innerHTML = `
             <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="action-btn" onclick="CustomLists.saveSettings('${name}')">Save</button>
-                <button class="action-btn" style="background: #ff4b6b;" onclick="CustomLists.deleteList('${name}')">Delete</button>
-                <button class="license-close-btn" style="margin: 0;" onclick="CustomLists.closeSettings()">Close</button>
+                <button class="action-btn" onclick="window.CustomLists.saveSettings('${name}')">Save</button>
+                <button class="action-btn" style="background: #ff4b6b;" onclick="window.CustomLists.deleteList('${name}')">Delete</button>
+                <button class="license-close-btn" style="margin: 0;" onclick="window.CustomLists.closeSettings()">Close</button>
             </div>
         `;
 
         modal.classList.add('active');
-        UIUtils.updateSharedDimmer();
-        UIUtils.setupQuickClose(dimmer, () => this.closeSettings());
+        if (window.UIUtils) {
+            window.UIUtils.updateSharedDimmer();
+            window.UIUtils.setupQuickClose(dimmer, () => this.closeSettings());
+        }
     },
 
     closeSettings() {
@@ -485,7 +487,7 @@ window.CustomLists = {
         if (modal) {
             modal.classList.remove('active');
         }
-        UIUtils.updateSharedDimmer();
+        if (window.UIUtils) window.UIUtils.updateSharedDimmer();
     },
 
     async saveSettings(name) {
@@ -553,8 +555,8 @@ window.CustomLists = {
                     <input type="password" id="listPassInput" placeholder="Password" autocomplete="current-password">
                 </div>
                 <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button class="action-btn" onclick="CustomLists.checkPassword('${name}')">Unlock</button>
-                    ${!list.hidden ? `<button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderListView('${name}')">Cancel</button>` : ''}
+                    <button class="action-btn" onclick="window.CustomLists.checkPassword('${name}')">Unlock</button>
+                    ${!list.hidden ? `<button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="window.CustomLists.renderListView('${name}')">Cancel</button>` : ''}
                 </div>
             </div>
         `;
@@ -582,7 +584,11 @@ window.CustomLists = {
     async showHeartMenu(word, element) {
         const listNames = Object.keys(this.lists);
         const cleanWord = (word || "").trim().toLowerCase();
-        const isPinned = await DBManager.isPinned(cleanWord);
+        
+        let isPinned = false;
+        if (window.DBManager) {
+            isPinned = await window.DBManager.isPinned(cleanWord);
+        }
 
         const existing = document.querySelector('.heart-menu');
         if (existing) existing.remove();
@@ -597,22 +603,22 @@ window.CustomLists = {
         let listHtml = '';
         if (listNames.length === 0) {
             listHtml = `<div class="heart-menu-item" style="color: var(--text-sub); font-size: 12px;">No custom lists found.</div>
-                        <div class="heart-menu-item" onclick="window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();" style="color: var(--accent); font-weight: bold;">+ Create List</div>`;
+                        <div class="heart-menu-item" onclick="window.history.pushState({}, '', '/create-list'); window.CustomLists.handleRoute();" style="color: var(--accent); font-weight: bold;">+ Create List</div>`;
         } else {
             listHtml = listNames.map(name => {
                 const inList = this.lists[name].words.includes(cleanWord);
                 const canEdit = this.canEditList(name);
 
                 if (inList) {
-                    return `<div class="heart-menu-item" style="color: #ff4b6b;" onclick="${!canEdit ? '' : `CustomLists.removeWordFromList('${cleanWord}', '${name}');`} document.querySelector('.heart-menu')?.remove();">Remove from ${name}${!canEdit ? ' (Locked)' : ''}</div>`;
+                    return `<div class="heart-menu-item" style="color: #ff4b6b;" onclick="${!canEdit ? '' : `window.CustomLists.removeWordFromList('${cleanWord}', '${name}');`} document.querySelector('.heart-menu')?.remove();">Remove from ${name}${!canEdit ? ' (Locked)' : ''}</div>`;
                 } else {
-                    return `<div class="heart-menu-item" style="${!canEdit ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="${!canEdit ? '' : `CustomLists.addWordToList('${cleanWord}', '${name}')`}">${name}${!canEdit ? ' (Locked)' : ''}</div>`;
+                    return `<div class="heart-menu-item" style="${!canEdit ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="${!canEdit ? '' : `window.CustomLists.addWordToList('${cleanWord}', '${name}')`}">${name}${!canEdit ? ' (Locked)' : ''}</div>`;
                 }
             }).join('');
         }
 
         menu.innerHTML = `
-            <div class="heart-menu-item" onclick="CustomLists.toggleFavorite('${cleanWord}')">
+            <div class="heart-menu-item" onclick="window.CustomLists.toggleFavorite('${cleanWord}')">
                 ${isPinned ? '<span style="color: #ff4b6b;">Remove from Favorites</span>' : 'Add to Favorites'}
             </div>
             <div style="padding: 10px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 12px; background: var(--hover-bg);">SAVE TO LIST</div>
@@ -636,7 +642,11 @@ window.CustomLists = {
     },
 
     async toggleFavorite(word) {
-        const active = await PinManager.togglePin(word);
+        let active = false;
+        if (window.PinManager) {
+            active = await window.PinManager.togglePin(word);
+        }
+        
         const pins = document.querySelectorAll('.pin-btn, #microPin');
         const heartEmpty = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
         const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>`;
@@ -658,7 +668,7 @@ window.CustomLists = {
         if (listNames.length === 0) {
             menu.innerHTML = `
                 <div class="heart-menu-item" style="color: var(--text-sub);">No lists found.</div>
-                <div class="heart-menu-item" onclick="window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();">Create List</div>
+                <div class="heart-menu-item" onclick="window.history.pushState({}, '', '/create-list'); window.CustomLists.handleRoute();">Create List</div>
             `;
             return;
         }
@@ -666,7 +676,7 @@ window.CustomLists = {
         menu.innerHTML = `
             <div style="padding: 10px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 12px;">SELECT LIST</div>
             ${listNames.map(name => `
-                <div class="heart-menu-item" onclick="CustomLists.addWordToList('${word}', '${name}')">${name}</div>
+                <div class="heart-menu-item" onclick="window.CustomLists.addWordToList('${word}', '${name}')">${name}</div>
             `).join('')}
         `;
     },
@@ -682,7 +692,11 @@ window.CustomLists = {
 
         if (list.words.includes(cleanWord)) return;
 
-        const data = await APIClient.fetchWordData(cleanWord);
+        let data = null;
+        if (window.APIClient) {
+            data = await window.APIClient.fetchWordData(cleanWord);
+        }
+        
         if (!data || data.error || !data.dictionary || data.dictionary.length === 0) {
             return;
         }
