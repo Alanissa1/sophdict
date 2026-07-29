@@ -6,7 +6,7 @@ window.ExploreLists = {
         const icons = window.CustomLists.icons;
 
         return `
-            <div class="input-group" style="margin-top: 15px;">
+            <div class="input-group" style="">
                 <label>Visibility</label>
                 <div class="visibility-group">
                     <label class="visibility-chip">

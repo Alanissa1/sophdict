@@ -457,7 +457,7 @@ window.CustomLists = {
                     <div>
                         ${list.words.length === 0 ? '<div style="color: var(--text-sub); text-align: center;">No words in list.</div>' :
                             list.words.map(w => `
-                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1px 0px 1px 0px; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0px 5px 0px; border-bottom: 1px solid var(--border-color);">
                                     <span style="color: var(--text-main); font-weight: 500;">${w}</span>
                                     ${this.canEditList(name) ? `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.handleRemoveFromSettings('${w}', '${name}', event)">Remove</button>` : ''}
                                 </div>

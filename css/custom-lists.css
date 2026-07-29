@@ -52,7 +52,6 @@
 
 
 .input-group {
-    margin-bottom: 15px;
 }
 
 .input-group label {
@@ -60,6 +59,7 @@
     margin-bottom: 5px;
     font-size: 14px;
     color: var(--text-sub);
+    background-color: var(--card-bg);
 }
 
 .input-group input:not([type="checkbox"]) {
@@ -137,7 +137,7 @@
 }
 
 .visibility-chip:has(input:checked) {
-    background-color: #e8f0fe;
+    background-color: #00338d5e;
     border-color: #1a73e8;
     color: #1a73e8;
     z-index: 1;

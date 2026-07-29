@@ -102,13 +102,13 @@ window.AppClearSearch = (skipPush = false) => {
             .map(([name]) => {
                 if (isDeleteMode) {
                     return `
-                        <button class="academic-list-trigger" onclick="CustomLists.deleteList('${name}')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #ff4b6b; background: #fff5f7; color: #ff4b6b; font-weight: bold; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                        <button class="academic-list-trigger list-btn-delete" onclick="CustomLists.deleteList('${name}')">
                             ${name} <span style="font-size: 16px;">&times;</span>
                         </button>
                     `;
                 }
                 return `
-                    <button class="academic-list-trigger" onclick="window.history.pushState({}, '', '/listname/${encodeURIComponent(name)}'); CustomLists.handleRoute();" style="padding: 8px 16px; border-radius: 20px; border: 1px solid var(--accent); background: var(--card-bg); color: var(--accent); font-weight: bold; cursor: pointer; font-size: 13px;">${name}</button>
+                    <button class="academic-list-trigger list-btn-custom" onclick="window.history.pushState({}, '', '/listname/${encodeURIComponent(name)}'); CustomLists.handleRoute();">${name}</button>
                 `;
             }).join('');
 
@@ -125,13 +125,13 @@ window.AppClearSearch = (skipPush = false) => {
 
         rc.innerHTML = `
             <div style="width: 100%; display: flex; justify-content: flex-start; gap: 10px; padding: 15px 0 0 0; flex-wrap: wrap; align-items: center;">
-                <button id="academic-list-btn" class="academic-list-trigger" onclick="AcademicList.open('academic')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #d32f2f; background: #fff; color: #d32f2f; font-weight: bold; cursor: pointer; font-size: 13px;">570 Academic Words</button>
-                <button class="academic-list-trigger" onclick="FormalList.open('c2')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #4a148c; background: #fff; color: #4a148c; font-weight: bold; cursor: pointer; font-size: 13px;">C2 Words</button>
-                <button class="academic-list-trigger" onclick="FormalList.open('c1')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #1a237e; background: #fff; color: #1a237e; font-weight: bold; cursor: pointer; font-size: 13px;">C1 Words</button>
-                <button class="academic-list-trigger" onclick="FormalList.open('b2')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #01579b; background: #fff; color: #01579b; font-weight: bold; cursor: pointer; font-size: 13px;">B2 Words</button>
-                <button class="academic-list-trigger" onclick="FormalList.open('b1')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #006064; background: #fff; color: #006064; font-weight: bold; cursor: pointer; font-size: 13px;">B1 Words</button>
-                <button class="academic-list-trigger" onclick="FormalList.open('a2')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #1b5e20; background: #fff; color: #1b5e20; font-weight: bold; cursor: pointer; font-size: 13px;">A2 Words</button>
-                <button class="academic-list-trigger" onclick="FormalList.open('a1')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #f57f17; background: #fff; color: #f57f17; font-weight: bold; cursor: pointer; font-size: 13px;">A1 Words</button>
+                <button id="academic-list-btn" class="academic-list-trigger list-btn-academic" onclick="AcademicList.open('academic')">570 Academic Words</button>
+                <button class="academic-list-trigger list-btn-c2" onclick="FormalList.open('c2')">C2 Words</button>
+                <button class="academic-list-trigger list-btn-c1" onclick="FormalList.open('c1')">C1 Words</button>
+                <button class="academic-list-trigger list-btn-b2" onclick="FormalList.open('b2')">B2 Words</button>
+                <button class="academic-list-trigger list-btn-b1" onclick="FormalList.open('b1')">B1 Words</button>
+                <button class="academic-list-trigger list-btn-a2" onclick="FormalList.open('a2')">A2 Words</button>
+                <button class="academic-list-trigger list-btn-a1" onclick="FormalList.open('a1')">A1 Words</button>
                 ${customListsHtml}
                 ${deleteControl}
                 <button id="create-list-btn" class="custom-list-trigger" onclick="window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();" title="Create Custom List">
