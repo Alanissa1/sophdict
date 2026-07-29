@@ -7,11 +7,12 @@ window.CustomLists = {
         explore: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m300-300 280-80 80-280-280 80-80 280Zm180-120q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420Zm0 340q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z"/></svg>`,
         trash: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`
     },
-    lists: {}, // name -> { type: 'local'|'online', words: [], locked: bool, hidden: bool, password: string, visibility: 'public'|'link' }
+    lists: {}, // name -> { type: 'local'|'online', words: [], locked: bool, hidden: bool, hasPassword: bool, visibility: 'public'|'link' }
     deleteMode: false,
 
     async init() {
         this.loadLocalLists();
+        await this._migratePasswords();
         window.addEventListener('popstate', () => this.handleRoute());
 
         // If on home page, refresh to show list buttons
@@ -20,6 +21,41 @@ window.CustomLists = {
         }
 
         this.handleRoute();
+    },
+
+    // --- Crypto helpers for local list password hashing ---
+    _generateSalt() {
+        return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b => b.toString(16).padStart(2, '0')).join('');
+    },
+
+    async _hashLocal(password, salt) {
+        const data = new TextEncoder().encode(salt + password);
+        const buf = await crypto.subtle.digest('SHA-256', data);
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    },
+
+    // Migrate legacy plain-text passwords out of localStorage
+    async _migratePasswords() {
+        let dirty = false;
+        for (const name of Object.keys(this.lists)) {
+            const list = this.lists[name];
+            if (list.password !== undefined) {
+                if (list.type === 'local' && list.password) {
+                    const salt = this._generateSalt();
+                    list.passwordHash = await this._hashLocal(list.password, salt);
+                    list.passwordSalt = salt;
+                }
+                list.hasPassword = !!list.password;
+                delete list.password;
+                dirty = true;
+            }
+        }
+        if (dirty) this.saveLocalLists();
+    },
+
+    // Get the stored auth token for an online list
+    _getToken(name) {
+        return sessionStorage.getItem(`auth_token_${name}`);
     },
 
     loadLocalLists() {
@@ -37,16 +73,18 @@ window.CustomLists = {
         localStorage.setItem('sophdict_custom_lists', JSON.stringify(this.lists));
     },
 
-    // --- NEW HELPER: Check if current user can edit ---
+    // --- Check if current user can edit ---
     canEditList(name) {
         const list = this.lists[name];
         if (!list) return false;
         
-        // If it's not locked, anyone (or anyone who unlocked a private list) can edit
+        // If it's not locked, anyone can edit
         if (!list.locked) return true;
         
-        // If it's locked AND has a password, check if the user is authenticated
-        return list.locked && list.password && localStorage.getItem(`auth_${name}`) === 'true';
+        // If locked with a password, check for valid session token
+        if (!list.hasPassword) return false;
+        if (list.type === 'online') return !!this._getToken(name);
+        return sessionStorage.getItem(`auth_local_${name}`) === 'true';
     },
 
     // --- NEW HELPER: Trigger unlock modal for owners ---
@@ -183,6 +221,7 @@ window.CustomLists = {
                 return;
             }
 
+            // Send plain password to backend — it will hash it server-side
             const result = await this.saveOnlineList(name, {
                 type: 'online',
                 words: [],
@@ -200,23 +239,36 @@ window.CustomLists = {
                 }
                 return;
             }
-        }
 
-        this.lists[name] = {
-            type: this.currentType,
-            words: [],
-            password: pass,
-            hidden: hide,
-            locked: lock,
-            visibility: visibility
-        };
+            // Store locally WITHOUT the password — only the flag
+            this.lists[name] = {
+                type: 'online',
+                words: [],
+                hasPassword: !!pass,
+                hidden: hide,
+                locked: lock,
+                visibility: visibility
+            };
+        } else {
+            // Local list — hash password client-side
+            const listData = {
+                type: 'local',
+                words: [],
+                hasPassword: !!pass,
+                hidden: hide,
+                locked: lock,
+                visibility: visibility
+            };
+            if (pass) {
+                const salt = this._generateSalt();
+                listData.passwordHash = await this._hashLocal(pass, salt);
+                listData.passwordSalt = salt;
+                sessionStorage.setItem(`auth_local_${name}`, 'true');
+            }
+            this.lists[name] = listData;
+        }
 
         this.saveLocalLists();
-
-        // Automatically authenticate the creator if they set a password
-        if (pass) {
-            localStorage.setItem(`auth_${name}`, 'true');
-        }
 
         if (document.body.classList.contains('home-state')) {
             window.AppClearSearch(true);
@@ -239,14 +291,24 @@ window.CustomLists = {
 
     async saveOnlineList(name, data) {
          try {
+            const headers = { 'Content-Type': 'application/json' };
+            // Attach session token for protected lists
+            const token = this._getToken(name);
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const resp = await fetch(`/api/custom-lists`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify({ name, data })
             });
             if (!resp.ok) {
                 const errData = await resp.json().catch(() => ({}));
                 return { success: false, message: errData.error || "Server error" };
+            }
+            const result = await resp.json();
+            // Store token returned on create (or password change)
+            if (result.token) {
+                sessionStorage.setItem(`auth_token_${name}`, result.token);
             }
             return { success: true };
         } catch (e) {
@@ -283,20 +345,20 @@ window.CustomLists = {
         }
 
         // Only lock list view if explicitly hidden (private)
-        if (list.password && list.hidden) {
-            const authenticated = localStorage.getItem(`auth_${name}`);
-            if (!authenticated) {
+        if (list.hasPassword && list.hidden) {
+            const hasToken = list.type === 'online' ? !!this._getToken(name) : sessionStorage.getItem(`auth_local_${name}`) === 'true';
+            if (!hasToken) {
                 this.renderPasswordPrompt(name, list);
                 return;
             }
         }
 
         const canEdit = this.canEditList(name);
-        const isAuth = localStorage.getItem(`auth_${name}`) === 'true';
+        const isAuth = list.type === 'online' ? !!this._getToken(name) : sessionStorage.getItem(`auth_local_${name}`) === 'true';
         this._currentLoadedList = name;
 
         // Unlock button for owner to edit read-only lists
-        const unlockBtn = (list.locked && list.password && !isAuth) ? 
+        const unlockBtn = (list.locked && list.hasPassword && !isAuth) ? 
             `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px;" onclick="CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
 
         document.body.classList.remove('home-state');
@@ -429,7 +491,8 @@ window.CustomLists = {
         if (!list) return;
 
         // Lock settings if list has a password and user is not authenticated
-        if (list.password && localStorage.getItem(`auth_${name}`) !== 'true') {
+        const isAuth = list.type === 'online' ? !!this._getToken(name) : sessionStorage.getItem(`auth_local_${name}`) === 'true';
+        if (list.hasPassword && !isAuth) {
             this.renderPasswordPrompt(name, list);
             return;
         }
@@ -442,8 +505,8 @@ window.CustomLists = {
         modal.querySelector('#licenseTextContent').innerHTML = `
             <div style="padding-top: 20px;">
                 <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="editListPass" name="sophdict_list_password" value="${list.password || ''}" autocomplete="new-password">
+                    <label>${list.hasPassword ? 'New Password (leave blank to keep current)' : 'Set Password'}</label>
+                    <input type="password" id="editListPass" name="sophdict_list_password" placeholder="${list.hasPassword ? 'Leave blank to keep current' : 'Optional'}" autocomplete="new-password">
                 </div>
                 <div class="input-group checkbox-row">
                     <label for="editListLock">Lock list (Read-only)</label>
@@ -490,7 +553,7 @@ window.CustomLists = {
 
     async saveSettings(name) {
         const list = this.lists[name];
-        list.password = document.getElementById('editListPass').value;
+        const newPass = document.getElementById('editListPass').value;
         list.locked = document.getElementById('editListLock').checked;
 
         const visInput = document.querySelector('input[name="editListVisibility"]:checked');
@@ -499,9 +562,44 @@ window.CustomLists = {
             list.hidden = (visInput.value === 'private');
         }
 
+        // Handle password change
+        if (newPass) {
+            if (list.type === 'online') {
+                // Change password via backend endpoint
+                const headers = { 'Content-Type': 'application/json' };
+                const token = this._getToken(name);
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                try {
+                    const resp = await fetch('/api/custom-lists?action=change-password', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ name, newPassword: newPass })
+                    });
+                    if (resp.ok) {
+                        const result = await resp.json();
+                        if (result.token) sessionStorage.setItem(`auth_token_${name}`, result.token);
+                        list.hasPassword = true;
+                    }
+                } catch (e) {
+                    console.error('Password change failed:', e);
+                }
+            } else {
+                // Local list: hash and store client-side
+                const salt = this._generateSalt();
+                list.passwordHash = await this._hashLocal(newPass, salt);
+                list.passwordSalt = salt;
+                list.hasPassword = true;
+                sessionStorage.setItem(`auth_local_${name}`, 'true');
+            }
+        }
+
+        // Build a clean copy for online save (strip local-only fields)
+        const saveData = { ...list };
+        delete saveData.password; // ensure no legacy field leaks
+
         this.saveLocalLists();
         this._lastSaveTime = Date.now();
-        if (list.type === 'online') await this.saveOnlineList(name, list);
+        if (list.type === 'online') await this.saveOnlineList(name, saveData);
         this.closeSettings();
         this.renderListView(name);
     },
@@ -550,24 +648,61 @@ window.CustomLists = {
                 <h3 style="color: var(--text-main);">${list.hidden ? 'Private List' : 'Password Protected'}</h3>
                 <p style="color: var(--text-sub);">This list is protected. Enter password to ${list.hidden ? 'view' : 'edit'}.</p>
                 <div class="input-group" style="max-width: 300px; margin: 20px auto;">
-                    <input type="password" id="listPassInput" placeholder="Password" autocomplete="current-password">
+                    <input type="password" id="listPassInput" placeholder="Password" autocomplete="current-password"
+                        onkeydown="if(event.key==='Enter') CustomLists.checkPassword('${name}')">
                 </div>
+                <div id="passError" style="color: #ff4b6b; text-align: center; margin-bottom: 10px; font-size: 14px;"></div>
                 <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button class="action-btn" onclick="CustomLists.checkPassword('${name}')">Unlock</button>
+                    <button class="action-btn" id="unlockBtn" onclick="CustomLists.checkPassword('${name}')">Unlock</button>
                     ${!list.hidden ? `<button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderListView('${name}')">Cancel</button>` : ''}
                 </div>
             </div>
         `;
     },
 
-    checkPassword(name) {
+    async checkPassword(name) {
         const input = document.getElementById('listPassInput').value;
         const list = this.lists[name];
-        if (input === list.password) {
-            localStorage.setItem(`auth_${name}`, 'true');
-            this.renderListView(name);
-        } else {
-            alert("Incorrect password"); // Added slight feedback
+        const errorDiv = document.getElementById('passError');
+        const unlockBtn = document.getElementById('unlockBtn');
+        if (!input) { if (errorDiv) errorDiv.innerText = 'Please enter a password.'; return; }
+
+        // Disable button during verification
+        if (unlockBtn) { unlockBtn.disabled = true; unlockBtn.innerText = 'Verifying...'; }
+
+        try {
+            if (list.type === 'online') {
+                // Backend verification
+                const resp = await fetch('/api/custom-lists?action=verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, password: input })
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    sessionStorage.setItem(`auth_token_${name}`, data.token);
+                    this.renderListView(name);
+                } else {
+                    if (errorDiv) errorDiv.innerText = 'Incorrect password.';
+                }
+            } else {
+                // Local list: verify against stored hash
+                if (list.passwordHash && list.passwordSalt) {
+                    const hash = await this._hashLocal(input, list.passwordSalt);
+                    if (hash === list.passwordHash) {
+                        sessionStorage.setItem(`auth_local_${name}`, 'true');
+                        this.renderListView(name);
+                    } else {
+                        if (errorDiv) errorDiv.innerText = 'Incorrect password.';
+                    }
+                } else {
+                    if (errorDiv) errorDiv.innerText = 'Password data missing.';
+                }
+            }
+        } catch (e) {
+            if (errorDiv) errorDiv.innerText = 'Network error. Please try again.';
+        } finally {
+            if (unlockBtn) { unlockBtn.disabled = false; unlockBtn.innerText = 'Unlock'; }
         }
     },
 
