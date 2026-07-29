@@ -102,7 +102,7 @@ window.CustomLists = {
                 <div id="creation-step-2" style="display: none;">
                     <div class="input-group" id="pathInputGroup">
                         <label>List Name</label>
-                        <input type="text" id="newListPath" name="sophdict_list_name" placeholder="my-awesome-list" autocomplete="one-time-code">
+                        <input type="text" id="newListPath" placeholder="my-awesome-list" autocomplete="off">
                     </div>
                     <div id="visibilityInputGroup" style="display: none;">
                         ${window.ExploreLists ? window.ExploreLists.renderSetting('link', true) : ''}
@@ -308,7 +308,7 @@ window.CustomLists = {
 
                 ${canEdit ? `
                 <div class="search-container manual-add-container" style="width: 100%; max-width: 100%; margin-bottom: 30px;">
-                    <input type="text" id="manualWordInput" name="sophdict_word_entry" placeholder="Add word manually..." autocomplete="one-time-code" style="flex: 1;">
+                    <input type="text" id="manualWordInput" placeholder="Add word manually..." autocomplete="off" readonly style="flex: 1;">
                     <button class="icon-btn" onclick="CustomLists.addManualWord('${name}')" aria-label="Add Word">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                     </button>
@@ -333,8 +333,14 @@ window.CustomLists = {
         const wi = document.getElementById('manualWordInput');
         if (!wi) return;
 
-        wi.onfocus = () => wi.closest('.search-container')?.classList.add('input-focused');
-        wi.onblur = () => setTimeout(() => wi.closest('.search-container')?.classList.remove('input-focused'), 150);
+        wi.onfocus = () => {
+            wi.removeAttribute('readonly');
+            wi.closest('.search-container')?.classList.add('input-focused');
+        };
+        wi.onblur = () => {
+            wi.setAttribute('readonly', true);
+            setTimeout(() => wi.closest('.search-container')?.classList.remove('input-focused'), 150);
+        };
 
         wi.onkeydown = (e) => {
             if (e.key === 'Enter') {
@@ -487,13 +493,33 @@ window.CustomLists = {
 
     deleteList(name) {
         delete this.lists[name];
-        this.saveLocalLists();
+        if (!this.deleteMode) {
+            this.saveLocalLists();
+        }
         this.closeSettings();
         if (window.AppClearSearch) window.AppClearSearch(true);
     },
 
     toggleDeleteMode() {
+        if (!this.deleteMode) {
+            // Entering delete mode, backup current lists
+            this._backupLists = JSON.parse(JSON.stringify(this.lists));
+        } else {
+            // Exiting delete mode (Save), persist changes
+            this.saveLocalLists();
+            this._backupLists = null;
+        }
         this.deleteMode = !this.deleteMode;
+        if (window.AppClearSearch) window.AppClearSearch(true);
+    },
+
+    cancelDeleteMode() {
+        if (this.deleteMode && this._backupLists) {
+            // Restore from backup
+            this.lists = this._backupLists;
+            this._backupLists = null;
+        }
+        this.deleteMode = false;
         if (window.AppClearSearch) window.AppClearSearch(true);
     },
 

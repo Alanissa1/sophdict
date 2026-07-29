@@ -116,7 +116,7 @@ window.AppClearSearch = (skipPush = false) => {
         const deleteControl = isDeleteMode ? `
             <div style="display: flex; gap: 5px;">
                 <button class="action-btn" onclick="CustomLists.toggleDeleteMode()" style="padding: 6px 12px; font-size: 11px; background: var(--accent); border-radius: 15px;">Save</button>
-                <button class="action-btn" onclick="CustomLists.toggleDeleteMode()" style="padding: 6px 12px; font-size: 11px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 15px;">Cancel</button>
+                <button class="action-btn" onclick="CustomLists.cancelDeleteMode()" style="padding: 6px 12px; font-size: 11px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 15px;">Cancel</button>
             </div>
         ` : `
             <button class="custom-list-trigger" onclick="CustomLists.toggleDeleteMode()" title="Remove Lists" style="background: transparent; border: none; color: var(--text-sub); display: flex; align-items: center; justify-content: center; padding: 4px; cursor: pointer;">
