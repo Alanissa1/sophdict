@@ -320,7 +320,7 @@ window.CustomLists = {
                     </div>
                     <div style="display: flex;">
                         ${unlockBtn}
-                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
+                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); height: 30px; width: 62px; padding: 0;" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
                     </div>
                 </div>
 
@@ -347,8 +347,6 @@ window.CustomLists = {
         if (canEdit) this.setupManualInput(name);
         if (window.PreFetcher) PreFetcher.updatePageStatus();
         window.scrollTo({ top: 0, behavior: 'instant' });
-    },
-        if (canEdit) this.setupManualInput(name);
     },
 
     setupManualInput(name) {
