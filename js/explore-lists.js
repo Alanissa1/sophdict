@@ -4,21 +4,22 @@ window.ExploreLists = {
     renderSetting(currentValue = 'link', isNew = true) {
         const nameAttr = isNew ? 'newListVisibility' : 'editListVisibility';
         const icons = window.CustomLists.icons;
+        const onChange = `onchange="if(window.CustomLists && window.CustomLists.updateFormState) window.CustomLists.updateFormState(${isNew})"`;
 
         return `
             <div class="input-group" style="">
                 <label>Visibility</label>
                 <div class="visibility-group">
                     <label class="visibility-chip">
-                        <input type="radio" name="${nameAttr}" value="public" ${currentValue === 'public' ? 'checked' : ''}>
+                        <input type="radio" name="${nameAttr}" value="public" ${currentValue === 'public' ? 'checked' : ''} ${onChange}>
                         ${icons.public} Public
                     </label>
                     <label class="visibility-chip">
-                        <input type="radio" name="${nameAttr}" value="link" ${currentValue === 'link' ? 'checked' : ''}>
+                        <input type="radio" name="${nameAttr}" value="link" ${currentValue === 'link' ? 'checked' : ''} ${onChange}>
                         ${icons.link} Unlisted
                     </label>
                     <label class="visibility-chip">
-                        <input type="radio" name="${nameAttr}" value="private" ${currentValue === 'private' ? 'checked' : ''}>
+                        <input type="radio" name="${nameAttr}" value="private" ${currentValue === 'private' ? 'checked' : ''} ${onChange}>
                         ${icons.private} Private
                     </label>
                 </div>

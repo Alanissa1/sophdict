@@ -161,7 +161,7 @@ window.CustomLists = {
                     </div>
                     <div class="input-group checkbox-row" id="lockInputGroup">
                         <label for="newListLock">Lock list (Read-only)</label>
-                        <input type="checkbox" id="newListLock">
+                        <input type="checkbox" id="newListLock" onchange="if(window.CustomLists.updateFormState) window.CustomLists.updateFormState(true)">
                     </div>
                     <div id="creation-error" style="color: #ff4b6b; margin-bottom: 10px; font-size: 14px;"></div>
                     <div style="display: flex; gap: 10px;">
@@ -194,18 +194,55 @@ window.CustomLists = {
             if (visibilityGroup) visibilityGroup.style.display = 'block';
             document.getElementById('newListPath').value = '';
         }
+        
+        setTimeout(() => this.updateFormState(true), 0);
+    },
+
+    updateFormState(isNew) {
+        const prefix = isNew ? 'new' : 'edit';
+        const visInput = document.querySelector(`input[name="${prefix}ListVisibility"]:checked`);
+        const vis = visInput ? visInput.value : (this.currentType === 'local' ? 'local' : null);
+        const lockCb = document.getElementById(`${prefix}ListLock`);
+        const passInput = document.getElementById(`${prefix}ListPass`);
+        
+        const passLabel = isNew ? passInput?.previousElementSibling : document.getElementById('editListPassLabel');
+        const hasExistingPassword = !isNew && this.lists[this._currentLoadedList]?.hasPassword;
+        
+        if (vis === 'private') {
+            if (lockCb) {
+                lockCb.checked = true;
+                lockCb.disabled = true;
+            }
+            if (passLabel) passLabel.innerText = hasExistingPassword ? 'New Password (Required if changing, blank to keep)' : 'Password (Required for Private)';
+        } else {
+            if (lockCb) {
+                lockCb.disabled = false;
+            }
+            if (lockCb && lockCb.checked) {
+                if (passLabel) passLabel.innerText = hasExistingPassword ? 'New Password (Required if changing, blank to keep)' : 'Password (Required to lock)';
+            } else {
+                if (passLabel) passLabel.innerText = hasExistingPassword ? 'New Password (Optional)' : 'Password (Optional)';
+            }
+        }
     },
 
     async confirmCreate() {
         const name = document.getElementById('newListPath').value.trim();
         const pass = document.getElementById('newListPass').value;
-        const lock = document.getElementById('newListLock').checked;
+        const lockCb = document.getElementById('newListLock');
+        const lock = lockCb ? lockCb.checked : false;
         const visibility = document.querySelector('input[name="newListVisibility"]:checked')?.value || 'link';
         const hide = (visibility === 'private');
+        const finalLock = lock || hide;
         const errorDiv = document.getElementById('creation-error');
 
         if (!name) {
             errorDiv.innerText = "Please enter a name.";
+            return;
+        }
+
+        if ((hide || finalLock) && !pass) {
+            errorDiv.innerText = "A password is required for private or locked lists.";
             return;
         }
 
@@ -227,7 +264,7 @@ window.CustomLists = {
                 words: [],
                 password: pass,
                 hidden: hide,
-                locked: lock,
+                locked: finalLock,
                 visibility: visibility
             });
 
@@ -246,7 +283,7 @@ window.CustomLists = {
                 words: [],
                 hasPassword: !!pass,
                 hidden: hide,
-                locked: lock,
+                locked: finalLock,
                 visibility: visibility
             };
         } else {
@@ -256,7 +293,7 @@ window.CustomLists = {
                 words: [],
                 hasPassword: !!pass,
                 hidden: hide,
-                locked: lock,
+                locked: finalLock,
                 visibility: visibility
             };
             if (pass) {
@@ -502,18 +539,29 @@ window.CustomLists = {
         if (!modal || !dimmer) return;
 
         modal.querySelector('.license-title').innerText = `List Settings: ${name}`;
+        
+        let footer = modal.querySelector('.license-footer');
+        if (!footer) {
+            footer = document.createElement('div');
+            footer.className = 'license-footer';
+            modal.appendChild(footer);
+        }
+
         modal.querySelector('#licenseTextContent').innerHTML = `
             <div style="padding-top: 20px;">
-                <div class="input-group">
-                    <label>${list.hasPassword ? 'New Password (leave blank to keep current)' : 'Set Password'}</label>
-                    <input type="password" id="editListPass" name="sophdict_list_password" placeholder="${list.hasPassword ? 'Leave blank to keep current' : 'Optional'}" autocomplete="new-password">
-                </div>
-                <div class="input-group checkbox-row">
+                ${list.type === 'online' && window.ExploreLists ? window.ExploreLists.renderSetting(list.visibility, false) : ''}
+
+                <div class="input-group checkbox-row" style="margin-top: 15px;">
                     <label for="editListLock">Lock list (Read-only)</label>
-                    <input type="checkbox" id="editListLock" ${list.locked ? 'checked' : ''}>
+                    <input type="checkbox" id="editListLock" ${list.locked ? 'checked' : ''} onchange="if(window.CustomLists.updateFormState) window.CustomLists.updateFormState(false)">
                 </div>
 
-                ${list.type === 'online' && window.ExploreLists ? window.ExploreLists.renderSetting(list.visibility, false) : ''}
+                <div class="input-group" style="margin-top: 15px;">
+                    <label id="editListPassLabel">${list.hasPassword ? 'New Password (leave blank to keep current)' : 'Set Password'}</label>
+                    <input type="password" id="editListPass" name="sophdict_list_password" placeholder="${list.hasPassword ? 'Leave blank to keep current' : 'Optional'}" autocomplete="new-password">
+                </div>
+                
+                <div id="settings-error" style="color: #ff4b6b; margin-top: 10px; font-size: 14px;"></div>
 
                 <div style="margin-top: 30px; margin-bottom: 20px;">
                     <h3 style="color: var(--text-main); font-size: 16px; margin-bottom: 10px;">Manage Words</h3>
@@ -530,8 +578,9 @@ window.CustomLists = {
             </div>
         `;
 
-        modal.querySelector('.license-footer').innerHTML = `
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        footer.style.display = 'flex';
+        footer.innerHTML = `
+            <div style="display: flex; gap: 10px; justify-content: flex-end; width: 100%;">
                 <button class="action-btn" onclick="CustomLists.saveSettings('${name}')">Save</button>
                 <button class="action-btn" style="background: #ff4b6b;" onclick="CustomLists.deleteList('${name}')">Delete</button>
                 <button class="license-close-btn" style="margin: 0;" onclick="CustomLists.closeSettings()">Close</button>
@@ -541,12 +590,15 @@ window.CustomLists = {
         modal.classList.add('active');
         UIUtils.updateSharedDimmer();
         UIUtils.setupQuickClose(dimmer, () => this.closeSettings());
+        setTimeout(() => this.updateFormState(false), 0);
     },
 
     closeSettings() {
         const modal = document.getElementById('licenseModal');
         if (modal) {
             modal.classList.remove('active');
+            const footer = modal.querySelector('.license-footer');
+            if (footer) footer.style.display = 'none';
         }
         UIUtils.updateSharedDimmer();
     },
@@ -554,12 +606,24 @@ window.CustomLists = {
     async saveSettings(name) {
         const list = this.lists[name];
         const newPass = document.getElementById('editListPass').value;
-        list.locked = document.getElementById('editListLock').checked;
-
+        const errorDiv = document.getElementById('settings-error');
+        
         const visInput = document.querySelector('input[name="editListVisibility"]:checked');
+        const visibility = visInput ? visInput.value : list.visibility;
+        const hide = (visibility === 'private');
+        const lockCb = document.getElementById('editListLock');
+        const lock = lockCb ? lockCb.checked : list.locked;
+        const finalLock = lock || hide;
+
+        if ((hide || finalLock) && !list.hasPassword && !newPass) {
+            if (errorDiv) errorDiv.innerText = "A password is required for private or locked lists.";
+            return;
+        }
+
+        list.locked = finalLock;
         if (visInput) {
-            list.visibility = visInput.value;
-            list.hidden = (visInput.value === 'private');
+            list.visibility = visibility;
+            list.hidden = hide;
         }
 
         // Handle password change

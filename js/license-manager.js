@@ -27,9 +27,7 @@ window.LicenseManager = {
             <div id="licenseTextContent" class="license-text">
                 ${licenseContent}
             </div>
-            <div class="license-footer">
-                <button class="license-close-btn" onclick="LicenseManager.hide()">Close</button>
-            </div>
+            <div class="license-footer" style="display: none;"></div>
         `;
         document.body.appendChild(modal);
 
