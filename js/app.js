@@ -127,6 +127,12 @@ window.AppClearSearch = (skipPush = false) => {
         rc.innerHTML = `
             <div style="width: 100%; display: flex; justify-content: flex-start; gap: 10px; padding: 15px 0 0 0; flex-wrap: wrap; align-items: center;">
                 <button id="academic-list-btn" class="academic-list-trigger" onclick="AcademicList.open('academic')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #d32f2f; background: #fff; color: #d32f2f; font-weight: bold; cursor: pointer; font-size: 13px;">570 Academic Words</button>
+                <button class="academic-list-trigger" onclick="FormalList.open('c2')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #4a148c; background: #fff; color: #4a148c; font-weight: bold; cursor: pointer; font-size: 13px;">C2 Words</button>
+                <button class="academic-list-trigger" onclick="FormalList.open('c1')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #1a237e; background: #fff; color: #1a237e; font-weight: bold; cursor: pointer; font-size: 13px;">C1 Words</button>
+                <button class="academic-list-trigger" onclick="FormalList.open('b2')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #01579b; background: #fff; color: #01579b; font-weight: bold; cursor: pointer; font-size: 13px;">B2 Words</button>
+                <button class="academic-list-trigger" onclick="FormalList.open('b1')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #006064; background: #fff; color: #006064; font-weight: bold; cursor: pointer; font-size: 13px;">B1 Words</button>
+                <button class="academic-list-trigger" onclick="FormalList.open('a2')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #1b5e20; background: #fff; color: #1b5e20; font-weight: bold; cursor: pointer; font-size: 13px;">A2 Words</button>
+                <button class="academic-list-trigger" onclick="FormalList.open('a1')" style="padding: 8px 16px; border-radius: 20px; border: 1px solid #f57f17; background: #fff; color: #f57f17; font-weight: bold; cursor: pointer; font-size: 13px;">A1 Words</button>
                 ${customListsHtml}
                 ${deleteControl}
                 <button id="create-list-btn" class="custom-list-trigger" onclick="window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();" title="Create Custom List">
@@ -276,5 +282,6 @@ window.AppClearSearch = (skipPush = false) => {
 
     // Always init AcademicList so it's ready for clicks from home and handles routing
     if (window.AcademicList) AcademicList.init();
+    if (window.FormalList) FormalList.init();
     if (window.FeedbackSupport) FeedbackSupport.init();
 })();

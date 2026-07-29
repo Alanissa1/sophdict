@@ -15,7 +15,7 @@ window.ExploreLists = {
                     </label>
                     <label class="visibility-chip">
                         <input type="radio" name="${nameAttr}" value="link" ${currentValue === 'link' ? 'checked' : ''}>
-                        ${icons.link} Just URL
+                        ${icons.link} Unlisted
                     </label>
                     <label class="visibility-chip">
                         <input type="radio" name="${nameAttr}" value="private" ${currentValue === 'private' ? 'checked' : ''}>
