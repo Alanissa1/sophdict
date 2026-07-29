@@ -58,7 +58,7 @@ window.FormalList = {
 
         let list = this.lists[type] || [];
         let title = type.toUpperCase() + ' Words';
-        let tagClass = 'ielts-match';
+        let tagClass = '';
 
         const start = (page - 1) * this.perPage;
         const end = start + this.perPage;

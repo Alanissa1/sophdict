@@ -146,6 +146,17 @@ main,
     display: inline-block;
     vertical-align: middle;
     font-family: Arial, Helvetica, sans-serif !important;
+    animation: instantHide 0s linear 3s forwards;
+}
+
+@keyframes instantHide {
+    to {
+        display: none;
+        width: 0;
+        margin: 0;
+        padding: 0;
+        opacity: 0;
+    }
 }
 
 body.dark-mode .ielts-header-tag {
@@ -157,17 +168,7 @@ body.dark-mode .ielts-header-tag {
     color: var(--text-sub);
     font-weight: bold;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 0.85em;
-    margin-right: 5px;
 }
-
-.ielts-match { border-color: #d32f2f !important; }
-.c2-match { border-color: #4a148c !important; }
-.c1-match { border-color: #1a237e !important; }
-.b2-match { border-color: #01579b !important; }
-.b1-match { border-color: #006064 !important; }
-.a2-match { border-color: #1b5e20 !important; }
-.a1-match { border-color: #f57f17 !important; }
 
 
 #text-scale-control,

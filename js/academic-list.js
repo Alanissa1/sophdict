@@ -54,7 +54,7 @@ window.AcademicList = Object.assign(window.AcademicList || {}, {
 
         let list = this.words;
         let title = '570 Academic Words';
-        let tagClass = 'ielts-match';
+        let tagClass = '';
 
         const start = (page - 1) * this.perPage;
         const end = start + this.perPage;

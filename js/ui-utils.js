@@ -198,14 +198,7 @@ window.UIUtils = {
         if (!word) return "";
         const clean = word.toLowerCase().trim();
         const classes = [];
-        if (window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean)) classes.push("ielts-match");
-        if (window.C2_WORDS && window.C2_WORDS.has(clean)) classes.push("c2-match");
-        if (window.C1_WORDS && window.C1_WORDS.has(clean)) classes.push("c1-match");
-        if (window.B2_WORDS && window.B2_WORDS.has(clean)) classes.push("b2-match");
-        if (window.B1_WORDS && window.B1_WORDS.has(clean)) classes.push("b1-match");
-        if (window.A2_WORDS && window.A2_WORDS.has(clean)) classes.push("a2-match");
-        if (window.A1_WORDS && window.A1_WORDS.has(clean)) classes.push("a1-match");
-        if (window.PRE_A1_WORDS && window.PRE_A1_WORDS.has(clean)) classes.push("pre-a1-match");
+        // Removed level-specific match classes as requested
         return classes.join(" ");
     },
 
@@ -246,13 +239,13 @@ window.UIUtils = {
             return html;
         };
 
-        res += renderBatch(groups.academic, "academic", "ielts-match");
-        res += renderBatch(groups.c2, "c2", "c2-match");
-        res += renderBatch(groups.c1, "c1", "c1-match");
-        res += renderBatch(groups.b2, "b2", "b2-match");
-        res += renderBatch(groups.b1, "b1", "b1-match");
-        res += renderBatch(groups.a2, "a2", "a2-match");
-        res += renderBatch(groups.a1, "a1", "a1-match");
+        res += renderBatch(groups.academic, "academic", "");
+        res += renderBatch(groups.c2, "c2", "");
+        res += renderBatch(groups.c1, "c1", "");
+        res += renderBatch(groups.b2, "b2", "");
+        res += renderBatch(groups.b1, "b1", "");
+        res += renderBatch(groups.a2, "a2", "");
+        res += renderBatch(groups.a1, "a1", "");
         res += renderBatch(groups.others, null, "");
         res += renderBatch(groups.slang, null, "");
 
