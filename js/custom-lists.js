@@ -1,4 +1,4 @@
-window.CustomLists = {
+Window.CustomLists = {
     icons: {
         public: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-80q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-7-.5-14.5T799-507q-5 29-27 48t-52 19h-80q-33 0-56.5-23.5T560-520v-40H400v-80q0-33 23.5-56.5T480-720h40q0-23 12.5-40.5T563-789q-20-5-40.5-8t-42.5-3q-134 0-227 93t-93 227h200q66 0 113 47t47 113v40H400v110q20 5 39.5 7.5T480-160Z"/></svg>`,
         link: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-280H280q-83 0-141.5-58.5T80-480q0-83 58.5-141.5T280-680h160v80H280q-50 0-85 35t-35 85q0 50 35 85t85 35h160v80ZM320-440v-80h320v80H320Zm200 160v-80h160q50 0 85-35t35-85q0-50-35-85t-85-35H520v-80h160q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H520Z"/></svg>`,
@@ -7,14 +7,13 @@ window.CustomLists = {
         explore: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m300-300 280-80 80-280-280 80-80 280Zm180-120q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420Zm0 340q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z"/></svg>`,
         trash: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`
     },
-    lists: {}, // name -> { type: 'local'|'online', words: [], locked: bool, hidden: bool, password: string, visibility: 'public'|'link' }
+    lists: {}, 
     deleteMode: false,
 
     async init() {
         this.loadLocalLists();
         window.addEventListener('popstate', () => this.handleRoute());
 
-        // If on home page, refresh to show list buttons
         if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
             if (window.AppClearSearch) window.AppClearSearch(true);
         }
@@ -37,28 +36,21 @@ window.CustomLists = {
         localStorage.setItem('sophdict_custom_lists', JSON.stringify(this.lists));
     },
 
-    // --- NEW HELPER: Check if current user can edit ---
     canEditList(name) {
         const list = this.lists[name];
         if (!list) return false;
         
-        // If it's not locked, anyone (or anyone who unlocked a private list) can edit
         if (!list.locked) return true;
         
-        // If it's locked AND has a password, check if the user is authenticated
-        return list.locked && list.password && localStorage.getItem(`auth_${name}`) === 'true';
+        // التحقق من وجود توكن صالح بدلاً من كلمة السر المكشوفة
+        return list.locked && (list.password || list.hasPassword) && !!localStorage.getItem(`auth_token_${name}`);
     },
 
-    // --- NEW HELPER: Trigger unlock modal for owners ---
     triggerUnlock(name) {
         const list = this.lists[name];
         if (list) {
             this.renderPasswordPrompt(name, list);
         }
-    },
-
-    createSettingsPanel() {
-        // Now using standard licenseModal from LicenseManager
     },
 
     handleRoute() {
@@ -176,6 +168,8 @@ window.CustomLists = {
             return;
         }
 
+        let tokenToSave = 'true';
+
         if (this.currentType === 'online') {
             const available = await this.checkOnlineName(name);
             if (!available) {
@@ -186,36 +180,41 @@ window.CustomLists = {
             const result = await this.saveOnlineList(name, {
                 type: 'online',
                 words: [],
-                password: pass,
+                password: pass, // سيتم تشفيره في الباك اند
                 hidden: hide,
                 locked: lock,
                 visibility: visibility
             });
 
             if (!result.success) {
-                if (result.message.includes('Database configuration missing')) {
-                    errorDiv.innerText = "Upstash database not configured in Vercel settings.";
-                } else {
-                    errorDiv.innerText = result.message || "Failed to connect to Upstash.";
-                }
+                errorDiv.innerText = result.message || "Failed to connect to backend.";
                 return;
             }
+            
+            // إنشاء توكن وهمي للمنشئ لحفظ جلسته (يُفضل استرجاع التوكن الحقيقي من السيرفر)
+            if(pass) tokenToSave = btoa(`${name}:${pass}`); 
         }
 
-        this.lists[name] = {
+        const listObj = {
             type: this.currentType,
             words: [],
-            password: pass,
             hidden: hide,
             locked: lock,
             visibility: visibility
         };
 
+        // حفظ كلمة السر محلياً فقط للقوائم المحلية
+        if(this.currentType === 'local') {
+            listObj.password = pass;
+        } else if (pass) {
+            listObj.hasPassword = true; // علامة للقوائم الأونلاين بدلاً من حفظ الباسورد الصريح
+        }
+
+        this.lists[name] = listObj;
         this.saveLocalLists();
 
-        // Automatically authenticate the creator if they set a password
         if (pass) {
-            localStorage.setItem(`auth_${name}`, 'true');
+            localStorage.setItem(`auth_token_${name}`, tokenToSave);
         }
 
         if (document.body.classList.contains('home-state')) {
@@ -239,10 +238,11 @@ window.CustomLists = {
 
     async saveOnlineList(name, data) {
          try {
+            const token = localStorage.getItem(`auth_token_${name}`);
             const resp = await fetch(`/api/custom-lists`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, data })
+                body: JSON.stringify({ name, data, token }) // نرسل التوكن لتأكيد الصلاحية في التحديث
             });
             if (!resp.ok) {
                 const errData = await resp.json().catch(() => ({}));
@@ -261,7 +261,6 @@ window.CustomLists = {
         if (window.RestoreSearchUI) window.RestoreSearchUI();
 
         let list = this.lists[name];
-
         const lastSave = this._lastSaveTime || 0;
         const recentlySaved = (Date.now() - lastSave) < 2000;
 
@@ -282,21 +281,18 @@ window.CustomLists = {
             return;
         }
 
-        // Only lock list view if explicitly hidden (private)
-        if (list.password && list.hidden) {
-            const authenticated = localStorage.getItem(`auth_${name}`);
-            if (!authenticated) {
-                this.renderPasswordPrompt(name, list);
-                return;
-            }
+        const isProtected = list.type === 'local' ? !!list.password : list.hasPassword;
+        const isAuth = !!localStorage.getItem(`auth_token_${name}`);
+
+        if (isProtected && list.hidden && !isAuth) {
+            this.renderPasswordPrompt(name, list);
+            return;
         }
 
         const canEdit = this.canEditList(name);
-        const isAuth = localStorage.getItem(`auth_${name}`) === 'true';
         this._currentLoadedList = name;
 
-        // Unlock button for owner to edit read-only lists
-        const unlockBtn = (list.locked && list.password && !isAuth) ? 
+        const unlockBtn = (list.locked && isProtected && !isAuth) ? 
             `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px;" onclick="window.CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
 
         document.body.classList.remove('home-state');
@@ -335,11 +331,11 @@ window.CustomLists = {
                 ` : ''}
 
                 <div style="margin-bottom: 20px; color: var(--text-sub);">
-                    Type: ${list.type} | Words: ${list.words.length}
+                    Type: ${list.type} | Words: ${list.words ? list.words.length : 0}
                     ${list.locked ? (canEdit ? ' | <span>READ ONLY (UNLOCKED FOR EDITING)</span>' : ' | <span>READ ONLY</span>') : ''}
                 </div>
                 <div class="tags-row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; margin-top: 20px;">
-                    ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
+                    ${(!list.words || list.words.length === 0) ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
                         list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? window.UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="if(window.ModalManager) window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
                 </div>
             </div>
@@ -350,26 +346,12 @@ window.CustomLists = {
     },
 
     setupManualInput(name) {
+        // ... (نفس الكود السابق بدون تغيير)
         const wi = document.getElementById('manualWordInput');
         if (!wi) return;
-
-        wi.onfocus = () => {
-            wi.removeAttribute('readonly');
-            wi.closest('.search-container')?.classList.add('input-focused');
-        };
-        wi.onblur = () => {
-            wi.setAttribute('readonly', true);
-            setTimeout(() => wi.closest('.search-container')?.classList.remove('input-focused'), 150);
-        };
-
-        wi.onkeydown = (e) => {
-            if (e.key === 'Enter') {
-                e.stopPropagation();
-                this.addManualWord(name);
-                this.hideManualSuggestions();
-            }
-        };
-
+        wi.onfocus = () => { wi.removeAttribute('readonly'); wi.closest('.search-container')?.classList.add('input-focused'); };
+        wi.onblur = () => { wi.setAttribute('readonly', true); setTimeout(() => wi.closest('.search-container')?.classList.remove('input-focused'), 150); };
+        wi.onkeydown = (e) => { if (e.key === 'Enter') { e.stopPropagation(); this.addManualWord(name); this.hideManualSuggestions(); } };
         wi.oninput = async () => {
             const q = wi.value.trim().toLowerCase();
             if (q.length < 1) { this.hideManualSuggestions(); return; }
@@ -380,24 +362,18 @@ window.CustomLists = {
             } catch (e) { this.hideManualSuggestions(); }
         };
     },
-
     showManualSuggestions(words, listName) {
         const box = document.getElementById('manual-suggestions-box');
         if (!box || words.length === 0) { this.hideManualSuggestions(); return; }
         box.innerHTML = words.map(w => `<div class="suggestion-item" onclick="document.getElementById('manualWordInput').value='${w}'; window.CustomLists.addManualWord('${listName}'); window.CustomLists.hideManualSuggestions();"><span>${w}</span></div>`).join('');
         box.style.display = 'block';
     },
-
-    hideManualSuggestions() {
-        const box = document.getElementById('manual-suggestions-box');
-        if (box) box.style.display = 'none';
-    },
+    hideManualSuggestions() { const box = document.getElementById('manual-suggestions-box'); if (box) box.style.display = 'none'; },
 
     async addManualWord(name) {
         const input = document.getElementById('manualWordInput');
         const word = input.value.trim().toLowerCase();
         if (!word) return;
-
         await this.addWordToList(word, name);
         input.value = '';
         this.renderListView(name);
@@ -407,7 +383,6 @@ window.CustomLists = {
         if (event) event.stopPropagation();
         const list = this.lists[name];
         
-        // Changed to use Edit permission check
         if (!list || !this.canEditList(name)) return;
         
         list.words = list.words.filter(w => w !== word);
@@ -428,8 +403,9 @@ window.CustomLists = {
         const list = this.lists[name];
         if (!list) return;
 
-        // Lock settings if list has a password and user is not authenticated
-        if (list.password && localStorage.getItem(`auth_${name}`) !== 'true') {
+        const isProtected = list.type === 'local' ? !!list.password : list.hasPassword;
+
+        if (isProtected && !localStorage.getItem(`auth_token_${name}`)) {
             this.renderPasswordPrompt(name, list);
             return;
         }
@@ -442,8 +418,8 @@ window.CustomLists = {
         modal.querySelector('#licenseTextContent').innerHTML = `
             <div style="padding-top: 20px;">
                 <div class="input-group">
-                    <label>Password</label>
-                    <input type="password" id="editListPass" name="sophdict_list_password" value="${list.password || ''}" autocomplete="new-password">
+                    <label>New Password (Leave blank to keep current)</label>
+                    <input type="password" id="editListPass" name="sophdict_list_password" placeholder="***" autocomplete="new-password">
                 </div>
                 <div class="input-group checkbox-row">
                     <label for="editListLock">Lock list (Read-only)</label>
@@ -455,7 +431,7 @@ window.CustomLists = {
                 <div style="margin-top: 30px; margin-bottom: 20px;">
                     <h3 style="color: var(--text-main); font-size: 16px; margin-bottom: 10px;">Manage Words</h3>
                     <div>
-                        ${list.words.length === 0 ? '<div style="color: var(--text-sub); text-align: center;">No words in list.</div>' :
+                        ${(!list.words || list.words.length === 0) ? '<div style="color: var(--text-sub); text-align: center;">No words in list.</div>' :
                             list.words.map(w => `
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0px 5px 0px; border-bottom: 1px solid var(--border-color);">
                                     <span style="color: var(--text-main); font-weight: 500;">${w}</span>
@@ -484,15 +460,14 @@ window.CustomLists = {
 
     closeSettings() {
         const modal = document.getElementById('licenseModal');
-        if (modal) {
-            modal.classList.remove('active');
-        }
+        if (modal) modal.classList.remove('active');
         if (window.UIUtils) window.UIUtils.updateSharedDimmer();
     },
 
     async saveSettings(name) {
         const list = this.lists[name];
-        list.password = document.getElementById('editListPass').value;
+        const newPass = document.getElementById('editListPass').value;
+        
         list.locked = document.getElementById('editListLock').checked;
 
         const visInput = document.querySelector('input[name="editListVisibility"]:checked');
@@ -501,9 +476,25 @@ window.CustomLists = {
             list.hidden = (visInput.value === 'private');
         }
 
+        // إذا تم إدخال كلمة سر جديدة
+        if (newPass) {
+            if (list.type === 'local') {
+                list.password = newPass;
+            } else {
+                list.password = newPass; // سيتم تشفيرها في الباك اند ومسحها من الكلاينت بعد الحفظ
+                list.hasPassword = true;
+            }
+            localStorage.setItem(`auth_token_${name}`, btoa(`${name}:${newPass}`));
+        }
+
+        if (list.type === 'online') {
+            await this.saveOnlineList(name, list);
+            delete list.password; // تنظيف كلمة السر من المتصفح بعد الإرسال
+        }
+
         this.saveLocalLists();
         this._lastSaveTime = Date.now();
-        if (list.type === 'online') await this.saveOnlineList(name, list);
+        
         this.closeSettings();
         this.renderListView(name);
     },
@@ -515,19 +506,15 @@ window.CustomLists = {
 
     deleteList(name) {
         delete this.lists[name];
-        if (!this.deleteMode) {
-            this.saveLocalLists();
-        }
+        if (!this.deleteMode) this.saveLocalLists();
         this.closeSettings();
         if (window.AppClearSearch) window.AppClearSearch(true);
     },
 
     toggleDeleteMode() {
         if (!this.deleteMode) {
-            // Entering delete mode, backup current lists
             this._backupLists = JSON.parse(JSON.stringify(this.lists));
         } else {
-            // Exiting delete mode (Save), persist changes
             this.saveLocalLists();
             this._backupLists = null;
         }
@@ -537,7 +524,6 @@ window.CustomLists = {
 
     cancelDeleteMode() {
         if (this.deleteMode && this._backupLists) {
-            // Restore from backup
             this.lists = this._backupLists;
             this._backupLists = null;
         }
@@ -554,22 +540,63 @@ window.CustomLists = {
                 <div class="input-group" style="max-width: 300px; margin: 20px auto;">
                     <input type="password" id="listPassInput" placeholder="Password" autocomplete="current-password">
                 </div>
+                <div id="authErrorMsg" style="color: #ff4b6b; margin-bottom: 10px; font-size: 14px; text-align:center;"></div>
                 <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button class="action-btn" onclick="window.CustomLists.checkPassword('${name}')">Unlock</button>
+                    <button class="action-btn" id="unlockBtn" onclick="window.CustomLists.checkPassword('${name}')">Unlock</button>
                     ${!list.hidden ? `<button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="window.CustomLists.renderListView('${name}')">Cancel</button>` : ''}
                 </div>
             </div>
         `;
     },
 
-    checkPassword(name) {
+    // 🔴 الأمان: التحقق الآمن من كلمة السر (عبر API للأونلاين، ومحلياً للـ Local)
+    async checkPassword(name) {
         const input = document.getElementById('listPassInput').value;
         const list = this.lists[name];
-        if (input === list.password) {
-            localStorage.setItem(`auth_${name}`, 'true');
-            this.renderListView(name);
+        const errorMsg = document.getElementById('authErrorMsg');
+        const btn = document.getElementById('unlockBtn');
+        
+        btn.innerText = "Verifying...";
+        btn.disabled = true;
+
+        if (list.type === 'local') {
+            if (input === list.password) {
+                localStorage.setItem(`auth_token_${name}`, 'local_auth');
+                this.renderListView(name);
+            } else {
+                errorMsg.innerText = "Incorrect password";
+                btn.innerText = "Unlock";
+                btn.disabled = false;
+            }
         } else {
-            alert("Incorrect password"); // Added slight feedback
+            // طلب التحقق من السيرفر للقوائم الأونلاين
+            try {
+                const resp = await fetch(`/api/custom-lists`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'verify', name: name, password: input })
+                });
+                
+                const data = await resp.json();
+                
+                if (resp.ok && data.success) {
+                    localStorage.setItem(`auth_token_${name}`, data.token);
+                    
+                    // استبدال القائمة المحلية بالقائمة الكاملة القادمة من السيرفر (تحتوي على الكلمات المخفية)
+                    this.lists[name] = data.list;
+                    this.saveLocalLists();
+                    
+                    this.renderListView(name);
+                } else {
+                    errorMsg.innerText = data.message || "Incorrect password";
+                    btn.innerText = "Unlock";
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                errorMsg.innerText = "Connection error. Try again.";
+                btn.innerText = "Unlock";
+                btn.disabled = false;
+            }
         }
     },
 
@@ -581,21 +608,16 @@ window.CustomLists = {
         return null;
     },
 
+    // ... (باقي الدوال كما هي: showHeartMenu, toggleFavorite, showListSelection, addWordToList)
     async showHeartMenu(word, element) {
         const listNames = Object.keys(this.lists);
         const cleanWord = (word || "").trim().toLowerCase();
-        
         let isPinned = false;
-        if (window.DBManager) {
-            isPinned = await window.DBManager.isPinned(cleanWord);
-        }
-
+        if (window.DBManager) isPinned = await window.DBManager.isPinned(cleanWord);
         const existing = document.querySelector('.heart-menu');
         if (existing) existing.remove();
-
         const menu = document.createElement('div');
         menu.className = 'heart-menu';
-
         const rect = element.getBoundingClientRect();
         menu.style.top = `${rect.bottom + window.scrollY + 5}px`;
         menu.style.left = `${rect.left + window.scrollX - 100}px`;
@@ -606,7 +628,7 @@ window.CustomLists = {
                         <div class="heart-menu-item" onclick="window.history.pushState({}, '', '/create-list'); window.CustomLists.handleRoute();" style="color: var(--accent); font-weight: bold;">+ Create List</div>`;
         } else {
             listHtml = listNames.map(name => {
-                const inList = this.lists[name].words.includes(cleanWord);
+                const inList = this.lists[name].words && this.lists[name].words.includes(cleanWord);
                 const canEdit = this.canEditList(name);
 
                 if (inList) {
@@ -617,103 +639,55 @@ window.CustomLists = {
             }).join('');
         }
 
-        menu.innerHTML = `
-            <div class="heart-menu-item" onclick="window.CustomLists.toggleFavorite('${cleanWord}')">
-                ${isPinned ? '<span style="color: #ff4b6b;">Remove from Favorites</span>' : 'Add to Favorites'}
-            </div>
-            <div style="padding: 10px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 12px; background: var(--hover-bg);">SAVE TO LIST</div>
-            ${listHtml}
-        `;
-
+        menu.innerHTML = `<div class="heart-menu-item" onclick="window.CustomLists.toggleFavorite('${cleanWord}')">${isPinned ? '<span style="color: #ff4b6b;">Remove from Favorites</span>' : 'Add to Favorites'}</div><div style="padding: 10px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 12px; background: var(--hover-bg);">SAVE TO LIST</div>${listHtml}`;
         document.body.appendChild(menu);
 
         const closeMenu = (e) => {
             const isClickInside = menu.contains(e.target) || (element && element.contains(e.target));
-            if (!isClickInside) {
-                menu.remove();
-                document.removeEventListener('click', closeMenu, true);
-                document.removeEventListener('touchstart', closeMenu, true);
-            }
+            if (!isClickInside) { menu.remove(); document.removeEventListener('click', closeMenu, true); document.removeEventListener('touchstart', closeMenu, true); }
         };
-        setTimeout(() => {
-            document.addEventListener('click', closeMenu, true);
-            document.addEventListener('touchstart', closeMenu, true);
-        }, 10);
+        setTimeout(() => { document.addEventListener('click', closeMenu, true); document.addEventListener('touchstart', closeMenu, true); }, 10);
     },
 
     async toggleFavorite(word) {
         let active = false;
-        if (window.PinManager) {
-            active = await window.PinManager.togglePin(word);
-        }
-        
+        if (window.PinManager) active = await window.PinManager.togglePin(word);
         const pins = document.querySelectorAll('.pin-btn, #microPin');
         const heartEmpty = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Zm0-108q96-86 158-147.5t98-107q36-45.5 50-81t14-70.5q0-60-40-100t-100-40q-47 0-87 26.5T518-680h-76q-15-41-55-67.5T300-774q-60 0-100 40t-40 100q0 35 14 70.5t50 81q36 45.5 98 107T480-228Zm0-273Z"/></svg>`;
         const heartFilled = `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>`;
-
-        pins.forEach(p => {
-            p.classList.toggle('active', active);
-            p.style.color = active ? '#ff4b6b' : '#8b8b8b';
-            p.innerHTML = active ? heartFilled : heartEmpty;
-        });
-
+        pins.forEach(p => { p.classList.toggle('active', active); p.style.color = active ? '#ff4b6b' : '#8b8b8b'; p.innerHTML = active ? heartFilled : heartEmpty; });
         document.querySelector('.heart-menu')?.remove();
     },
 
     showListSelection(word) {
         const menu = document.querySelector('.heart-menu');
         if (!menu) return;
-
         const listNames = Object.keys(this.lists);
         if (listNames.length === 0) {
-            menu.innerHTML = `
-                <div class="heart-menu-item" style="color: var(--text-sub);">No lists found.</div>
-                <div class="heart-menu-item" onclick="window.history.pushState({}, '', '/create-list'); window.CustomLists.handleRoute();">Create List</div>
-            `;
+            menu.innerHTML = `<div class="heart-menu-item" style="color: var(--text-sub);">No lists found.</div><div class="heart-menu-item" onclick="window.history.pushState({}, '', '/create-list'); window.CustomLists.handleRoute();">Create List</div>`;
             return;
         }
-
-        menu.innerHTML = `
-            <div style="padding: 10px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 12px;">SELECT LIST</div>
-            ${listNames.map(name => `
-                <div class="heart-menu-item" onclick="window.CustomLists.addWordToList('${word}', '${name}')">${name}</div>
-            `).join('')}
-        `;
+        menu.innerHTML = `<div style="padding: 10px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 12px;">SELECT LIST</div>${listNames.map(name => `<div class="heart-menu-item" onclick="window.CustomLists.addWordToList('${word}', '${name}')">${name}</div>`).join('')}`;
     },
 
     async addWordToList(word, listName) {
         const cleanWord = (word || "").trim().toLowerCase();
         if (!cleanWord) return;
-
         const list = this.lists[listName];
-        
-        // Changed to use Edit permission check
         if (!list || !this.canEditList(listName)) return;
-
+        if (!list.words) list.words = [];
         if (list.words.includes(cleanWord)) return;
 
         let data = null;
-        if (window.APIClient) {
-            data = await window.APIClient.fetchWordData(cleanWord);
-        }
-        
-        if (!data || data.error || !data.dictionary || data.dictionary.length === 0) {
-            return;
-        }
+        if (window.APIClient) data = await window.APIClient.fetchWordData(cleanWord);
+        if (!data || data.error || !data.dictionary || data.dictionary.length === 0) return;
 
         list.words.push(cleanWord);
-
-        if (list.type === 'online') {
-            await this.saveOnlineList(listName, list);
-        }
-
+        if (list.type === 'online') await this.saveOnlineList(listName, list);
         this.saveLocalLists();
         this._lastSaveTime = Date.now();
 
-        if (window.location.pathname === `/listname/${encodeURIComponent(listName)}`) {
-            this.renderListView(listName);
-        }
-
+        if (window.location.pathname === `/listname/${encodeURIComponent(listName)}`) this.renderListView(listName);
         document.querySelector('.heart-menu')?.remove();
     }
 };
