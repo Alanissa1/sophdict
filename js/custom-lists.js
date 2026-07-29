@@ -647,9 +647,14 @@ window.CustomLists = {
                         const result = await resp.json();
                         if (result.token) sessionStorage.setItem(`auth_token_${name}`, result.token);
                         list.hasPassword = true;
+                    } else {
+                        const errData = await resp.json().catch(() => ({}));
+                        if (errorDiv) errorDiv.innerText = errData.error || 'Failed to change password.';
+                        return; // Stop saving settings
                     }
                 } catch (e) {
-                    console.error('Password change failed:', e);
+                    if (errorDiv) errorDiv.innerText = 'Network error during password change.';
+                    return;
                 }
             } else {
                 // Local list: hash and store client-side
@@ -751,7 +756,8 @@ window.CustomLists = {
                     sessionStorage.setItem(`auth_token_${name}`, data.token);
                     this.renderListView(name);
                 } else {
-                    if (errorDiv) errorDiv.innerText = 'Incorrect password.';
+                    const errData = await resp.json().catch(() => ({}));
+                    if (errorDiv) errorDiv.innerText = errData.error || 'Incorrect password.';
                 }
             } else {
                 // Local list: verify against stored hash

@@ -153,11 +153,41 @@ export default async function handler(req, res) {
 
         if (method === 'POST') {
             const action = query.action || body?.action;
+            const ip = req.headers['x-forwarded-for'] || req.connection?.remoteAddress || 'unknown';
+            const ipKey = `bruteforce:ip:${ip}`;
+
+            async function checkRateLimit(listName) {
+                const listKey = `bruteforce:list:${listName}`;
+                const [ipAttemptsVal, listAttemptsVal] = await Promise.all([
+                    redis.get(ipKey),
+                    redis.get(listKey)
+                ]);
+                if ((parseInt(ipAttemptsVal) || 0) >= 10) return 'Too many failed attempts from this IP. Please try again in 15 minutes.';
+                if ((parseInt(listAttemptsVal) || 0) >= 20) return 'Too many failed attempts for this list. Please try again in 15 minutes.';
+                return null;
+            }
+
+            async function recordFailedAttempt(listName) {
+                const listKey = `bruteforce:list:${listName}`;
+                const [newIpFails, newListFails] = await Promise.all([
+                    redis.incr(ipKey),
+                    redis.incr(listKey)
+                ]);
+                if (newIpFails === 1) await redis.expire(ipKey, 900); // 15 mins
+                if (newListFails === 1) await redis.expire(listKey, 900);
+            }
+
+            async function resetAttempts(listName) {
+                await Promise.all([redis.del(ipKey), redis.del(`bruteforce:list:${listName}`)]);
+            }
 
             // --- VERIFY PASSWORD (returns session token) ---
             if (action === 'verify') {
                 const { name: listName, password } = body;
                 if (!listName || !password) return res.status(400).json({ error: 'Name and password required' });
+
+                const rateLimitError = await checkRateLimit(listName);
+                if (rateLimitError) return res.status(429).json({ error: rateLimitError });
 
                 const key = `list:${listName}`;
                 const data = parseData(await redis.get(key));
@@ -169,9 +199,11 @@ export default async function handler(req, res) {
                 if (!data.passwordHash) return res.status(400).json({ error: 'List has no password' });
 
                 if (!verifyPasswordHash(password, data.passwordHash, data.passwordSalt)) {
+                    await recordFailedAttempt(listName);
                     return res.status(401).json({ error: 'Incorrect password' });
                 }
 
+                await resetAttempts(listName);
                 return res.status(200).json({ success: true, token: createToken(listName) });
             }
 
@@ -191,15 +223,22 @@ export default async function handler(req, res) {
                 let authenticated = token && verifyToken(token, listName);
 
                 if (!authenticated && data.passwordHash) {
+                    const rateLimitError = await checkRateLimit(listName);
+                    if (rateLimitError) return res.status(429).json({ error: rateLimitError });
+
                     if (!oldPassword || !verifyPasswordHash(oldPassword, data.passwordHash, data.passwordSalt)) {
+                        await recordFailedAttempt(listName);
                         return res.status(401).json({ error: 'Incorrect old password' });
                     }
                     authenticated = true;
                 }
 
                 if (!authenticated && data.passwordHash) {
+                    await recordFailedAttempt(listName);
                     return res.status(401).json({ error: 'Authentication required' });
                 }
+
+                await resetAttempts(listName);
 
                 // Set or remove password
                 if (newPassword) {
