@@ -90,27 +90,7 @@ window.UIThesaurus = {
                             }).filter(Boolean) || [];
 
                             const renderTags = (list, tagClass) => {
-                                let res = "";
-                                const academic = [];
-                                const slang = [];
-                                const others = [];
-
-                                list.forEach(item => {
-                                    const clean = item.wd.toLowerCase().trim();
-                                    const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean);
-
-                                    if (isAcademic) academic.push(item);
-                                    else if (item.isSlang) slang.push(item);
-                                    else others.push(item);
-                                });
-
-                                if (academic.length) {
-                                    res += academic.map(s => `<span class="tag ${tagClass} ielts-match" data-word="${s.wd}" tabindex="0">${s.html}</span>`).join('');
-                                    res += `<span class="academic-tag-label">&lt;Academic</span>`;
-                                }
-                                res += others.map(s => `<span class="tag ${tagClass}" data-word="${s.wd}" tabindex="0">${s.html}</span>`).join('');
-                                res += slang.map(s => `<span class="tag ${tagClass}" data-word="${s.wd}" tabindex="0">${s.html}</span>`).join('');
-                                return res;
+                                return UIUtils.renderTaggedGroups(list, tagClass, true);
                             };
 
                             const syns = getTagData(sData.syn_list);

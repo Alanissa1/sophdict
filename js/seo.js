@@ -91,19 +91,20 @@
 
                 // Intercept modal open to append it to the main word
                 window.ModalManager.show = function(word, sourceElement, isHistoryNav) {
+                    if (!word) return;
                     const result = originalShow ? originalShow.apply(this, arguments) : undefined;
                     
                     if (!isHistoryNav) {
                         const pathname = window.location.pathname;
                         const isAlreadyInModal = pathname.includes('/modal/');
 
-                        if (pathname.startsWith('/570academic')) {
-                            // Support /570academic/1/modal/word
+                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/formal-')) {
+                            // Support /570academic/1/modal/word or /listname/my-list/modal/word
                             const base = pathname.split('/modal/')[0];
                             if (isAlreadyInModal) {
-                                window.history.replaceState({ modal: true, word, academic: true }, "", `${base}/modal/${encodeURIComponent(word)}`);
+                                window.history.replaceState({ modal: true, word }, "", `${base}/modal/${encodeURIComponent(word)}`);
                             } else {
-                                window.history.pushState({ modal: true, word, academic: true }, "", `${base}/modal/${encodeURIComponent(word)}`);
+                                window.history.pushState({ modal: true, word }, "", `${base}/modal/${encodeURIComponent(word)}`);
                             }
                         } else {
                             const mainWord = localStorage.getItem('lastWord');

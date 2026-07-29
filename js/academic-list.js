@@ -79,7 +79,7 @@ window.AcademicList = Object.assign(window.AcademicList || {}, {
                 </div>
                 ${this.renderPagination(type, page, totalPages)}
                 <div class="tags-row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; margin-top: 20px;">
-                    ${pageWords.map(w => `<span class="tag syn-tag ${tagClass}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
+                    ${pageWords.map(w => `<span class="tag syn-tag ${tagClass} ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
                 </div>
             </div>
         `;

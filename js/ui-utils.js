@@ -198,19 +198,65 @@ window.UIUtils = {
         if (!word) return "";
         const clean = word.toLowerCase().trim();
         const classes = [];
-        if (window.IELTS_WORDS && window.IELTS_WORDS.has(clean)) {
-            classes.push("ielts-match");
-        }
-        if (window.SAT_WORDS && window.SAT_WORDS.has(clean)) {
-            classes.push("sat-match");
-        }
-        if (window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean)) {
-            classes.push("ielts-match");
-        }
-        if (window.PRE_A1_WORDS && window.PRE_A1_WORDS.has(clean)) {
-            classes.push("pre-a1-match");
-        }
+        if (window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean)) classes.push("ielts-match");
+        if (window.C2_WORDS && window.C2_WORDS.has(clean)) classes.push("c2-match");
+        if (window.C1_WORDS && window.C1_WORDS.has(clean)) classes.push("c1-match");
+        if (window.B2_WORDS && window.B2_WORDS.has(clean)) classes.push("b2-match");
+        if (window.B1_WORDS && window.B1_WORDS.has(clean)) classes.push("b1-match");
+        if (window.A2_WORDS && window.A2_WORDS.has(clean)) classes.push("a2-match");
+        if (window.A1_WORDS && window.A1_WORDS.has(clean)) classes.push("a1-match");
+        if (window.PRE_A1_WORDS && window.PRE_A1_WORDS.has(clean)) classes.push("pre-a1-match");
         return classes.join(" ");
+    },
+
+    renderTaggedGroups(list, tagClass, isThesaurus = false) {
+        let res = "";
+        const groups = {
+            academic: [],
+            c2: [], c1: [], b2: [], b1: [], a2: [], a1: [],
+            others: [],
+            slang: []
+        };
+
+        list.forEach(item => {
+            const word = isThesaurus ? item.wd : (typeof item === 'string' ? item : item.wd);
+            if (!word) return;
+            const clean = word.toLowerCase().trim();
+            const isSlang = isThesaurus ? item.isSlang : (typeof item === 'object' && item.isSlang);
+
+            if (window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean)) groups.academic.push(item);
+            else if (window.C2_WORDS && window.C2_WORDS.has(clean)) groups.c2.push(item);
+            else if (window.C1_WORDS && window.C1_WORDS.has(clean)) groups.c1.push(item);
+            else if (window.B2_WORDS && window.B2_WORDS.has(clean)) groups.b2.push(item);
+            else if (window.B1_WORDS && window.B1_WORDS.has(clean)) groups.b1.push(item);
+            else if (window.A2_WORDS && window.A2_WORDS.has(clean)) groups.a2.push(item);
+            else if (window.A1_WORDS && window.A1_WORDS.has(clean)) groups.a1.push(item);
+            else if (isSlang) groups.slang.push(item);
+            else groups.others.push(item);
+        });
+
+        const renderBatch = (items, label, matchClass) => {
+            if (!items.length) return "";
+            let html = items.map(item => {
+                const wd = isThesaurus ? item.wd : (typeof item === 'string' ? item : item.wd);
+                const content = isThesaurus ? item.html : wd;
+                return `<span class="tag ${tagClass} ${matchClass}" data-word="${wd}" tabindex="0">${content}</span>`;
+            }).join('');
+            if (label) html += `<span class="academic-tag-label">&lt;${label}</span>`;
+            return html;
+        };
+
+        res += renderBatch(groups.academic, "academic", "ielts-match");
+        res += renderBatch(groups.c2, "c2", "c2-match");
+        res += renderBatch(groups.c1, "c1", "c1-match");
+        res += renderBatch(groups.b2, "b2", "b2-match");
+        res += renderBatch(groups.b1, "b1", "b1-match");
+        res += renderBatch(groups.a2, "a2", "a2-match");
+        res += renderBatch(groups.a1, "a1", "a1-match");
+        res += renderBatch(groups.others, null, "");
+        res += renderBatch(groups.slang, null, "");
+
+        return res;
     },
 
     updateSharedDimmer() {

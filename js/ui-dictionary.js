@@ -482,30 +482,7 @@ window.UIDictionary = {
         let tagsHtml = "";
         if (!skipTags) {
             const renderTags = (list, tagClass) => {
-                let res = "";
-                const academic = [];
-                const slang = [];
-                const others = [];
-                list.forEach(item => {
-                    const word = typeof item === 'string' ? item : item.wd;
-                    const isSlang = typeof item === 'object' && item.isSlang;
-                    if (!word) return;
-
-                    const clean = word.toLowerCase().trim();
-                    const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(clean);
-
-                    if (isAcademic) academic.push(word);
-                    else if (isSlang) slang.push(word);
-                    else others.push(word);
-                });
-
-                if (academic.length) {
-                    res += academic.map(w => `<span class="tag ${tagClass} ielts-match" data-word="${w}" tabindex="0">${w}</span>`).join('');
-                    res += `<span class="academic-tag-label">&lt;academic</span>`;
-                }
-                res += others.map(w => `<span class="tag ${tagClass}" data-word="${w}" tabindex="0">${w}</span>`).join('');
-                res += slang.map(w => `<span class="tag ${tagClass}" data-word="${w}" tabindex="0">${w}</span>`).join('');
-                return res;
+                return UIUtils.renderTaggedGroups(list, tagClass, false);
             };
 
             const mapTagData = (list) => {
@@ -576,7 +553,7 @@ window.UIDictionary = {
         uros.forEach(u => {
             const word = u.ure.replace(/\*/g, '');
             const fl = u.fl ? `<span class="run-on-fl">(${u.fl})</span>` : "";
-            html += `<span class="tag syn-tag" data-word="${word}" tabindex="0" style="display:flex; align-items:center;">${word}${fl}</span>`;
+            html += `<span class="tag syn-tag ${UIUtils.getTagClass(word)}" data-word="${word}" tabindex="0" style="display:flex; align-items:center;">${word}${fl}</span>`;
         });
 
         html += `</div></div>`;

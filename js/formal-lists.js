@@ -58,7 +58,7 @@ window.FormalList = {
 
         let list = this.lists[type] || [];
         let title = type.toUpperCase() + ' Words';
-        let tagClass = 'formal-match';
+        let tagClass = 'ielts-match';
 
         const start = (page - 1) * this.perPage;
         const end = start + this.perPage;
@@ -74,11 +74,16 @@ window.FormalList = {
                             <div id="page-fetch-status" class="fetch-progress-meter" style="font-weight: bold; font-size: 14px;"></div>
                             <span style=" color:var(--text-sub);">words offline</span>
                         </div>
+                        <div id="fetch-ui-container" class="fetch-ui-container">
+                            <button class="icon-btn fetch-btn" title="Download all words from tags" onclick="PreFetcher.showInput()">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 ${this.renderPagination(type, page, totalPages)}
                 <div class="tags-row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; margin-top: 20px;">
-                    ${pageWords.map(w => `<span class="tag syn-tag ${tagClass}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
+                    ${pageWords.map(w => `<span class="tag syn-tag ${tagClass} ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
                 </div>
             </div>
         `;
@@ -93,13 +98,13 @@ window.FormalList = {
         let html = `<div class="pagination" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">`;
 
         if (current > 1) {
-            html += `<button class="page-btn" onclick="FormalList.open('${type}', ${current - 1})">Before</button>`;
+            html += `<button class="page-btn" id="ss" onclick="FormalList.open('${type}', ${current - 1})">Before</button>`;
         }
 
         const range = 2;
         for (let i = 1; i <= total; i++) {
             if (i === 1 || i <= total && (i >= current - range && i <= current + range) || i === total) {
-                let activeColor = '#d32f2f';
+                let activeColor = '#e1364f';
                 let textColor = '#fff';
                 const isActive = i === current;
 
@@ -110,10 +115,17 @@ window.FormalList = {
         }
 
         if (current < total) {
-            html += `<button class="page-btn" onclick="FormalList.open('${type}', ${current + 1})">Next</button>`;
+            html += `<button class="page-btn" id="ss" onclick="FormalList.open('${type}', ${current + 1})">Next</button>`;
         }
 
         html += `</div>`;
         return html;
     }
 };
+
+window.C2_WORDS = new Set((window.FormalList.lists.c2 || []).map(w => w.toLowerCase()));
+window.C1_WORDS = new Set((window.FormalList.lists.c1 || []).map(w => w.toLowerCase()));
+window.B2_WORDS = new Set((window.FormalList.lists.b2 || []).map(w => w.toLowerCase()));
+window.B1_WORDS = new Set((window.FormalList.lists.b1 || []).map(w => w.toLowerCase()));
+window.A2_WORDS = new Set((window.FormalList.lists.a2 || []).map(w => w.toLowerCase()));
+window.A1_WORDS = new Set((window.FormalList.lists.a1 || []).map(w => w.toLowerCase()));

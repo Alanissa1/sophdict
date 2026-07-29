@@ -48,6 +48,7 @@ window.ModalManager = {
     },
 
     async show(word, targetContext = null, isHistoryNav = false) {
+        if (!word) return;
         if (!this.win || !this.dim) this.init();
 
         this.lastTriggerElement = document.activeElement;

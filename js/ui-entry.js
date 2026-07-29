@@ -39,6 +39,16 @@ window.UIEntry = {
             const isPinned = await DBManager.isPinned(word);
             const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(word.toLowerCase());
 
+            let levelLabel = "";
+            let levelColor = "";
+            if (isAcademic) { levelLabel = "Academic"; levelColor = "#e1364f"; }
+            else if (window.C2_WORDS && window.C2_WORDS.has(word.toLowerCase())) { levelLabel = "C2"; levelColor = "#4a148c"; }
+            else if (window.C1_WORDS && window.C1_WORDS.has(word.toLowerCase())) { levelLabel = "C1"; levelColor = "#1a237e"; }
+            else if (window.B2_WORDS && window.B2_WORDS.has(word.toLowerCase())) { levelLabel = "B2"; levelColor = "#01579b"; }
+            else if (window.B1_WORDS && window.B1_WORDS.has(word.toLowerCase())) { levelLabel = "B1"; levelColor = "#006064"; }
+            else if (window.A2_WORDS && window.A2_WORDS.has(word.toLowerCase())) { levelLabel = "A2"; levelColor = "#1b5e20"; }
+            else if (window.A1_WORDS && window.A1_WORDS.has(word.toLowerCase())) { levelLabel = "A1"; levelColor = "#f57f17"; }
+
             if (containerId === 'results-container') {
                 targetContainer.innerHTML = `
                     <div class="word-header">
@@ -49,7 +59,7 @@ window.UIEntry = {
                                     <div style="display: flex; flex-direction: column;">
                                         <div style="display: flex; align-items: center;">
                                             <h1 class="word-title">${word}</h1>
-                                            ${isAcademic ? `<span class="ielts-header-tag header-tag-academic" style="background-color:#e1364f; box-shadow: 0 2px 4px rgba(225, 54, 79, 0.3);">Academic</span>` : ''}
+                                            ${levelLabel ? `<span class="ielts-header-tag" style="background-color:${levelColor}; box-shadow: 0 2px 4px color-mix(in srgb, ${levelColor}, transparent 70%);">${levelLabel}</span>` : ''}
                                         </div>
                                         <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px;">
                                             <span class="pronunciation">/${pronunciation}/</span>

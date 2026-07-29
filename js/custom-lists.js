@@ -300,6 +300,17 @@ window.CustomLists = {
                         ${list.locked ? this.icons.editOnly : (list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : (list.visibility === 'private' ? this.icons.private : this.icons.link)) : this.icons.private)}
                         ${name}
                     </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; margin-left: auto; margin-right: 10px;">
+                        <div id="offline-status-container" style="display:flex; align-items:baseline; gap:5px;">
+                            <div id="page-fetch-status" class="fetch-progress-meter" style="font-weight: bold; font-size: 14px;"></div>
+                            <span style=" color:var(--text-sub);">words offline</span>
+                        </div>
+                        <div id="fetch-ui-container" class="fetch-ui-container">
+                            <button class="icon-btn fetch-btn" title="Download all words from tags" onclick="PreFetcher.showInput()">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
+                            </button>
+                        </div>
+                    </div>
                     <div style="display: flex;">
                         ${unlockBtn}
                         <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
@@ -318,11 +329,11 @@ window.CustomLists = {
 
                 <div style="margin-bottom: 20px; color: var(--text-sub);">
                     Type: ${list.type} | Words: ${list.words.length}
-                    ${list.locked ? (canEdit ? ' | <span style="color: #ff4b6b; font-weight: bold;">READ ONLY (UNLOCKED FOR EDITING)</span>' : ' | <span style="color: #ff4b6b; font-weight: bold;">READ ONLY</span>') : ''}
+                    ${list.locked ? (canEdit ? ' | <span style="">READ ONLY (UNLOCKED FOR EDITING)</span>' : ' | <span>READ ONLY</span>') : ''}
                 </div>
                 <div class="tags-row">
                     ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
-                        list.words.map(w => `<span class="tag" onclick="window.ModalManager.show('${w}')">${w}</span>`).join('')}
+                        list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
                 </div>
             </div>
         `;
