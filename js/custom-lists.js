@@ -7,13 +7,14 @@ window.CustomLists = {
         explore: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m300-300 280-80 80-280-280 80-80 280Zm180-120q-25 0-42.5-17.5T420-480q0-25 17.5-42.5T480-540q25 0 42.5 17.5T540-480q0 25-17.5 42.5T480-420Zm0 340q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q133 0 226.5-93.5T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 133 93.5 226.5T480-160Zm0-320Z"/></svg>`,
         trash: `<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>`
     },
-    lists: {}, 
+    lists: {}, // name -> { type: 'local'|'online', words: [], locked: bool, hidden: bool, password: string, visibility: 'public'|'link' }
     deleteMode: false,
 
     async init() {
         this.loadLocalLists();
         window.addEventListener('popstate', () => this.handleRoute());
 
+        // If on home page, refresh to show list buttons
         if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
             if (window.AppClearSearch) window.AppClearSearch(true);
         }
@@ -36,15 +37,19 @@ window.CustomLists = {
         localStorage.setItem('sophdict_custom_lists', JSON.stringify(this.lists));
     },
 
+    // --- NEW HELPER: Check if current user can edit ---
     canEditList(name) {
         const list = this.lists[name];
         if (!list) return false;
+        
+        // If it's not locked, anyone (or anyone who unlocked a private list) can edit
         if (!list.locked) return true;
         
-        const hasPass = !!(list.password || list.hasPassword);
-        return list.locked && hasPass && localStorage.getItem(`auth_${name}`) === 'true';
+        // If it's locked AND has a password, check if the user is authenticated
+        return list.locked && list.password && localStorage.getItem(`auth_${name}`) === 'true';
     },
 
+    // --- NEW HELPER: Trigger unlock modal for owners ---
     triggerUnlock(name) {
         const list = this.lists[name];
         if (list) {
@@ -52,7 +57,9 @@ window.CustomLists = {
         }
     },
 
-    createSettingsPanel() {},
+    createSettingsPanel() {
+        // Now using standard licenseModal from LicenseManager
+    },
 
     handleRoute() {
         const path = window.location.pathname;
@@ -186,7 +193,11 @@ window.CustomLists = {
             });
 
             if (!result.success) {
-                errorDiv.innerText = result.message || "Failed to connect to Upstash.";
+                if (result.message.includes('Database configuration missing')) {
+                    errorDiv.innerText = "Upstash database not configured in Vercel settings.";
+                } else {
+                    errorDiv.innerText = result.message || "Failed to connect to Upstash.";
+                }
                 return;
             }
         }
@@ -202,9 +213,9 @@ window.CustomLists = {
 
         this.saveLocalLists();
 
+        // Automatically authenticate the creator if they set a password
         if (pass) {
             localStorage.setItem(`auth_${name}`, 'true');
-            localStorage.setItem(`pass_${name}`, pass);
         }
 
         if (document.body.classList.contains('home-state')) {
@@ -228,46 +239,19 @@ window.CustomLists = {
 
     async saveOnlineList(name, data) {
          try {
-            const payload = { ...data };
-            const authPass = localStorage.getItem(`pass_${name}`) || (this.lists[name] ? this.lists[name].password : '');
-            
             const resp = await fetch(`/api/custom-lists`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'x-list-password': authPass || ''
-                },
-                body: JSON.stringify({ name, data: payload, password: authPass })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, data })
             });
-
             if (!resp.ok) {
                 const errData = await resp.json().catch(() => ({}));
-                if (resp.status === 401) {
-                    localStorage.removeItem(`auth_${name}`);
-                    localStorage.removeItem(`pass_${name}`);
-                }
                 return { success: false, message: errData.error || "Server error" };
             }
             return { success: true };
         } catch (e) {
             return { success: false, message: "Network error" };
         }
-    },
-
-    async fetchOnlineList(name) {
-         try {
-            const resp = await fetch(`/api/custom-lists?action=get&name=${encodeURIComponent(name)}&t=${Date.now()}`);
-            if (resp.ok) {
-                const fetched = await resp.json();
-                if (this.lists[name] && this.lists[name].password) {
-                    fetched.password = this.lists[name].password;
-                } else {
-                    fetched.password = localStorage.getItem(`pass_${name}`) || '';
-                }
-                return fetched;
-            }
-        } catch (e) {}
-        return null;
     },
 
     async renderListView(name) {
@@ -298,9 +282,8 @@ window.CustomLists = {
             return;
         }
 
-        const hasPass = !!(list.password || list.hasPassword);
-
-        if (hasPass && list.hidden) {
+        // Only lock list view if explicitly hidden (private)
+        if (list.password && list.hidden) {
             const authenticated = localStorage.getItem(`auth_${name}`);
             if (!authenticated) {
                 this.renderPasswordPrompt(name, list);
@@ -312,7 +295,8 @@ window.CustomLists = {
         const isAuth = localStorage.getItem(`auth_${name}`) === 'true';
         this._currentLoadedList = name;
 
-        const unlockBtn = (list.locked && hasPass && !isAuth) ? 
+        // Unlock button for owner to edit read-only lists
+        const unlockBtn = (list.locked && list.password && !isAuth) ? 
             `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px;" onclick="CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
 
         document.body.classList.remove('home-state');
@@ -423,22 +407,14 @@ window.CustomLists = {
         if (event) event.stopPropagation();
         const list = this.lists[name];
         
+        // Changed to use Edit permission check
         if (!list || !this.canEditList(name)) return;
-
-        const prevWords = [...list.words];
+        
         list.words = list.words.filter(w => w !== word);
         this.saveLocalLists();
 
         this._lastSaveTime = Date.now();
-        if (list.type === 'online') {
-            const res = await this.saveOnlineList(name, list);
-            if (!res.success) {
-                list.words = prevWords; // Revert change on network or auth failure
-                this.saveLocalLists();
-                alert(res.message || "Failed to remove word.");
-                return;
-            }
-        }
+        if (list.type === 'online') await this.saveOnlineList(name, list);
 
         const modal = document.getElementById('licenseModal');
         const isSettingsOpen = modal && modal.classList.contains('active');
@@ -452,8 +428,8 @@ window.CustomLists = {
         const list = this.lists[name];
         if (!list) return;
 
-        const hasPass = !!(list.password || list.hasPassword);
-        if (hasPass && localStorage.getItem(`auth_${name}`) !== 'true') {
+        // Lock settings if list has a password and user is not authenticated
+        if (list.password && localStorage.getItem(`auth_${name}`) !== 'true') {
             this.renderPasswordPrompt(name, list);
             return;
         }
@@ -514,16 +490,7 @@ window.CustomLists = {
 
     async saveSettings(name) {
         const list = this.lists[name];
-        const newPass = document.getElementById('editListPass').value;
-        list.password = newPass;
-
-        if (newPass) {
-            localStorage.setItem(`pass_${name}`, newPass);
-            localStorage.setItem(`auth_${name}`, 'true');
-        } else {
-            localStorage.removeItem(`pass_${name}`);
-        }
-
+        list.password = document.getElementById('editListPass').value;
         list.locked = document.getElementById('editListLock').checked;
 
         const visInput = document.querySelector('input[name="editListVisibility"]:checked');
@@ -534,13 +501,7 @@ window.CustomLists = {
 
         this.saveLocalLists();
         this._lastSaveTime = Date.now();
-        if (list.type === 'online') {
-            const res = await this.saveOnlineList(name, list);
-            if (!res.success) {
-                alert(res.message || "Failed to save settings online.");
-                return;
-            }
-        }
+        if (list.type === 'online') await this.saveOnlineList(name, list);
         this.closeSettings();
         this.renderListView(name);
     },
@@ -561,8 +522,10 @@ window.CustomLists = {
 
     toggleDeleteMode() {
         if (!this.deleteMode) {
+            // Entering delete mode, backup current lists
             this._backupLists = JSON.parse(JSON.stringify(this.lists));
         } else {
+            // Exiting delete mode (Save), persist changes
             this.saveLocalLists();
             this._backupLists = null;
         }
@@ -572,6 +535,7 @@ window.CustomLists = {
 
     cancelDeleteMode() {
         if (this.deleteMode && this._backupLists) {
+            // Restore from backup
             this.lists = this._backupLists;
             this._backupLists = null;
         }
@@ -599,18 +563,20 @@ window.CustomLists = {
     checkPassword(name) {
         const input = document.getElementById('listPassInput').value;
         const list = this.lists[name];
-        if (!list) return;
-
-        if (list.password && input !== list.password) {
-            alert("Incorrect password");
-            return;
+        if (input === list.password) {
+            localStorage.setItem(`auth_${name}`, 'true');
+            this.renderListView(name);
+        } else {
+            alert("Incorrect password"); // Added slight feedback
         }
+    },
 
-        localStorage.setItem(`auth_${name}`, 'true');
-        localStorage.setItem(`pass_${name}`, input);
-        list.password = input;
-
-        this.renderListView(name);
+    async fetchOnlineList(name) {
+         try {
+            const resp = await fetch(`/api/custom-lists?action=get&name=${encodeURIComponent(name)}&t=${Date.now()}`);
+            if (resp.ok) return await resp.json();
+        } catch (e) {}
+        return null;
     },
 
     async showHeartMenu(word, element) {
@@ -711,6 +677,7 @@ window.CustomLists = {
 
         const list = this.lists[listName];
         
+        // Changed to use Edit permission check
         if (!list || !this.canEditList(listName)) return;
 
         if (list.words.includes(cleanWord)) return;
@@ -723,12 +690,7 @@ window.CustomLists = {
         list.words.push(cleanWord);
 
         if (list.type === 'online') {
-            const res = await this.saveOnlineList(listName, list);
-            if (!res.success) {
-                list.words = list.words.filter(w => w !== cleanWord); // Revert
-                alert(res.message || "Failed to update list online.");
-                return;
-            }
+            await this.saveOnlineList(listName, list);
         }
 
         this.saveLocalLists();
