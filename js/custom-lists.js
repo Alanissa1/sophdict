@@ -102,7 +102,7 @@ window.CustomLists = {
                 <div id="creation-step-2" style="display: none;">
                     <div class="input-group" id="pathInputGroup">
                         <label>List Name</label>
-                        <input type="text" id="newListPath" name="sophdict_list_name" placeholder="my-awesome-list" autocomplete="chrome-off">
+                        <input type="text" id="newListPath" name="sophdict_list_name" placeholder="my-awesome-list" autocomplete="one-time-code">
                     </div>
                     <div id="visibilityInputGroup" style="display: none;">
                         ${window.ExploreLists ? window.ExploreLists.renderSetting('link', true) : ''}
@@ -308,7 +308,7 @@ window.CustomLists = {
 
                 ${canEdit ? `
                 <div class="search-container manual-add-container" style="width: 100%; max-width: 100%; margin-bottom: 30px;">
-                    <input type="text" id="manualWordInput" name="sophdict_word_entry" placeholder="Add word manually..." autocomplete="chrome-off" style="flex: 1;">
+                    <input type="text" id="manualWordInput" name="sophdict_word_entry" placeholder="Add word manually..." autocomplete="one-time-code" style="flex: 1;">
                     <button class="icon-btn" onclick="CustomLists.addManualWord('${name}')" aria-label="Add Word">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                     </button>
