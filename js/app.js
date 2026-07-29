@@ -99,7 +99,6 @@ window.AppClearSearch = (skipPush = false) => {
     if (rc) {
         const isDeleteMode = window.CustomLists?.deleteMode;
         const customListsHtml = Object.entries(window.CustomLists?.lists || {})
-            .filter(([_, list]) => !list.hidden)
             .map(([name]) => {
                 if (isDeleteMode) {
                     return `
