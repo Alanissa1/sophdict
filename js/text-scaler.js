@@ -689,7 +689,10 @@ window.TextScaler = {
                         <span style="font-weight:bold; color:var(--text-main); font-size:14px;">Offline First</span>
                         <span style="font-size:11px; color:var(--text-sub);">Prioritize local cache for speed. (Updates disabled while ON)</span>
                     </div>
-                    <input type="checkbox" id="offlineFirstToggle">
+                    <label class="switch">
+                        <input type="checkbox" id="offlineFirstToggle">
+                        <span class="slider"></span>
+                    </label>
                 </div>
 
                 <div id="theme-settings-container"></div>

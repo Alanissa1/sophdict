@@ -167,7 +167,10 @@ window.CustomLists = {
                     </div>
                     <div class="input-group checkbox-row" id="lockInputGroup">
                         <label for="newListLock">Lock list (Read-only)</label>
-                        <input type="checkbox" id="newListLock" onchange="if(window.CustomLists.updateFormState) window.CustomLists.updateFormState(true)">
+                        <label class="switch">
+                            <input type="checkbox" id="newListLock" onchange="if(window.CustomLists.updateFormState) window.CustomLists.updateFormState(true)">
+                            <span class="slider"></span>
+                        </label>
                     </div>
                     <div id="creation-error" style="color: #ff4b6b; margin-bottom: 10px; font-size: 14px;"></div>
                     <div style="display: flex; gap: 10px;">
@@ -569,7 +572,10 @@ window.CustomLists = {
 
                 <div class="input-group checkbox-row" style="margin-top: 15px;">
                     <label for="editListLock">Lock list (Read-only)</label>
-                    <input type="checkbox" id="editListLock" ${list.locked ? 'checked' : ''} onchange="if(window.CustomLists.updateFormState) window.CustomLists.updateFormState(false)">
+                    <label class="switch">
+                        <input type="checkbox" id="editListLock" ${list.locked ? 'checked' : ''} onchange="if(window.CustomLists.updateFormState) window.CustomLists.updateFormState(false)">
+                        <span class="slider"></span>
+                    </label>
                 </div>
 
                 <div class="input-group" style="margin-top: 15px;">
