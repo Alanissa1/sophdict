@@ -1,5 +1,7 @@
 window.GameManager = {
     examples: [],
+    fullPool: [],
+    usedIndices: new Set(),
     currentIdx: 0,
     userWords: [],
     correctWords: [],
@@ -20,44 +22,63 @@ window.GameManager = {
         document.body.appendChild(overlay);
     },
 
-    async start(data, mode = 'to-translation') {
-        // 1. Determine the active translation language
-        let activeLang = null;
-        if (window.TranslationManager && window.TranslationManager.isEnabled) {
-            activeLang = window.TranslationManager.targetLanguage;
+    async start(data, mode = 'to-translation', isAppend = false) {
+        // 1. Determine the active translation language (only if not appending)
+        if (!isAppend) {
+            let activeLang = null;
+            if (window.TranslationManager && window.TranslationManager.isEnabled) {
+                activeLang = window.TranslationManager.targetLanguage;
+            }
+
+            if (!activeLang) {
+                const browserLang = (navigator.language || navigator.userLanguage).split('-')[0];
+                activeLang = browserLang;
+            }
+
+            if (activeLang === 'en') {
+                alert("Practice mode is only available when translating to a non-English language.");
+                return;
+            }
+
+            this.targetLang = activeLang;
+            this.currentMode = mode;
+            this.usedIndices = new Set();
         }
 
-        // 2. If translation is OFF, use browser system language
-        if (!activeLang) {
-            const browserLang = (navigator.language || navigator.userLanguage).split('-')[0];
-            activeLang = browserLang;
-        }
-
-        // 3. IF the active language is English (en), disable the game as there is nothing to translate
-        if (activeLang === 'en') {
-            alert("Practice mode is only available when translating to a non-English language.");
-            return;
-        }
-
-        this.targetLang = activeLang;
-
-        this.currentMode = mode;
         const loader = document.getElementById('loader');
         const loaderText = document.getElementById('loaderText');
         if (loader) {
-            loaderText.innerText = "Preparing practice...";
+            loaderText.innerText = isAppend ? "Loading more..." : "Preparing practice...";
             loader.style.display = 'flex';
         }
 
         try {
-            const pool = await this.preparePool(data);
-            if (pool.length === 0) {
-                alert("Not enough examples found to practice! Try searching for common words first.");
-                return;
+            if (!isAppend) {
+                this.fullPool = await this.preparePool(data);
+                if (this.fullPool.length === 0) {
+                    alert("Not enough examples found to practice! Try searching for common words first.");
+                    return;
+                }
             }
-            this.examples = this.shuffle(pool).slice(0, 10);
+
+            // Pick 10 unused examples
+            const available = this.fullPool.filter((_, i) => !this.usedIndices.has(i));
+            if (available.length === 0) {
+                alert("No more new examples found for this session!");
+                if (isAppend) return;
+            }
+
+            this.examples = this.shuffle(available).slice(0, 10);
+
+            // Mark as used
+            this.fullPool.forEach((item, i) => {
+                if (this.examples.some(ex => ex.english === item.english)) {
+                    this.usedIndices.add(i);
+                }
+            });
+
             this.currentIdx = 0;
-            this.score = 0;
+            if (!isAppend) this.score = 0;
 
             document.getElementById('gameOverlay').style.display = 'flex';
             this.renderQuestion();
@@ -305,6 +326,8 @@ window.GameManager = {
 
     renderFinished() {
         const overlay = document.getElementById('gameOverlay');
+        const hasMore = this.fullPool.length > this.usedIndices.size;
+
         overlay.innerHTML = `
             <div class="game-header">
                 <button class="game-close-btn" onclick="GameManager.close()">&times;</button>
@@ -312,9 +335,12 @@ window.GameManager = {
             <div class="game-content">
                 <div class="game-finished">
                     <h2 style="color:var(--text-main);">Practice Finished!</h2>
-                    <div class="game-score">${this.score} / ${this.examples.length}</div>
+                    <div class="game-score">${this.score} / ${this.usedIndices.size}</div>
                     <div style="margin-bottom:30px; color:var(--text-sub);">Great job! You are improving your vocabulary.</div>
-                    <button class="game-check-btn" onclick="GameManager.close()">RETURN TO DICTIONARY</button>
+                    <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+                        ${hasMore ? `<button class="game-check-btn" onclick="GameManager.start(null, '${this.currentMode}', true)">PRACTICE 10 MORE</button>` : ''}
+                        <button class="game-check-btn" style="background:var(--bg-color); color:var(--text-main); border:1px solid var(--border-color);" onclick="GameManager.close()">RETURN TO DICTIONARY</button>
+                    </div>
                 </div>
             </div>
         `;
