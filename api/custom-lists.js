@@ -95,8 +95,9 @@ function sanitize(data) {
 }
 
 export default async function handler(req, res) {
-    // Basic protection against direct browser visits
-    if (req.headers['sec-fetch-mode'] === 'navigate') {
+    // Basic protection against direct browser visits and cross-site requests
+    const secFetchSite = req.headers['sec-fetch-site'];
+    if (req.headers['sec-fetch-mode'] === 'navigate' || (secFetchSite && !['same-origin', 'same-site'].includes(secFetchSite))) {
         return res.status(403).json({ error: 'Direct access not allowed' });
     }
 
