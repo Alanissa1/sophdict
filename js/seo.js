@@ -98,8 +98,8 @@
                         const pathname = window.location.pathname;
                         const isAlreadyInModal = pathname.includes('/modal/');
 
-                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/formal-')) {
-                            // Support /570academic/1/modal/word or /listname/my-list/modal/word
+                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/llistname/') || pathname.startsWith('/formal-')) {
+                            // Support /570academic/1/modal/word or /listname/my-list/modal/word or /llistname/my-list/modal/word
                             const base = pathname.split('/modal/')[0];
                             if (isAlreadyInModal) {
                                 window.history.replaceState({ modal: true, word }, "", `${base}/modal/${encodeURIComponent(word)}`);
@@ -161,7 +161,7 @@
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
-        if (path.startsWith('570academic') || path === 'feedbackandsupport') return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport') return;
 
         // Open empty page first as requested
         if (window.AppClearSearch) window.AppClearSearch(true);
@@ -201,7 +201,7 @@
     window.addEventListener('popstate', (e) => {
         const path = window.location.pathname.substring(1);
 
-        if (path.startsWith('570academic') || path === 'feedbackandsupport') return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport') return;
 
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);

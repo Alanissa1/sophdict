@@ -107,8 +107,10 @@ window.AppClearSearch = (skipPush = false) => {
                         </button>
                     `;
                 }
+                const list = window.CustomLists?.lists[name];
+                const prefix = list?.type === 'local' ? '/llistname/' : '/listname/';
                 return `
-                    <button class="academic-list-trigger list-btn-custom" onclick="window.history.pushState({}, '', '/listname/${encodeURIComponent(name)}'); CustomLists.handleRoute();">${name}</button>
+                    <button class="academic-list-trigger list-btn-custom" onclick="window.history.pushState({}, '', '${prefix}${encodeURIComponent(name)}'); CustomLists.handleRoute();">${name}</button>
                 `;
             }).join('');
 

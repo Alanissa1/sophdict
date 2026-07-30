@@ -101,14 +101,16 @@ window.CustomLists = {
 
     handleRoute() {
         const path = window.location.pathname;
-        if (path === '/create-list') {
+        if (path === '/create-list' || path === '/create-list/online' || path === '/create-list/local') {
             this.renderCreationUI();
         } else if (path === '/list/explore') {
             if (window.ExploreLists) window.ExploreLists.renderExploreUI();
-        } else if (path.startsWith('/listname/')) {
-            const listName = decodeURIComponent(path.replace('/listname/', ''));
+        } else if (path.startsWith('/listname/') || path.startsWith('/llistname/')) {
+            const prefix = path.startsWith('/llistname/') ? '/llistname/' : '/listname/';
             const modalIndex = path.indexOf('/modal/');
-            const actualListName = modalIndex !== -1 ? decodeURIComponent(path.substring(10, modalIndex)) : listName;
+            const actualListName = modalIndex !== -1
+                ? decodeURIComponent(path.substring(prefix.length, modalIndex))
+                : decodeURIComponent(path.substring(prefix.length));
 
             if (!document.querySelector('.list-page') || this._currentLoadedList !== actualListName) {
                 this.renderListView(actualListName);
@@ -129,15 +131,19 @@ window.CustomLists = {
         if (window.RestoreSearchUI) window.RestoreSearchUI();
 
         document.body.classList.remove('home-state');
+
+        const path = window.location.pathname;
+        const isStep2 = path === '/create-list/local' || path === '/create-list/online';
+
         container.innerHTML = `
             <div class="list-creation-container">
                 <h2 style="color: var(--text-main); margin-bottom: 20px;">Create New List</h2>
-                <div id="creation-step-1">
-                    <button class="list-option-btn" onclick="CustomLists.showDetailsForm('local')">
+                <div id="creation-step-1" style="display: ${isStep2 ? 'none' : 'block'};">
+                    <button class="list-option-btn" onclick="window.history.pushState({}, '', '/create-list/local'); CustomLists.handleRoute();">
                         <strong>Locally</strong><br>
                         <span style="font-size: 12px; color: var(--text-sub);">Saved on this device only.</span>
                     </button>
-                    <button class="list-option-btn" onclick="CustomLists.showDetailsForm('online')">
+                    <button class="list-option-btn" onclick="window.history.pushState({}, '', '/create-list/online'); CustomLists.handleRoute();">
                         <strong>Online</strong><br>
                         <span style="font-size: 12px; color: var(--text-sub);">Saved on Upstash, accessible anywhere.</span>
                     </button>
@@ -147,7 +153,7 @@ window.CustomLists = {
                         </div>
                     </button>
                 </div>
-                <div id="creation-step-2" style="display: none;">
+                <div id="creation-step-2" style="display: ${isStep2 ? 'block' : 'none'};">
                     <div class="input-group" id="pathInputGroup">
                         <label>List Name</label>
                         <input type="text" id="newListPath" placeholder="my-awesome-list" autocomplete="off">
@@ -166,11 +172,16 @@ window.CustomLists = {
                     <div id="creation-error" style="color: #ff4b6b; margin-bottom: 10px; font-size: 14px;"></div>
                     <div style="display: flex; gap: 10px;">
                         <button class="action-btn" id="confirmCreateBtn" onclick="CustomLists.confirmCreate()">Create List</button>
-                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderCreationUI()">Back</button>
+                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();">Back</button>
                     </div>
                 </div>
             </div>
         `;
+
+        if (isStep2) {
+            const type = path === '/create-list/local' ? 'local' : 'online';
+            this.showDetailsForm(type);
+        }
     },
 
     currentType: null,
@@ -311,7 +322,8 @@ window.CustomLists = {
             window.AppClearSearch(true);
         }
 
-        window.history.pushState({}, "", `/listname/${encodeURIComponent(name)}`);
+        const prefix = this.currentType === 'local' ? '/llistname/' : '/listname/';
+        window.history.pushState({}, "", `${prefix}${encodeURIComponent(name)}`);
         this.handleRoute();
     },
 
@@ -522,7 +534,7 @@ window.CustomLists = {
         const modal = document.getElementById('licenseModal');
         const isSettingsOpen = modal && modal.classList.contains('active');
 
-        if (!isSettingsOpen && window.location.pathname === `/listname/${encodeURIComponent(name)}`) {
+        if (!isSettingsOpen && (window.location.pathname === `/listname/${encodeURIComponent(name)}` || window.location.pathname === `/llistname/${encodeURIComponent(name)}`)) {
             this.renderListView(name);
         }
     },
@@ -905,7 +917,7 @@ window.CustomLists = {
         this.saveLocalLists();
         this._lastSaveTime = Date.now();
 
-        if (window.location.pathname === `/listname/${encodeURIComponent(listName)}`) {
+        if (window.location.pathname === `/listname/${encodeURIComponent(listName)}` || window.location.pathname === `/llistname/${encodeURIComponent(listName)}`) {
             this.renderListView(listName);
         }
 
