@@ -1,7 +1,18 @@
 export default async function handler(req, res) {
     const { word } = req.query;
+
+    // Security: Block direct browser access and unauthorized domains
+    const referer = req.headers.referer;
+    const isLocalhost = process.env.NODE_ENV === 'development';
+    if (!isLocalhost && referer && !referer.includes('sophdict.com')) {
+        return res.status(403).json({ error: 'Access denied' });
+    }
+    if (!isLocalhost && !referer) {
+        return res.status(403).json({ error: 'Direct access not allowed' });
+    }
+
     const key = process.env.THESAURUS_KEY;
-    const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+    let upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
     const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
     if (!word) {
