@@ -76,9 +76,6 @@ window.UIEntry = {
                                 </div>
                                 <div style="display:flex; align-items:center;">
                                     <div id="fetch-ui-container" class="fetch-ui-container">
-                                        <button class="icon-btn" title="Start Translation Game" onclick="GameManager.start('${word}')" style="margin-right: 5px;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M189-160q-20 0-34.5-14.5T140-209v-542q0-20 14.5-34.5T189-800h582q20 0 34.5 14.5T820-751v542q0 20-14.5 34.5T771-160H189Zm0-66h582v-476H189v476Zm104-71h66v-133h134v-66H359v-134h-66v134H159v66h134v133Zm322-133q-14 0-23.5-9.5T582-464q0-14 9.5-23.5t23.5-9.5q14 0 23.5 9.5t9.5 23.5q0 14-9.5 23.5t-23.5 9.5Zm111-111q-14 0-23.5-9.5t-9.5-23.5q0-14 9.5-23.5t23.5-9.5q14 0 23.5 9.5t9.5 23.5q0 14-9.5 23.5t-23.5 9.5Zm-111-111q-14 0-23.5-9.5t-9.5-23.5q0-14 9.5-23.5t23.5-9.5q14 0 23.5 9.5t9.5 23.5q0 14-9.5 23.5t-23.5 9.5Zm111 111q-14 0-23.5-9.5t-9.5-23.5q0-14 9.5-23.5t23.5-9.5q14 0 23.5 9.5t9.5 23.5q0 14-9.5 23.5t-23.5 9.5ZM189-226v-476 476Z"/></svg>
-                                        </button>
                                         <button class="icon-btn fetch-btn" title="Download all words from tags" onclick="PreFetcher.showInput()">
                                             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
                                         </button>
