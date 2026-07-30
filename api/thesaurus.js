@@ -1,23 +1,14 @@
 export default async function handler(req, res) {
-    // Basic protection against direct browser visits and cross-site requests
-    const secFetchSite = req.headers['sec-fetch-site'];
-    if (req.headers['sec-fetch-mode'] === 'navigate' || (secFetchSite && !['same-origin', 'same-site'].includes(secFetchSite))) {
-        return res.status(403).json({ error: 'Direct access not allowed' });
-    }
-
     const { word } = req.query;
     const key = process.env.THESAURUS_KEY;
-    let upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+    const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
     const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
     if (!word) {
         return res.status(400).json({ error: 'Word is required' });
     }
 
-    if (upstashUrl) {
-        if (!upstashUrl.startsWith('http')) upstashUrl = `https://${upstashUrl}`;
-        if (upstashUrl.endsWith('/')) upstashUrl = upstashUrl.slice(0, -1);
-    }
+    if (upstashUrl && upstashUrl.endsWith('/')) upstashUrl = upstashUrl.slice(0, -1);
 
     const cacheKey = `thes:${word.toLowerCase().trim()}`;
 
@@ -25,22 +16,14 @@ export default async function handler(req, res) {
         // 1. Try to get from Upstash Cache
         if (upstashUrl && upstashToken) {
             try {
-                const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
-                const cacheRes = await fetch(pipelineUrl, {
+                const cacheRes = await fetch(upstashUrl, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${upstashToken}` },
-                    body: JSON.stringify([
-                        ["GET", cacheKey],
-                        ["SADD", "all_words_index", word.toLowerCase().trim()]
-                    ])
+                    body: JSON.stringify(["GET", cacheKey])
                 });
                 const cacheData = await cacheRes.json();
-                // When using pipeline, Upstash returns an array of responses: [{result: ...}, {result: ...}]
-                if (Array.isArray(cacheData) && cacheData[0] && cacheData[0].result) {
-                    res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
-                    res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
-                    res.setHeader('X-Robots-Tag', 'noindex');
-                    return res.status(200).json(JSON.parse(cacheData[0].result));
+                if (cacheData && cacheData.result) {
+                    return res.status(200).json(JSON.parse(cacheData.result));
                 }
             } catch (e) {
                 console.error('[Cache] Read error:', e);
@@ -55,17 +38,13 @@ export default async function handler(req, res) {
         const response = await fetch(url);
         const data = await response.json();
 
-        // 3. Save to Upstash Cache (1 year expiry) and Word Index
+        // 3. Save to Upstash Cache (1 year expiry)
         if (upstashUrl && upstashToken && data && !data.error && Array.isArray(data) && data.length > 0 && typeof data[0] !== 'string') {
             try {
-                const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
-                await fetch(pipelineUrl, {
+                await fetch(upstashUrl, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${upstashToken}` },
-                    body: JSON.stringify([
-                        ["SET", cacheKey, JSON.stringify(data), "EX", 31536000],
-                        ["SADD", "all_words_index", word.toLowerCase().trim()]
-                    ])
+                    body: JSON.stringify(["SET", cacheKey, JSON.stringify(data), "EX", 31536000])
                 });
             } catch (e) {
                 console.error('[Cache] Write error:', e);
@@ -73,8 +52,6 @@ export default async function handler(req, res) {
         }
 
         res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
-        res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
-        res.setHeader('X-Robots-Tag', 'noindex');
         res.status(200).json(data);
     } catch (error) {
         console.error(error);
