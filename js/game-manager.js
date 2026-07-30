@@ -21,6 +21,26 @@ window.GameManager = {
     },
 
     async start(data, mode = 'to-translation') {
+        // 1. Determine the active translation language
+        let activeLang = null;
+        if (window.TranslationManager && window.TranslationManager.isEnabled) {
+            activeLang = window.TranslationManager.targetLanguage;
+        }
+
+        // 2. If translation is OFF, use browser system language
+        if (!activeLang) {
+            const browserLang = (navigator.language || navigator.userLanguage).split('-')[0];
+            activeLang = browserLang;
+        }
+
+        // 3. IF the active language is English (en), disable the game as there is nothing to translate
+        if (activeLang === 'en') {
+            alert("Practice mode is only available when translating to a non-English language.");
+            return;
+        }
+
+        this.targetLang = activeLang;
+
         this.currentMode = mode;
         const loader = document.getElementById('loader');
         const loaderText = document.getElementById('loaderText');
@@ -88,10 +108,18 @@ window.GameManager = {
 
     extractExamples(data) {
         const examples = new Set();
+        const word = data.word;
         if (data.dictionary) {
             data.dictionary.forEach(entry => {
                 const vis = UIDictionary.extractVisFromEntry(entry);
-                vis.forEach(v => { if (v.t) examples.add(UIUtils.stripTags(v.t)); });
+                vis.forEach(v => {
+                    if (v.t) {
+                        // Use the exact same cleaning as TranslationManager/UI
+                        const clean = UIUtils.cleanMWExample(v.t, word);
+                        const stripped = UIUtils.stripTags(clean);
+                        examples.add(stripped);
+                    }
+                });
             });
         }
         if (data.thesaurus) {
@@ -104,7 +132,13 @@ window.GameManager = {
                                     if (node[1] && node[1].dt) {
                                         const visNode = node[1].dt.find(i => i[0] === 'vis');
                                         if (visNode && visNode[1]) {
-                                            visNode[1].forEach(v => { if (v.t) examples.add(UIUtils.stripTags(v.t)); });
+                                            visNode[1].forEach(v => {
+                                                if (v.t) {
+                                                    const clean = UIUtils.cleanMWExample(v.t, word);
+                                                    const stripped = UIUtils.stripTags(clean);
+                                                    examples.add(stripped);
+                                                }
+                                            });
                                         }
                                     }
                                 });
@@ -118,12 +152,24 @@ window.GameManager = {
     },
 
     async getTranslation(text) {
-        const cacheKey = `${this.targetLang}:${text}`;
-        const localCache = JSON.parse(localStorage.getItem('translation_cache') || '{}');
-        if (localCache[cacheKey]) return localCache[cacheKey];
+        const lang = this.targetLang;
+        const cacheKey = `${lang}:${text}`;
 
+        // 1. Try TranslationManager's internal cache first
+        if (window.TranslationManager && window.TranslationManager.cache && window.TranslationManager.cache[cacheKey]) {
+            return window.TranslationManager.cache[cacheKey];
+        }
+
+        // 2. Try localStorage
+        const localCache = JSON.parse(localStorage.getItem('translation_cache') || '{}');
+        if (localCache[cacheKey]) {
+            if (window.TranslationManager) window.TranslationManager.cache[cacheKey] = localCache[cacheKey];
+            return localCache[cacheKey];
+        }
+
+        // 3. Perform a real fetch
         try {
-            const res = await fetch(`/api/translate?lang=${this.targetLang}&text=${encodeURIComponent(text)}`);
+            const res = await fetch(`/api/translate?lang=${lang}&text=${encodeURIComponent(text)}`);
             if (res.ok) {
                 const data = await res.json();
                 let translated = "";
@@ -133,6 +179,9 @@ window.GameManager = {
                 if (translated) {
                     localCache[cacheKey] = translated;
                     localStorage.setItem('translation_cache', JSON.stringify(localCache));
+                    if (window.TranslationManager) {
+                        window.TranslationManager.cache[cacheKey] = translated;
+                    }
                     return translated;
                 }
             }
@@ -141,9 +190,12 @@ window.GameManager = {
     },
 
     splitText(text) {
-        // Clean MW tags and punctuation before splitting
-        const cleaned = UIUtils.cleanMWText(text);
-        return cleaned.split(/\s+/).filter(w => w.length > 0).map(w => w.replace(/[.,!?;:"()]/g, ''));
+        if (!text) return [];
+        // DUOLINGO-STYLE: Separate the text into words, removing punctuation
+        return text.split(/\s+/)
+            .filter(w => w.length > 0)
+            .map(w => w.replace(/[.,!?;:"()]/g, '').trim())
+            .filter(w => w.length > 0);
     },
 
     shuffle(array) {
