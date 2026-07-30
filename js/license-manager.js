@@ -1,19 +1,5 @@
 window.LicenseManager = {
     content: '',
-    formatContent(text) {
-        if (!text) return '';
-        return text
-            .replace(/^# (.*$)/gm, '<h1 style="margin: 0 0 15px 0; font-size: 1.5rem;">$1</h1>')
-            .replace(/^## (.*$)/gm, '<h2 style="margin: 20px 0 10px 0; font-size: 1.25rem;">$1</h2>')
-            .replace(/^### (.*$)/gm, '<h3 style="margin: 15px 0 10px 0; font-size: 1.1rem; color: var(--primary-color);">$1</h3>')
-            .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-            .replace(/^\* (.*$)/gm, '<div style="margin-left: 10px; margin-bottom: 5px; display: flex; gap: 8px;"><span>•</span><span>$1</span></div>')
-            .split('\n\n').map(para => {
-                if (para.trim().startsWith('<h') || para.trim().startsWith('<div')) return para;
-                return `<p style="margin-bottom: 15px;">${para.replace(/\n/g, '<br>')}</p>`;
-            }).join('');
-    },
-
     async init() {
         const modal = document.createElement('div');
         modal.id = 'licenseModal';
@@ -24,7 +10,11 @@ window.LicenseManager = {
             const resp = await fetch('LICENSE');
             if (resp.ok) {
                 const text = await resp.text();
-                this.content = this.formatContent(text);
+                this.content = text.split('\n\n').map(para => {
+                    if (para.includes('Copyright')) return para;
+                    if (para.includes('Word List Attributions:') || para.includes('Data and Service Attributions:')) return `<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">${para}`;
+                    return para;
+                }).join('<br><br>').replace(/\n/g, '<br>');
                 licenseContent = this.content;
             }
         } catch (e) {
@@ -83,7 +73,11 @@ window.PrivacyManager = {
             const resp = await fetch('PRIVACY.md');
             if (resp.ok) {
                 const text = await resp.text();
-                this.content = LicenseManager.formatContent(text);
+                this.content = text.split('\n\n').map(para => {
+                    if (para.includes('SophDict')) return para;
+                    if (para.includes('Services:') || para.includes('Attributions:')) return `<hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border-color); opacity: 0.3;">${para}`;
+                    return para;
+                }).join('<br><br>').replace(/\n/g, '<br>');
             }
         } catch (e) {
             console.error('Privacy load error:', e);
