@@ -1,6 +1,7 @@
 window.UIEntry = {
     async render(data, containerId = 'results-container', targetContext = null) {
         try {
+            window._lastData = data;
             const targetContainer = document.getElementById(containerId);
             if (!targetContainer) return;
 
@@ -80,6 +81,9 @@ window.UIEntry = {
                                             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
                                         </button>
                                     </div>
+                                    <button class="icon-btn" title="Practice Examples" onclick="GameManager.start(window._lastData)" style="margin-right: 5px;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M180-120q-24.75 0-42.38-17.62Q120-155.25 120-180v-440q0-24.75 17.62-42.38Q155.25-680 180-680h600q24.75 0 42.38 17.62Q840-644.75 840-620v440q0 24.75-17.62 42.38Q804.75-120 780-120H180Zm0-60h600v-440H180v440Zm110-100h100v-100H290v100Zm160-80h140v-80H450v80Zm160 80h100v-100H610v100Zm-210-80Zm-60-140h60v-60h-60v60Zm140 0h60v-60h-60v60Zm-300-40h520v-300q0-24.75-17.62-42.38Q724.75-840 700-840H260q-24.75 0-42.38 17.62Q200-804.75 200-780v300Z"/></svg>
+                                    </button>
                                     <span class="pin-btn-main"></span>
                                 </div>
                             </div>
@@ -195,6 +199,11 @@ window.UIEntry = {
 
             UIUtils.attachInlineTTS(targetContainer);
             PreFetcher.addToQueue(UIUtils.extractLinks(data));
+
+            // Background prefetch for Practice Mode to ensure 10 translations are ready
+            if (window.GameManager) {
+                GameManager.preparePool(data).catch(() => null);
+            }
         } catch (err) {
             console.error("[UI] Render Error:", err);
             const targetContainer = document.getElementById(containerId);

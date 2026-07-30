@@ -1,0 +1,279 @@
+window.GameManager = {
+    examples: [],
+    currentIdx: 0,
+    userWords: [],
+    correctWords: [],
+    score: 0,
+    targetLang: 'tr',
+    currentMode: 'to-translation', // 'to-translation' or 'to-example'
+
+    init() {
+        this.targetLang = localStorage.getItem('translation_target_lang') || 'tr';
+        this.createOverlay();
+    },
+
+    createOverlay() {
+        if (document.getElementById('gameOverlay')) return;
+        const overlay = document.createElement('div');
+        overlay.id = 'gameOverlay';
+        overlay.className = 'game-overlay';
+        document.body.appendChild(overlay);
+    },
+
+    async start(data, mode = 'to-translation') {
+        this.currentMode = mode;
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loaderText');
+        if (loader) {
+            loaderText.innerText = "Preparing practice...";
+            loader.style.display = 'flex';
+        }
+
+        try {
+            const pool = await this.preparePool(data);
+            if (pool.length === 0) {
+                alert("Not enough examples found to practice! Try searching for common words first.");
+                return;
+            }
+            this.examples = this.shuffle(pool).slice(0, 10);
+            this.currentIdx = 0;
+            this.score = 0;
+
+            document.getElementById('gameOverlay').style.display = 'flex';
+            this.renderQuestion();
+        } finally {
+            if (loader) loader.style.display = 'none';
+        }
+    },
+
+    async preparePool(data) {
+        let allEnglishExamples = [];
+
+        // 1. Get from current data (Dictionary and Thesaurus)
+        if (data) {
+            allEnglishExamples = this.extractExamples(data);
+        }
+
+        // 2. If less than 10, pull from history/stats to meet the requirement
+        if (allEnglishExamples.length < 10) {
+            const recentWords = Object.keys(window.StatsManager?.stats?.wordCounts || {})
+                .filter(w => !data || w !== data.word)
+                .sort((a,b) => (window.StatsManager.stats.wordLastActive[b] || 0) - (window.StatsManager.stats.wordLastActive[a] || 0));
+
+            // We'd ideally want to fetch these words, but for now let's hope we have enough from current
+            // In a real scenario, we could trigger background fetches here.
+        }
+
+        // 3. Ensure we have translations (Prefetch if missing)
+        const pool = [];
+        // Limit to first 15 potential candidates to translate
+        const candidates = allEnglishExamples.slice(0, 15);
+
+        const translationPromises = candidates.map(async (eng) => {
+            const trans = await this.getTranslation(eng);
+            if (trans) {
+                return {
+                    english: eng,
+                    translation: trans,
+                    engWords: this.splitText(eng),
+                    transWords: this.splitText(trans)
+                };
+            }
+            return null;
+        });
+
+        const results = await Promise.all(translationPromises);
+        return results.filter(r => r !== null);
+    },
+
+    extractExamples(data) {
+        const examples = new Set();
+        if (data.dictionary) {
+            data.dictionary.forEach(entry => {
+                const vis = UIDictionary.extractVisFromEntry(entry);
+                vis.forEach(v => { if (v.t) examples.add(UIUtils.stripTags(v.t)); });
+            });
+        }
+        if (data.thesaurus) {
+            data.thesaurus.forEach(entry => {
+                if (entry.def) {
+                    entry.def.forEach(def => {
+                        if (def.sseq) {
+                            def.sseq.forEach(sseq => {
+                                sseq.forEach(node => {
+                                    if (node[1] && node[1].dt) {
+                                        const visNode = node[1].dt.find(i => i[0] === 'vis');
+                                        if (visNode && visNode[1]) {
+                                            visNode[1].forEach(v => { if (v.t) examples.add(UIUtils.stripTags(v.t)); });
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        return Array.from(examples);
+    },
+
+    async getTranslation(text) {
+        const cacheKey = `${this.targetLang}:${text}`;
+        const localCache = JSON.parse(localStorage.getItem('translation_cache') || '{}');
+        if (localCache[cacheKey]) return localCache[cacheKey];
+
+        try {
+            const res = await fetch(`/api/translate?lang=${this.targetLang}&text=${encodeURIComponent(text)}`);
+            if (res.ok) {
+                const data = await res.json();
+                let translated = "";
+                if (data && data[0]) {
+                    data[0].forEach(part => { if (part[0]) translated += part[0]; });
+                }
+                if (translated) {
+                    localCache[cacheKey] = translated;
+                    localStorage.setItem('translation_cache', JSON.stringify(localCache));
+                    return translated;
+                }
+            }
+        } catch (e) {}
+        return null;
+    },
+
+    splitText(text) {
+        // Simple split and clean
+        return text.split(/\s+/).filter(w => w.length > 0).map(w => w.replace(/[.,!?;:"()]/g, ''));
+    },
+
+    shuffle(array) {
+        const newArr = [...array];
+        for (let i = newArr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+        }
+        return newArr;
+    },
+
+    renderQuestion() {
+        const item = this.examples[this.currentIdx];
+        const overlay = document.getElementById('gameOverlay');
+        const progress = ((this.currentIdx) / this.examples.length) * 100;
+
+        const isToTrans = this.currentMode === 'to-translation';
+        const questionText = isToTrans ? item.english : item.translation;
+        this.correctWords = isToTrans ? item.transWords : item.engWords;
+
+        this.userWords = [];
+        const bankWords = this.shuffle([...this.correctWords]);
+
+        overlay.innerHTML = `
+            <div class="game-header">
+                <div style="display:flex; flex-direction:column;">
+                    <div style="font-weight:bold; color:var(--text-main);">Practice Mode</div>
+                    <div style="font-size:0.8em; color:var(--text-sub);">
+                        ${isToTrans ? 'English ➔ ' + this.targetLang.toUpperCase() : this.targetLang.toUpperCase() + ' ➔ English'}
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button class="add-lang-btn" style="margin:0; padding:5px 10px; font-size:12px; border:1px solid var(--border-color); background:none; color:var(--text-main); cursor:pointer; border-radius:5px;" onclick="GameManager.toggleMode()">Switch Mode</button>
+                    <button class="game-close-btn" onclick="GameManager.close()">&times;</button>
+                </div>
+            </div>
+            <div class="game-progress-container">
+                <div class="game-progress-bar" style="width: ${progress}%"></div>
+            </div>
+            <div class="game-content">
+                <div class="game-question">"${questionText}"</div>
+                <div class="game-answer-area" id="gameAnswerArea"></div>
+                <div class="game-word-bank">
+                    ${bankWords.map((w, i) => `<div class="game-word" onclick="GameManager.addWord('${w}', this, ${i})">${w}</div>`).join('')}
+                </div>
+                <div class="game-feedback" id="gameFeedback"></div>
+                <div class="game-controls">
+                    <button class="game-check-btn" id="gameCheckBtn" onclick="GameManager.check()" disabled>CHECK</button>
+                </div>
+            </div>
+        `;
+    },
+
+    addWord(word, el, idx) {
+        if (el.classList.contains('selected')) return;
+        el.classList.add('selected');
+
+        const answerArea = document.getElementById('gameAnswerArea');
+        const wordEl = document.createElement('div');
+        wordEl.className = 'game-word placed';
+        wordEl.innerText = word;
+        wordEl.dataset.idx = idx;
+        wordEl.onclick = () => {
+            el.classList.remove('selected');
+            wordEl.remove();
+            this.userWords = this.userWords.filter(w => w.idx !== idx);
+            document.getElementById('gameCheckBtn').disabled = this.userWords.length === 0;
+        };
+
+        answerArea.appendChild(wordEl);
+        this.userWords.push({ word, idx });
+        document.getElementById('gameCheckBtn').disabled = false;
+    },
+
+    check() {
+        const userStr = this.userWords.map(w => w.word.toLowerCase()).join(' ');
+        const correctStr = this.correctWords.map(w => w.toLowerCase()).join(' ');
+
+        const feedback = document.getElementById('gameFeedback');
+        const checkBtn = document.getElementById('gameCheckBtn');
+
+        if (userStr === correctStr) {
+            feedback.innerText = "CORRECT!";
+            feedback.className = "game-feedback correct";
+            this.score++;
+            checkBtn.innerText = "NEXT";
+            checkBtn.style.background = "#4caf50";
+            checkBtn.onclick = () => this.next();
+        } else {
+            feedback.innerText = `WRONG! Correct: ${this.correctWords.join(' ')}`;
+            feedback.className = "game-feedback wrong";
+            checkBtn.innerText = "GOT IT";
+            checkBtn.style.background = "#f44336";
+            checkBtn.onclick = () => this.next();
+        }
+    },
+
+    next() {
+        this.currentIdx++;
+        if (this.currentIdx < this.examples.length) {
+            this.renderQuestion();
+        } else {
+            this.renderFinished();
+        }
+    },
+
+    renderFinished() {
+        const overlay = document.getElementById('gameOverlay');
+        overlay.innerHTML = `
+            <div class="game-header">
+                <button class="game-close-btn" onclick="GameManager.close()">&times;</button>
+            </div>
+            <div class="game-content">
+                <div class="game-finished">
+                    <h2 style="color:var(--text-main);">Practice Finished!</h2>
+                    <div class="game-score">${this.score} / ${this.examples.length}</div>
+                    <div style="margin-bottom:30px; color:var(--text-sub);">Great job! You are improving your vocabulary.</div>
+                    <button class="game-check-btn" onclick="GameManager.close()">RETURN TO DICTIONARY</button>
+                </div>
+            </div>
+        `;
+    },
+
+    close() {
+        document.getElementById('gameOverlay').style.display = 'none';
+    },
+
+    toggleMode() {
+        this.currentMode = this.currentMode === 'to-translation' ? 'to-example' : 'to-translation';
+        this.renderQuestion();
+    }
+};
+
+GameManager.init();
