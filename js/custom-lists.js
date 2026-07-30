@@ -414,7 +414,7 @@ window.CustomLists = {
             `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px; padding: 6px 5px;" onclick="CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
 
         const visIcon = list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : (list.visibility === 'private' ? this.icons.private : this.icons.link)) : this.icons.private;
-        const lockIcon = (list.locked && list.visibility !== 'private') ? `<span style="color: var(--text-sub); opacity: 0.6; display: flex;" title="Read-only">${this.icons.editOnly}</span>` : '';
+        const lockIcon = (list.locked && list.visibility !== 'private') ? `<span style="color: var(--text-sub); opacity: 0.6; display: flex;" title="Read-only">${this.icons.editOnly.replace(/24px/g, '18px')}</span>` : '';
 
         document.body.classList.remove('home-state');
         container.innerHTML = `
@@ -423,7 +423,6 @@ window.CustomLists = {
                     <div class="list-name-display" style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 24px;">
                         ${visIcon}
                         ${name}
-                        ${lockIcon}
                     </div>
                     <div style="display:flex; flex-direction:column; align-items:flex-end; margin-left: auto; margin-right: 10px;">
                         <div id="offline-status-container" style="display:flex; align-items:baseline; gap:5px;">
@@ -438,7 +437,7 @@ window.CustomLists = {
                     </div>
                     <div style="display: flex;">
                         ${unlockBtn}
-                        <button class="action-btn" style="padding: 7px 5px;background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); height: 30px; width: 62px; padding: 0;" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
+                        <button class="action-btn" style="padding: 6px 5px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
                     </div>
                 </div>
 
@@ -452,9 +451,9 @@ window.CustomLists = {
                 </div>
                 ` : ''}
 
-                <div style="margin-bottom: 20px; color: var(--text-sub);">
-                    Type: ${list.type} | Words: ${list.words.length}
-                    ${list.locked ? (canEdit ? ' | <span style="">READ ONLY (UNLOCKED FOR EDITING)</span>' : ' | <span>READ ONLY</span>') : ''}
+                <div style="margin-bottom: 20px; color: var(--text-sub); display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+                    <span>Type: ${list.type} | Words: ${list.words.length}</span>
+                    ${list.locked ? (canEdit ? ' | <span style="display: flex; align-items: center; gap: 5px;">READ ONLY (UNLOCKED FOR EDITING) ' + lockIcon + '</span>' : ' | <span style="display: flex; align-items: center; gap: 5px;">READ ONLY ' + lockIcon + '</span>') : ''}
                 </div>
                 <div class="tags-row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; margin-top: 20px;">
                     ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
