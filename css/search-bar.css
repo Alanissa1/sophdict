@@ -76,6 +76,10 @@
     color: #ff4b6b;
 }
 
+#gameToggleBtn {
+    color: #58cc02;
+}
+
 .suggestions-container {
     position: absolute;
     top: 100%;

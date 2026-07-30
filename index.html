@@ -43,6 +43,7 @@
     <link rel="stylesheet" href="css/translation.css">
     <link rel="stylesheet" href="css/wallpaper.css">
     <link rel="stylesheet" href="css/custom-lists.css">
+    <link rel="stylesheet" href="css/game.css">
     <meta name="theme-color" content="#1a73e8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -72,6 +73,9 @@
             </button>
             <button class="icon-btn" id="pinnedToggleBtn" title="Favorites">
                 <svg width="26" height="26" viewBox="0 -960 960 960"><path fill="currentColor" d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>
+            </button>
+            <button class="icon-btn" id="gameToggleBtn" title="Play Learning Game">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M180-120q-24 0-42-18t-18-42v-440q0-24 18-42t42-18h600q24 0 42 18t18 42v440q0 24-18 42t-42 18H180Zm20-300v240h560v-240H200Zm0-60h560v-140H200v140Zm120 240v-120h80v120h-80Zm160 0v-120h80v120h-80Zm160 0v-120h80v120h-80ZM200-420v240-240-140 140Z"/></svg>
             </button>
             <div id="suggestions-box" class="suggestions-container"></div>
         </div>
@@ -139,6 +143,18 @@
 <div id="microDimmer" class="backdrop"></div>
 <div id="scaleDimmer"></div>
 
+<div id="gameOverlay" class="game-overlay" style="display:none;">
+    <div class="game-header">
+        <button class="game-close-btn" id="gameCloseBtn">&times;</button>
+        <div class="game-progress-container">
+            <div id="gameProgressBar" class="game-progress-bar"></div>
+        </div>
+    </div>
+    <div id="gameContent" class="game-content">
+        <!-- Game screens will be injected here -->
+    </div>
+</div>
+
 <script src="js/config.js"></script>
 <script src="js/academic-list.js"></script>
 <script src="js/formal-lists.js"></script>
@@ -169,6 +185,7 @@
 <script src="js/license-manager.js"></script>
 <script src="js/video-explanation.js"></script>
 <script src="js/wallpaper-manager.js"></script>
+<script src="js/game-manager.js"></script>
 <script src="js/app.js"></script>
 <script src="js/seo.js"></script>
 <script src="js/vercel-analytics.js"></script>
