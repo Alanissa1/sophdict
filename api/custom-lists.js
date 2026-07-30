@@ -110,6 +110,7 @@ export default async function handler(req, res) {
 
     // Prevent Vercel from aggressively caching this dynamic API
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 

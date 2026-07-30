@@ -36,11 +36,15 @@
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api/(dictionary|thesaurus|translate|suggestions)(.*)",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, s-maxage=31536000, stale-while-revalidate=604800, immutable"
+        },
+        {
+          "key": "Vary",
+          "value": "sec-fetch-site, sec-fetch-mode"
         }
       ]
     }

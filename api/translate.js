@@ -34,6 +34,8 @@ export default async function handler(req, res) {
                 if (cacheRes.ok) {
                     const cacheData = await cacheRes.json();
                     if (cacheData && cacheData.result) {
+                        res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
+                        res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
                         return res.status(200).json(JSON.parse(cacheData.result));
                     }
                 }
@@ -109,6 +111,7 @@ export default async function handler(req, res) {
         }
 
         res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
+        res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
         return res.status(200).json(data);
     } catch (error) {
         console.error('[Translate Error]:', error.message);
