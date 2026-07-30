@@ -141,8 +141,9 @@ window.GameManager = {
     },
 
     splitText(text) {
-        // Simple split and clean
-        return text.split(/\s+/).filter(w => w.length > 0).map(w => w.replace(/[.,!?;:"()]/g, ''));
+        // Clean MW tags and punctuation before splitting
+        const cleaned = UIUtils.cleanMWText(text);
+        return cleaned.split(/\s+/).filter(w => w.length > 0).map(w => w.replace(/[.,!?;:"()]/g, ''));
     },
 
     shuffle(array) {
@@ -160,7 +161,8 @@ window.GameManager = {
         const progress = ((this.currentIdx) / this.examples.length) * 100;
 
         const isToTrans = this.currentMode === 'to-translation';
-        const questionText = isToTrans ? item.english : item.translation;
+        // Use cleanMWExample to handle {wi} tags and highlighting correctly
+        const questionText = isToTrans ? UIUtils.cleanMWExample(item.english) : UIUtils.cleanMWExample(item.translation);
         this.correctWords = isToTrans ? item.transWords : item.engWords;
 
         this.userWords = [];
@@ -183,7 +185,7 @@ window.GameManager = {
                 <div class="game-progress-bar" style="width: ${progress}%"></div>
             </div>
             <div class="game-content">
-                <div class="game-question">"${questionText}"</div>
+                <div class="game-question">${questionText}</div>
                 <div class="game-answer-area" id="gameAnswerArea"></div>
                 <div class="game-word-bank">
                     ${bankWords.map((w, i) => `<div class="game-word" onclick="GameManager.addWord('${w}', this, ${i})">${w}</div>`).join('')}

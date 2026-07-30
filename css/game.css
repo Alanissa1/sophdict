@@ -37,7 +37,7 @@
 
 .game-progress-bar {
     height: 100%;
-    background: var(--accent-color);
+    background: var(--primary-color);
     border-radius: 5px;
     width: 0%;
     transition: width 0.3s ease;
@@ -55,17 +55,20 @@
     text-align: center;
 }
 
-.game-question {
-    font-size: 1.4em;
-    font-weight: 600;
-    margin-bottom: 40px;
-    color: var(--text-main);
+.game-question b {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+body.dark-mode .game-question b {
+    color: var(--primary-color);
 }
 
 .game-answer-area {
     min-height: 100px;
     width: 100%;
     border-bottom: 2px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.02);
     margin-bottom: 40px;
     display: flex;
     flex-wrap: wrap;
@@ -73,6 +76,11 @@
     justify-content: center;
     align-content: flex-start;
     padding: 10px;
+    border-radius: 8px;
+}
+
+body.dark-mode .game-answer-area {
+    background: rgba(255, 255, 255, 0.05);
 }
 
 .game-word-bank {
@@ -104,9 +112,13 @@
 }
 
 .game-word.placed {
-    background: var(--accent-color);
+    background: var(--primary-color);
     color: white;
-    border-color: var(--accent-color);
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .game-word.placed {
+    color: #000;
 }
 
 .game-controls {
@@ -117,13 +129,17 @@
 .game-check-btn {
     width: 100%;
     padding: 15px;
-    background: var(--accent-color);
+    background: var(--primary-color);
     color: white;
     border: none;
     border-radius: 12px;
     font-size: 1.1em;
     font-weight: 600;
     cursor: pointer;
+}
+
+body.dark-mode .game-check-btn {
+    color: #000;
 }
 
 .game-check-btn:disabled {
@@ -147,6 +163,6 @@
 .game-score {
     font-size: 3em;
     font-weight: bold;
-    color: var(--accent-color);
+    color: var(--primary-color);
     margin: 20px 0;
 }
