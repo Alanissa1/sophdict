@@ -77,10 +77,10 @@ window.CustomLists = {
     canEditList(name) {
         const list = this.lists[name];
         if (!list) return false;
-        
+
         // If it's not locked, anyone can edit
         if (!list.locked) return true;
-        
+
         // If locked with a password, check for valid session token
         if (!list.hasPassword) return false;
         if (list.type === 'online') return !!this._getToken(name);
@@ -195,7 +195,7 @@ window.CustomLists = {
         const visibilityGroup = document.getElementById('visibilityInputGroup');
 
         if (type === 'local') {
-            pathGroup.style.display = 'block'; 
+            pathGroup.style.display = 'block';
             lockGroup.style.display = 'flex';
             if (visibilityGroup) visibilityGroup.style.display = 'none';
             document.getElementById('newListPath').value = `Local List ${Object.keys(this.lists).length + 1}`;
@@ -205,7 +205,7 @@ window.CustomLists = {
             if (visibilityGroup) visibilityGroup.style.display = 'block';
             document.getElementById('newListPath').value = '';
         }
-        
+
         setTimeout(() => this.updateFormState(true), 0);
     },
 
@@ -215,10 +215,10 @@ window.CustomLists = {
         const vis = visInput ? visInput.value : (this.currentType === 'local' ? 'local' : null);
         const lockCb = document.getElementById(`${prefix}ListLock`);
         const passInput = document.getElementById(`${prefix}ListPass`);
-        
+
         const passLabel = isNew ? passInput?.previousElementSibling : document.getElementById('editListPassLabel');
         const hasExistingPassword = !isNew && this.lists[this._currentLoadedList]?.hasPassword;
-        
+
         if (vis === 'private') {
             if (lockCb) {
                 lockCb.checked = true;
@@ -330,7 +330,7 @@ window.CustomLists = {
     async checkOnlineName(name) {
         try {
             const resp = await fetch(`/api/custom-lists?action=check&name=${encodeURIComponent(name)}`);
-            if (!resp.ok) return true; 
+            if (!resp.ok) return true;
             const data = await resp.json();
             return data.available !== false;
         } catch (e) {
@@ -339,7 +339,7 @@ window.CustomLists = {
     },
 
     async saveOnlineList(name, data) {
-         try {
+        try {
             const headers = { 'Content-Type': 'application/json' };
             // Attach session token for protected lists
             const token = this._getToken(name);
@@ -407,8 +407,8 @@ window.CustomLists = {
         this._currentLoadedList = name;
 
         // Unlock button for owner to edit read-only lists
-        const unlockBtn = (list.locked && list.hasPassword && !isAuth) ? 
-            `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px;" onclick="CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
+        const unlockBtn = (list.locked && list.hasPassword && !isAuth) ?
+            `<button class="action-btn" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--accent); margin-right: 10px; padding: 6px 5px;" onclick="CustomLists.triggerUnlock('${name}')">Unlock Edit</button>` : '';
 
         const visIcon = list.type === 'online' ? (list.visibility === 'public' ? this.icons.public : (list.visibility === 'private' ? this.icons.private : this.icons.link)) : this.icons.private;
         const lockIcon = (list.locked && list.visibility !== 'private') ? `<span style="color: var(--text-sub); opacity: 0.6; display: flex;" title="Read-only">${this.icons.editOnly}</span>` : '';
@@ -455,7 +455,7 @@ window.CustomLists = {
                 </div>
                 <div class="tags-row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; margin-top: 20px;">
                     ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
-                        list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
+                list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
                 </div>
             </div>
         `;
@@ -521,10 +521,10 @@ window.CustomLists = {
     async removeWordFromList(word, name, event) {
         if (event) event.stopPropagation();
         const list = this.lists[name];
-        
+
         // Changed to use Edit permission check
         if (!list || !this.canEditList(name)) return;
-        
+
         list.words = list.words.filter(w => w !== word);
         this.saveLocalLists();
 
@@ -555,7 +555,7 @@ window.CustomLists = {
         if (!modal || !dimmer) return;
 
         modal.querySelector('.license-title').innerText = `List Settings: ${name}`;
-        
+
         let footer = modal.querySelector('.license-footer');
         if (!footer) {
             footer = document.createElement('div');
@@ -583,7 +583,7 @@ window.CustomLists = {
                     <h3 style="color: var(--text-main); font-size: 16px; margin-bottom: 10px;">Manage Words</h3>
                     <div>
                         ${list.words.length === 0 ? '<div style="color: var(--text-sub); text-align: center;">No words in list.</div>' :
-                            list.words.map(w => `
+                list.words.map(w => `
                                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0px 5px 0px; border-bottom: 1px solid var(--border-color);">
                                     <span style="color: var(--text-main); font-weight: 500;">${w}</span>
                                     ${this.canEditList(name) ? `<button class="action-btn" style="background: #ff4b6b; padding: 4px 10px; font-size: 12px;" onclick="CustomLists.handleRemoveFromSettings('${w}', '${name}', event)">Remove</button>` : ''}
@@ -623,7 +623,7 @@ window.CustomLists = {
         const list = this.lists[name];
         const newPass = document.getElementById('editListPass').value;
         const errorDiv = document.getElementById('settings-error');
-        
+
         const visInput = document.querySelector('input[name="editListVisibility"]:checked');
         const visibility = visInput ? visInput.value : list.visibility;
         const hide = (visibility === 'private');
@@ -793,10 +793,10 @@ window.CustomLists = {
     },
 
     async fetchOnlineList(name) {
-         try {
+        try {
             const resp = await fetch(`/api/custom-lists?action=get&name=${encodeURIComponent(name)}&t=${Date.now()}`);
             if (resp.ok) return await resp.json();
-        } catch (e) {}
+        } catch (e) { }
         return null;
     },
 
@@ -897,7 +897,7 @@ window.CustomLists = {
         if (!cleanWord) return;
 
         const list = this.lists[listName];
-        
+
         // Changed to use Edit permission check
         if (!list || !this.canEditList(listName)) return;
 

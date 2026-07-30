@@ -10,9 +10,10 @@ window.RestoreSearchUI = () => {
     if (!sc || !h) return;
     sc.classList.remove('input-focused');
     if (sc.parentElement !== h) h.appendChild(sc);
-    const wi = document.getElementById('wordInput'), st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn'), bx = document.getElementById('suggestions-box');
+    const wi = document.getElementById('wordInput'), st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn'), bx = document.getElementById('suggestions-box'), gb = document.getElementById('game-start-btn');
     if (st && wi) sc.insertBefore(st, wi);
     if (ts) sc.appendChild(ts); if (pt) sc.appendChild(pt); if (bx) sc.appendChild(bx);
+    if (gb) sc.appendChild(gb);
 };
 
 window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
@@ -151,10 +152,11 @@ window.AppClearSearch = (skipPush = false) => {
             if (logo) logo.after(currentSc);
             let sb = document.querySelector('.home-settings-bar');
             if (sb) {
-                const st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn');
+                const st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn'), gb = document.getElementById('game-start-btn');
                 if (st) { sb.appendChild(st); st.style.display = ''; }
                 if (ts) { sb.appendChild(ts); ts.style.display = ''; }
                 if (pt) { sb.appendChild(pt); pt.style.display = ''; }
+                if (gb) { sb.appendChild(gb); gb.style.display = ''; }
             }
         }
         window.renderHomeLists();
@@ -181,6 +183,7 @@ window.AppClearSearch = (skipPush = false) => {
 
     // Init CustomLists BEFORE AppClearSearch so buttons appear
     if (window.CustomLists) await window.CustomLists.init();
+    if (window.GameManager) window.GameManager.init();
 
     TTSManager.init(); ModalManager.init(); KeyboardNavigator.init(); ScrollManager.init();
     const wi = document.getElementById('wordInput'), sb = document.getElementById('search-button'), ll = document.querySelector('.logo-link'), pt = document.getElementById('pinnedToggleBtn'), st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn');
