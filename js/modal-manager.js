@@ -17,7 +17,7 @@ window.ModalManager = {
         if (saved) {
             try {
                 this.settings = { ...this.settings, ...JSON.parse(saved) };
-            } catch (e) {}
+            } catch (e) { }
         }
         this.applySettings();
 
@@ -67,7 +67,7 @@ window.ModalManager = {
                     <div style="display: flex; width: max-content;">
                         <h2 class="micro-title" style="margin:0; line-height:1.2;">${word}</h2>
                     </div>
-                    <div style="display: flex; gap: 5px; font-size: 0.9em; width: max-content;">
+                    <div style="display: flex; gap: 5px; width: max-content;">
                         <span class="micro-pronunciation" style="line-height:1.2;">//</span>
                     </div>
                 </div>

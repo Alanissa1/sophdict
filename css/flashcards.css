@@ -9,7 +9,7 @@
 }
 
 .word-header .pin-btn svc {
-     display:flex;
+    display: flex;
 }
 
 
@@ -18,6 +18,7 @@
     justify-content: space-between;
     display: flex;
     width: 100%;
+    flex-wrap: wrap;
 }
 
 .word-info {
@@ -97,6 +98,7 @@
 .sn-main {
     margin-right: 0;
 }
+
 .sn-main-hidden {
     pointer-events: none !important;
     opacity: 0 !important;
@@ -105,8 +107,7 @@
 }
 
 /* Letters (a., b.) */
-.sn-letter {
-}
+.sn-letter {}
 
 .sn-letter-hidden {
     pointer-events: none !important;
@@ -116,9 +117,7 @@
 }
 
 /* Sub-numbers ((1), (2)) */
-.sn-sub {
-
-}
+.sn-sub {}
 
 .sense-divider {
     font-weight: 600;
@@ -198,7 +197,8 @@
     border-radius: 40%;
 }
 
-.tag-expand-btn svg, .tag-expand-btn svg path {
+.tag-expand-btn svg,
+.tag-expand-btn svg path {
     fill: #858585bd !important;
     background: color-mix(in srgb, var(--card-bg) 85%, transparent);
     border-radius: 50%;
@@ -228,7 +228,8 @@
 }
 
 
-.synonyms-container, .antonyms-container {
+.synonyms-container,
+.antonyms-container {
     display: flex;
     flex-wrap: wrap;
     flex-grow: 1;
@@ -241,6 +242,8 @@
     cursor: pointer;
     border: 1px solid #8787877d;
     color: #124ea1;
+    min-width: 45px;
+    text-align: center;
 }
 
 .tag:hover {
@@ -270,8 +273,8 @@
 }
 
 /* Targeted way to make the spacing smaller for definitions and examples */
-.def-text + br, 
-.example + br {
+.def-text+br,
+.example+br {
     display: block;
     content: "";
 }

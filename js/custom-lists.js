@@ -404,7 +404,7 @@ window.CustomLists = {
         document.body.classList.remove('home-state');
         container.innerHTML = `
             <div class="list-page" style="padding: 20px 0;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;flex-wrap: wrap;">
                     <div class="list-name-display" style="margin: 0; display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 24px;">
                         ${visIcon}
                         ${name}
@@ -423,12 +423,12 @@ window.CustomLists = {
                     </div>
                     <div style="display: flex;">
                         ${unlockBtn}
-                        <button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); height: 30px; width: 62px; padding: 0;" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
+                        <button class="action-btn" style="padding: 7px 5px;background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); height: 30px; width: 62px; padding: 0;" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
                     </div>
                 </div>
 
                 ${canEdit ? `
-                <div class="search-container manual-add-container" style="width: 100%; max-width: 100%; margin-bottom: 30px;">
+                <div class="search-container manual-add-container" style="width: 100%; margin-bottom: 15px;">
                     <input type="text" id="manualWordInput" placeholder="Add word manually..." autocomplete="off" readonly style="flex: 1;">
                     <button class="icon-btn" onclick="CustomLists.addManualWord('${name}')" aria-label="Add Word">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>

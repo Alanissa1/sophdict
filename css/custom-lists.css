@@ -23,8 +23,8 @@
 }
 
 #create-list-btn svg {
-  height: 24px;
-  width: 24px;
+    height: 24px;
+    width: 24px;
 }
 
 
@@ -34,7 +34,7 @@
     margin: 0 auto;
     background: var(--card-bg);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .list-option-btn {
@@ -51,8 +51,7 @@
 }
 
 
-.input-group {
-}
+.input-group {}
 
 .input-group label {
     display: block;
@@ -70,13 +69,13 @@
     border: 1px solid var(--border-color);
     background: var(--bg-color);
     color: var(--text-main);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     outline: none;
     transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .input-group input:not([type="checkbox"]):focus {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     border-color: var(--primary-color);
 }
 
@@ -137,10 +136,10 @@
 }
 
 .visibility-chip:has(input:checked) {
-    background-color: #00338d5e;
-    border-color: #1a73e8;
-    color: #1a73e8;
+    border-color: #0085ff;
+    color: #ffffff;
     z-index: 1;
+    background: #0070ff;
 }
 
 .action-btn {
@@ -163,7 +162,7 @@
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
     z-index: 2900;
     min-width: 150px;
     overflow: hidden;
