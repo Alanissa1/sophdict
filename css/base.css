@@ -710,7 +710,7 @@ body.dark-mode #ss {
 }
 
 input:checked + .slider {
-    background-color: var(--primary-color);
+    background-color: var(--primary-color) !important;
 }
 
 input:focus + .slider {

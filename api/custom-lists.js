@@ -95,6 +95,11 @@ function sanitize(data) {
 }
 
 export default async function handler(req, res) {
+    // Basic protection against direct browser visits
+    if (req.headers['sec-fetch-mode'] === 'navigate') {
+        return res.status(403).json({ error: 'Direct access not allowed' });
+    }
+
     if (!redis) {
         return res.status(503).json({ error: 'Database configuration missing. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel.' });
     }

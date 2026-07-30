@@ -58,7 +58,6 @@
     margin-bottom: 5px;
     font-size: 14px;
     color: var(--text-sub);
-    background-color: var(--card-bg);
 }
 
 .input-group input:not([type="checkbox"]) {
@@ -104,7 +103,6 @@
     border: 1px solid #dadce0;
     cursor: pointer;
     transition: all 0.2s ease;
-    background-color: #fff;
     user-select: none;
     flex: 1;
     justify-content: center;
