@@ -13,7 +13,10 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Word is required' });
     }
 
-    if (upstashUrl && upstashUrl.endsWith('/')) upstashUrl = upstashUrl.slice(0, -1);
+    if (upstashUrl) {
+        if (!upstashUrl.startsWith('http')) upstashUrl = `https://${upstashUrl}`;
+        if (upstashUrl.endsWith('/')) upstashUrl = upstashUrl.slice(0, -1);
+    }
 
     const cacheKey = `thes:${word.toLowerCase().trim()}`;
 

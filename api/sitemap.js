@@ -1,43 +1,80 @@
-export default async function handler(req, res) {
-    const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-    const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
-    const origin = 'https://www.sophdict.com'; // Change to your actual domain
+import { Redis } from '@upstash/redis'
 
-    let words = [];
+export default async function handler(req, res) {
+    let url = process.env.UPSTASH_REDIS_REST_URL;
+    if (url && !url.startsWith('http')) url = `https://${url}`;
+    if (url && url.endsWith('/')) url = url.slice(0, -1);
+
+    const redis = (url && process.env.UPSTASH_REDIS_REST_TOKEN)
+        ? new Redis({
+            url: url,
+            token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        })
+        : null;
+
+    const origin = 'https://www.sophdict.com';
+    let wordsSet = new Set();
+
     try {
-        if (upstashUrl && upstashToken) {
-            const cleanUrl = upstashUrl.replace(/\/$/, "");
-            const response = await fetch(`${cleanUrl}/smembers/all_words_index`, {
-                headers: { Authorization: `Bearer ${upstashToken}` }
-            });
-            const data = await response.json();
-            if (data && data.result) {
-                // Filter out invalid/empty entries and limit to avoid Vercel's 4.5MB response limit
-                words = data.result.filter(w => w && typeof w === 'string' && w.length > 0);
-                // Sort for determinism and better compression
-                words.sort();
+        if (redis) {
+            // 1. Get words from the main index (most efficient)
+            const indexedWords = await redis.smembers('all_words_index');
+            if (Array.isArray(indexedWords)) {
+                indexedWords.forEach(w => {
+                    if (w && typeof w === 'string') wordsSet.add(w.toLowerCase().trim());
+                });
+            }
+
+            // 2. Discover words from public lists (ensures lists are represented)
+            const listKeys = await redis.keys('list:*');
+            if (listKeys && listKeys.length > 0) {
+                // Fetch in chunks to avoid large payloads
+                const chunkSize = 50;
+                for (let i = 0; i < listKeys.length; i += chunkSize) {
+                    const chunk = listKeys.slice(i, i + chunkSize);
+                    const listDatas = await redis.mget(...chunk);
+                    listDatas.forEach(data => {
+                        if (!data) return;
+                        // Handle both stringified and parsed JSON
+                        const list = (typeof data === 'string') ? JSON.parse(data) : data;
+                        if (list && list.visibility === 'public' && Array.isArray(list.words)) {
+                            list.words.forEach(w => {
+                                const wordStr = (typeof w === 'string') ? w : w?.word;
+                                if (wordStr) wordsSet.add(wordStr.toLowerCase().trim());
+                            });
+                        }
+                    });
+                }
             }
         }
     } catch (e) {
         console.error('Sitemap fetch error:', e);
     }
 
-    // Limit to 45,000 URLs to stay within Google's 50k limit and Vercel's response size limit
+    // Filter out invalid entries, sort alphabetically, and limit to stay within Vercel/Google limits
+    const words = Array.from(wordsSet)
+        .filter(w => w && w.length > 0)
+        .sort();
+
+    // Limit to 45,000 URLs to avoid Vercel's 4.5MB response limit and Google's 50k URL limit
     const displayWords = words.slice(0, 45000);
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-        <url><loc>${origin}/</loc><priority>1.0</priority></url>
-        ${displayWords.map(word => `
-        <url>
-            <loc>${origin}/${encodeURIComponent(word.trim().toLowerCase())}</loc>
-            <changefreq>monthly</changefreq>
-            <priority>0.6</priority>
-        </url>`).join('')}
-    </urlset>`;
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>${origin}/</loc>
+        <priority>1.0</priority>
+    </url>
+    ${displayWords.map(word => `
+    <url>
+        <loc>${origin}/${encodeURIComponent(word)}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>`).join('')}
+</urlset>`;
 
     res.setHeader('Content-Type', 'text/xml');
+    // Cache for 1 hour, serve stale for 10 mins while revalidating
     res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=600');
-    res.write(sitemap);
-    res.end();
+    res.send(sitemap.trim());
 }
