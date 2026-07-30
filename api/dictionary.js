@@ -21,14 +21,19 @@ export default async function handler(req, res) {
         // 1. Try to get from Upstash Cache
         if (upstashUrl && upstashToken) {
             try {
-                const cacheRes = await fetch(upstashUrl, {
+                const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
+                const cacheRes = await fetch(pipelineUrl, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${upstashToken}` },
-                    body: JSON.stringify(["GET", cacheKey])
+                    body: JSON.stringify([
+                        ["GET", cacheKey],
+                        ["SADD", "all_words_index", word.toLowerCase().trim()]
+                    ])
                 });
                 const cacheData = await cacheRes.json();
-                if (cacheData && cacheData.result) {
-                    return res.status(200).json(JSON.parse(cacheData.result));
+                // When using pipeline, Upstash returns an array of responses: [{result: ...}, {result: ...}]
+                if (Array.isArray(cacheData) && cacheData[0] && cacheData[0].result) {
+                    return res.status(200).json(JSON.parse(cacheData[0].result));
                 }
             } catch (e) {
                 console.error('[Cache] Read error:', e);
