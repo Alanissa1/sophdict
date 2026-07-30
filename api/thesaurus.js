@@ -39,6 +39,7 @@ export default async function handler(req, res) {
                 if (Array.isArray(cacheData) && cacheData[0] && cacheData[0].result) {
                     res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
                     res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
+                    res.setHeader('X-Robots-Tag', 'noindex');
                     return res.status(200).json(JSON.parse(cacheData[0].result));
                 }
             } catch (e) {
@@ -73,6 +74,7 @@ export default async function handler(req, res) {
 
         res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
         res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
+        res.setHeader('X-Robots-Tag', 'noindex');
         res.status(200).json(data);
     } catch (error) {
         console.error(error);
