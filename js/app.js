@@ -140,7 +140,7 @@ window.AppClearSearch = (skipPush = false) => {
                 <div class="home-settings-bar"></div>
             </div>
             <div class="welcome-screen" style="padding-top: 5vh;">
-                <img src="SophDict.png" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">Search for definitions, synonyms, and more</div><div id="home-lists-root" class="home-lists-container"></div>
+                <img src="sophdict.svg" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">Search for definitions, synonyms, and more</div><div id="home-lists-root" class="home-lists-container"></div>
             </div>`;
 
         const ws = rc.querySelector('.welcome-screen'), currentSc = document.querySelector('.search-container');

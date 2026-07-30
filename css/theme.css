@@ -34,8 +34,8 @@ body.dark-mode *::-webkit-scrollbar-thumb:hover {
 body.dark-mode .header-logo,
 body.dark-mode .header-logo1,
 body.dark-mode .welcome-logo,
-body.dark-mode img[src="SophDict.png"] {
-    content: url('../SophDict2.png') !important;
+body.dark-mode img[src="sophdict.svg"] {
+    content: url('../sophdict2.svg') !important;
 }
 
 body.dark-mode a {
