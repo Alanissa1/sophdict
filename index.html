@@ -1,32 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <base href="/">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="SophDict - The Sophisticated Dictionary. Find definitions, synonyms, and more with our advanced dictionary and thesaurus tool.">
-    <meta name="keywords" content="dictionary, thesaurus, definitions, synonyms, sophisticated dictionary, SophDict, vocabulary, word search, language tool">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    
+    <!-- Enhanced Search Engine Optimization (SEO) -->
+    <meta name="description" content="SophDict is the ultimate sophisticated dictionary and thesaurus. Discover accurate definitions, rich synonyms, antonyms, audio pronunciations, etymology, and advanced vocabulary tools to elevate your language skills.">
+    <meta name="keywords" content="dictionary, thesaurus, definitions, synonyms, antonyms, sophisticated dictionary, SophDict, vocabulary builder, word search, language learning tool, English dictionary, pronunciation guide, academic words">
     <meta name="author" content="SophDict Team">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook / LinkedIn -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="./">
+    <meta property="og:site_name" content="SophDict">
     <meta property="og:title" content="SophDict - The Sophisticated Dictionary">
-    <meta property="og:description" content="Find definitions, synonyms, and more with our advanced dictionary and thesaurus tool.">
+    <meta property="og:description" content="Discover accurate definitions, rich synonyms, antonyms, audio pronunciations, and advanced vocabulary tools to elevate your language skills with SophDict.">
     <meta property="og:image" content="sophdict.svg">
+    <meta property="og:locale" content="en_US">
 
-    <!-- Twitter -->
+    <!-- Twitter / X -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="./">
     <meta property="twitter:title" content="SophDict - The Sophisticated Dictionary">
-    <meta property="twitter:description" content="Find definitions, synonyms, and more with our advanced dictionary and thesaurus tool.">
+    <meta property="twitter:description" content="Discover accurate definitions, rich synonyms, antonyms, audio pronunciations, and advanced vocabulary tools to elevate your language skills with SophDict.">
     <meta property="twitter:image" content="sophdict.svg">
 
+    <!-- Structured Data (JSON-LD) for Google Rich Results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "SophDict",
+      "alternateName": "The Sophisticated Dictionary",
+      "url": "https://sophdict.com/",
+      "description": "An advanced dictionary and thesaurus tool offering definitions, synonyms, antonyms, and audio pronunciations.",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://sophdict.com/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "SophDict",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <link rel="canonical" href="./">
-    <link rel="icon" type="image/png" sizes="577x577" href="sophdicta.png">
+    <!-- Updated PWA Icons for better OS support -->
+    <link rel="icon" type="image/png" sizes="192x192" href="sophdicta.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="sophdicta.png">
     <link rel="apple-touch-icon" href="sophdicta.png">
+    
     <title>SophDict - The Sophisticated Dictionary</title>
+    
+    <!-- CSS Dependencies -->
     <link rel="stylesheet" href="css/base.css">
     <link rel="stylesheet" href="css/search-bar.css">
     <link rel="stylesheet" href="css/flashcards.css">
@@ -44,6 +84,8 @@
     <link rel="stylesheet" href="css/game.css">
     <link rel="stylesheet" href="css/wallpaper.css">
     <link rel="stylesheet" href="css/custom-lists.css">
+    
+    <!-- PWA & Mobile Web App settings -->
     <meta name="theme-color" content="#1a73e8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -140,6 +182,7 @@
 <div id="microDimmer" class="backdrop"></div>
 <div id="scaleDimmer"></div>
 
+<!-- JavaScript Dependencies (Untouched to prevent breaking codes) -->
 <script src="js/config.js"></script>
 <script src="js/academic-list.js"></script>
 <script src="js/formal-lists.js"></script>
