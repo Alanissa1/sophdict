@@ -292,8 +292,9 @@ window.GameManager = {
         if (el.classList.contains('selected')) return;
         el.classList.add('selected');
         
-        // Hide original placeholder word element to save space on small screens
-        el.style.display = 'none';
+        // Use visibility: hidden instead of display: none to keep layout slots fixed and prevent layout shifting/centering jumps
+        el.style.visibility = 'hidden';
+        el.style.pointerEvents = 'none';
 
         const answerArea = document.getElementById('gameAnswerArea');
         const wordEl = document.createElement('div');
@@ -303,8 +304,9 @@ window.GameManager = {
         wordEl.onclick = () => {
             el.classList.remove('selected');
             
-            // Restore original placeholder visibility when un-tapped
-            el.style.display = ''; 
+            // Restore original placeholder visibility
+            el.style.visibility = '';
+            el.style.pointerEvents = '';
             wordEl.remove();
             
             this.userWords = this.userWords.filter(w => w.idx !== idx);
