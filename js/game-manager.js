@@ -260,7 +260,7 @@ window.GameManager = {
                     <span>${questionText}</span>
                 </div>
                 <div class="game-answer-area" id="gameAnswerArea" dir="${answerDir}"></div>
-                <div class="game-word-bank" dir="${answerDir}">
+                <div class="game-word-bank" dir="${answerDir}" style="display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center;">
                     ${bankWords.map((w, i) => {
                         const escapedW = w.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         return `<div class="game-word" onclick="GameManager.addWord('${escapedW}', this, ${i})">${w}</div>`;
@@ -292,9 +292,8 @@ window.GameManager = {
         if (el.classList.contains('selected')) return;
         el.classList.add('selected');
         
-        // Use visibility: hidden instead of display: none to keep layout slots fixed and prevent layout shifting/centering jumps
-        el.style.visibility = 'hidden';
-        el.style.pointerEvents = 'none';
+        // Use display: none so that empty rows/lines completely disappear and remaining words reflow cleanly
+        el.style.display = 'none';
 
         const answerArea = document.getElementById('gameAnswerArea');
         const wordEl = document.createElement('div');
@@ -304,9 +303,8 @@ window.GameManager = {
         wordEl.onclick = () => {
             el.classList.remove('selected');
             
-            // Restore original placeholder visibility
-            el.style.visibility = '';
-            el.style.pointerEvents = '';
+            // Restore original placeholder visibility and layout position
+            el.style.display = '';
             wordEl.remove();
             
             this.userWords = this.userWords.filter(w => w.idx !== idx);
