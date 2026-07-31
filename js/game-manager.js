@@ -1,4 +1,4 @@
-Window.GameManager = {
+window.GameManager = {
     examples: [],
     fullPool: [],
     usedIndices: new Set(),
@@ -259,7 +259,7 @@ Window.GameManager = {
                 <div class="game-question" dir="${questionDir}" style="display:flex; justify-content:center; align-items:center; text-align:center;">
                     <span>${questionText}</span>
                 </div>
-                <div class="game-answer-area" id="gameAnswerArea" dir="${answerDir}" style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 8px; text-align: left;"></div>
+                <div class="game-answer-area" id="gameAnswerArea" dir="${answerDir}"></div>
                 <div class="game-word-bank" dir="${answerDir}">
                     ${bankWords.map((w, i) => {
                         const escapedW = w.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
