@@ -104,8 +104,8 @@ window.GameManager = {
 
         // 3. Ensure we have translations (Prefetch if missing)
         const pool = [];
-        // Limit to first 40 potential candidates to translate
-        const candidates = allEnglishExamples.slice(0, 40);
+        // Limit to first 100 potential candidates to translate
+        const candidates = allEnglishExamples.slice(0, 100);
 
         const translationPromises = candidates.map(async (eng) => {
             const trans = await this.getTranslation(eng);
