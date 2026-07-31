@@ -205,8 +205,7 @@ window.GameManager = {
 
     splitText(text) {
         if (!text) return [];
-        // DUOLINGO-STYLE: Fix regex to only remove punctuation at boundaries (start and end of words). 
-        // This preserves internal hyphens (cd-game) and apostrophes (don't).
+        // DUOLINGO-STYLE: Preserve internal hyphens (cd-game) and apostrophes (don't)
         return text.split(/\s+/)
             .filter(w => w.length > 0)
             .map(w => w.replace(/^[.,!?;:"'()[\]{}]+|[.,!?;:"'()[\]{}]+$/g, '').trim())
@@ -220,16 +219,6 @@ window.GameManager = {
             [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
         }
         return newArr;
-    },
-    
-    // NEW FUNCTION: Handle TTS specifically for English text
-    playTTS(text, lang = 'en-US') {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // Stop current speech if speaking
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            window.speechSynthesis.speak(utterance);
-        }
     },
 
     renderQuestion() {
@@ -250,12 +239,6 @@ window.GameManager = {
         const questionDir = (!isToTrans && isRTL) ? 'rtl' : 'ltr';
         const answerDir = (isToTrans && isRTL) ? 'rtl' : 'ltr';
 
-        // Add English TTS button if the question is in English
-        const engTextEscaped = item.english.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
-        const ttsBtn = isToTrans
-            ? `<button onclick="GameManager.playTTS('${engTextEscaped}')" style="background:none; border:none; cursor:pointer; font-size:1.2em; margin-left:10px; padding:0; vertical-align:middle;" title="Listen">🔊</button>`
-            : '';
-
         overlay.innerHTML = `
             <div class="game-header">
                 <div style="display:flex; flex-direction:column;">
@@ -274,12 +257,11 @@ window.GameManager = {
             </div>
             <div class="game-content">
                 <div class="game-question" dir="${questionDir}" style="display:flex; justify-content:center; align-items:center; text-align:center;">
-                    <span>${questionText}</span> ${ttsBtn}
+                    <span>${questionText}</span>
                 </div>
                 <div class="game-answer-area" id="gameAnswerArea" dir="${answerDir}"></div>
                 <div class="game-word-bank" dir="${answerDir}">
                     ${bankWords.map((w, i) => {
-                        // FIX: Safely escape quotes inside strings so tap doesn't silently break HTML attributes
                         const escapedW = w.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         return `<div class="game-word" onclick="GameManager.addWord('${escapedW}', this, ${i})">${w}</div>`;
                     }).join('')}
@@ -290,13 +272,27 @@ window.GameManager = {
                 </div>
             </div>
         `;
+
+        // Integrate with the pre-existing TTSManager for English questions
+        if (isToTrans && window.TTSManager) {
+            const qContainer = overlay.querySelector('.game-question');
+            const ttsBtn = window.TTSManager.createButton(item.english, "tts-btn");
+            if (ttsBtn) {
+                ttsBtn.style.marginLeft = "10px";
+                ttsBtn.style.display = "inline-flex";
+                ttsBtn.style.alignItems = "center";
+                ttsBtn.style.cursor = "pointer";
+                ttsBtn.style.verticalAlign = "middle";
+                qContainer.appendChild(ttsBtn);
+            }
+        }
     },
 
     addWord(word, el, idx) {
         if (el.classList.contains('selected')) return;
         el.classList.add('selected');
         
-        // FIX: Remove original word element visually to save space on small screens
+        // Hide original placeholder word element to save space on small screens
         el.style.display = 'none';
 
         const answerArea = document.getElementById('gameAnswerArea');
@@ -307,7 +303,7 @@ window.GameManager = {
         wordEl.onclick = () => {
             el.classList.remove('selected');
             
-            // FIX: Bring original word element back visually when un-tapped
+            // Restore original placeholder visibility when un-tapped
             el.style.display = ''; 
             wordEl.remove();
             
@@ -329,26 +325,37 @@ window.GameManager = {
 
         const isToTrans = this.currentMode === 'to-translation';
         const item = this.examples[this.currentIdx];
-        const engTextEscaped = item.english.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
 
-        // Add TTS button to feedback if the correct answer they were working towards was English
-        const feedbackTTSBtn = !isToTrans
-            ? `<button onclick="GameManager.playTTS('${engTextEscaped}')" style="background:none; border:none; cursor:pointer; font-size:1.2em; vertical-align:middle; margin-left:10px;" title="Listen">🔊</button>`
-            : '';
+        feedback.innerHTML = "";
+        const textSpan = document.createElement('span');
 
         if (userStr === correctStr) {
-            feedback.innerHTML = `<span>CORRECT!</span> ${feedbackTTSBtn}`;
+            textSpan.innerText = "CORRECT!";
             feedback.className = "game-feedback correct";
             this.score++;
             checkBtn.innerText = "NEXT";
             checkBtn.style.background = "#4caf50";
             checkBtn.onclick = () => this.next();
         } else {
-            feedback.innerHTML = `<span>WRONG! Correct: ${this.correctWords.join(' ')}</span> ${feedbackTTSBtn}`;
+            textSpan.innerText = `WRONG! Correct: ${this.correctWords.join(' ')}`;
             feedback.className = "game-feedback wrong";
             checkBtn.innerText = "GOT IT";
             checkBtn.style.background = "#f44336";
             checkBtn.onclick = () => this.next();
+        }
+        feedback.appendChild(textSpan);
+
+        // Integrate with TTSManager for correct English sentence revelation in example mode
+        if (!isToTrans && window.TTSManager) {
+            const ttsBtn = window.TTSManager.createButton(item.english, "tts-btn");
+            if (ttsBtn) {
+                ttsBtn.style.marginLeft = "10px";
+                ttsBtn.style.display = "inline-flex";
+                ttsBtn.style.alignItems = "center";
+                ttsBtn.style.cursor = "pointer";
+                ttsBtn.style.verticalAlign = "middle";
+                feedback.appendChild(ttsBtn);
+            }
         }
     },
 
