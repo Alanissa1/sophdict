@@ -1,4 +1,4 @@
-window.GameManager = {
+Window.GameManager = {
     examples: [],
     fullPool: [],
     usedIndices: new Set(),
@@ -259,8 +259,8 @@ window.GameManager = {
                 <div class="game-question" dir="${questionDir}" style="display:flex; justify-content:center; align-items:center; text-align:center;">
                     <span>${questionText}</span>
                 </div>
-                <div class="game-answer-area" id="gameAnswerArea" dir="${answerDir}"></div>
-                <div class="game-word-bank" dir="${answerDir}" style="display:flex; flex-wrap:wrap; justify-content:flex-start; align-items:center;">
+                <div class="game-answer-area" id="gameAnswerArea" dir="${answerDir}" style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 8px; text-align: left;"></div>
+                <div class="game-word-bank" dir="${answerDir}">
                     ${bankWords.map((w, i) => {
                         const escapedW = w.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         return `<div class="game-word" onclick="GameManager.addWord('${escapedW}', this, ${i})">${w}</div>`;
@@ -292,7 +292,7 @@ window.GameManager = {
         if (el.classList.contains('selected')) return;
         el.classList.add('selected');
         
-        // Use display: none so that empty rows/lines completely disappear and remaining words reflow cleanly
+        // Hide original placeholder word element to save space on small screens
         el.style.display = 'none';
 
         const answerArea = document.getElementById('gameAnswerArea');
@@ -303,8 +303,8 @@ window.GameManager = {
         wordEl.onclick = () => {
             el.classList.remove('selected');
             
-            // Restore original placeholder visibility and layout position
-            el.style.display = '';
+            // Restore original placeholder visibility when un-tapped
+            el.style.display = ''; 
             wordEl.remove();
             
             this.userWords = this.userWords.filter(w => w.idx !== idx);
