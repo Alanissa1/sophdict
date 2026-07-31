@@ -105,7 +105,7 @@ window.GameManager = {
         // 3. Ensure we have translations (Prefetch if missing)
         const pool = [];
         // Limit to first 15 potential candidates to translate
-        const candidates = allEnglishExamples.slice(0, 15);
+        const candidates = allEnglishExamples.slice(0, 20);
 
         const translationPromises = candidates.map(async (eng) => {
             const trans = await this.getTranslation(eng);
@@ -243,11 +243,11 @@ window.GameManager = {
             <div class="game-header">
                 <div style="display:flex; flex-direction:column;">
                     <div style="font-weight:bold; color:var(--text-main);">Practice Mode</div>
-                    <div style="font-size:0.8em; color:var(--text-sub);">
+                    <div style="font-size:1em; color:var(--text-sub);">
                         ${isToTrans ? 'English ➔ ' + this.targetLang.toUpperCase() : this.targetLang.toUpperCase() + ' ➔ English'}
                     </div>
                 </div>
-                <div style="display:flex; gap:10px; align-items:center;">
+                <div style="display:flex; gap:10px; align-items:left;">
                     <button class="add-lang-btn" style="margin:0; padding:5px 10px; font-size:12px; border:1px solid var(--border-color); background:none; color:var(--text-main); cursor:pointer; border-radius:5px;" onclick="GameManager.toggleMode()">Switch Mode</button>
                     <button class="game-close-btn" onclick="GameManager.close()">&times;</button>
                 </div>
@@ -280,7 +280,7 @@ window.GameManager = {
             if (ttsBtn) {
                 ttsBtn.style.marginLeft = "10px";
                 ttsBtn.style.display = "inline-flex";
-                ttsBtn.style.alignItems = "center";
+                ttsBtn.style.alignItems = "left";
                 ttsBtn.style.cursor = "pointer";
                 ttsBtn.style.verticalAlign = "middle";
                 qContainer.appendChild(ttsBtn);
