@@ -52,7 +52,7 @@
     max-width: 600px;
     margin: 0 auto;
     width: 100%;
-    text-align: center;
+    text-align: left;
 }
 
 .game-question b {
@@ -73,7 +73,7 @@ body.dark-mode .game-question b {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    justify-content: center;
+    justify-content: left;
     align-content: flex-start;
     padding: 10px;
     border-radius: 8px;
@@ -87,7 +87,7 @@ body.dark-mode .game-answer-area {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    justify-content: center;
+    justify-content: left;
 }
 
 .game-word {
@@ -153,7 +153,10 @@ body.dark-mode .game-check-btn {
     height: 24px;
 }
 
-.game-feedback.correct { color: #4caf50; }
+.game-feedback.correct {
+color: #4caf50; 
+margin: -10px 0 10px 0;
+}
 .game-feedback.wrong { color: #f44336; }
 
 .game-finished {
