@@ -100,9 +100,6 @@ window.GameManager = {
             const recentWords = Object.keys(window.StatsManager?.stats?.wordCounts || {})
                 .filter(w => !data || w !== data.word)
                 .sort((a,b) => (window.StatsManager.stats.wordLastActive[b] || 0) - (window.StatsManager.stats.wordLastActive[a] || 0));
-
-            // We'd ideally want to fetch these words, but for now let's hope we have enough from current
-            // In a real scenario, we could trigger background fetches here.
         }
 
         // 3. Ensure we have translations (Prefetch if missing)
@@ -135,7 +132,6 @@ window.GameManager = {
                 const vis = UIDictionary.extractVisFromEntry(entry);
                 vis.forEach(v => {
                     if (v.t) {
-                        // Use the exact same cleaning as TranslationManager/UI
                         const clean = UIUtils.cleanMWExample(v.t, word);
                         const stripped = UIUtils.stripTags(clean);
                         examples.add(stripped);
@@ -176,19 +172,16 @@ window.GameManager = {
         const lang = this.targetLang;
         const cacheKey = `${lang}:${text}`;
 
-        // 1. Try TranslationManager's internal cache first
         if (window.TranslationManager && window.TranslationManager.cache && window.TranslationManager.cache[cacheKey]) {
             return window.TranslationManager.cache[cacheKey];
         }
 
-        // 2. Try localStorage
         const localCache = JSON.parse(localStorage.getItem('translation_cache') || '{}');
         if (localCache[cacheKey]) {
             if (window.TranslationManager) window.TranslationManager.cache[cacheKey] = localCache[cacheKey];
             return localCache[cacheKey];
         }
 
-        // 3. Perform a real fetch
         try {
             const res = await fetch(`/api/translate?lang=${lang}&text=${encodeURIComponent(text)}`);
             if (res.ok) {
@@ -212,10 +205,11 @@ window.GameManager = {
 
     splitText(text) {
         if (!text) return [];
-        // DUOLINGO-STYLE: Separate the text into words, removing punctuation
+        // DUOLINGO-STYLE: Fix regex to only remove punctuation at boundaries (start and end of words). 
+        // This preserves internal hyphens (cd-game) and apostrophes (don't).
         return text.split(/\s+/)
             .filter(w => w.length > 0)
-            .map(w => w.replace(/[.,!?;:"()]/g, '').trim())
+            .map(w => w.replace(/^[.,!?;:"'()[\]{}]+|[.,!?;:"'()[\]{}]+$/g, '').trim())
             .filter(w => w.length > 0);
     },
 
@@ -227,6 +221,16 @@ window.GameManager = {
         }
         return newArr;
     },
+    
+    // NEW FUNCTION: Handle TTS specifically for English text
+    playTTS(text, lang = 'en-US') {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Stop current speech if speaking
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            window.speechSynthesis.speak(utterance);
+        }
+    },
 
     renderQuestion() {
         const item = this.examples[this.currentIdx];
@@ -234,12 +238,23 @@ window.GameManager = {
         const progress = ((this.currentIdx) / this.examples.length) * 100;
 
         const isToTrans = this.currentMode === 'to-translation';
-        // Use cleanMWExample to handle {wi} tags and highlighting correctly
         const questionText = isToTrans ? UIUtils.cleanMWExample(item.english) : UIUtils.cleanMWExample(item.translation);
         this.correctWords = isToTrans ? item.transWords : item.engWords;
 
         this.userWords = [];
         const bankWords = this.shuffle([...this.correctWords]);
+
+        // Detect RTL languages to fix backward sentence building
+        const rtlLangs = ['ar', 'fa', 'he', 'ur'];
+        const isRTL = rtlLangs.includes(this.targetLang);
+        const questionDir = (!isToTrans && isRTL) ? 'rtl' : 'ltr';
+        const answerDir = (isToTrans && isRTL) ? 'rtl' : 'ltr';
+
+        // Add English TTS button if the question is in English
+        const engTextEscaped = item.english.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        const ttsBtn = isToTrans
+            ? `<button onclick="GameManager.playTTS('${engTextEscaped}')" style="background:none; border:none; cursor:pointer; font-size:1.2em; margin-left:10px; padding:0; vertical-align:middle;" title="Listen">🔊</button>`
+            : '';
 
         overlay.innerHTML = `
             <div class="game-header">
@@ -258,10 +273,16 @@ window.GameManager = {
                 <div class="game-progress-bar" style="width: ${progress}%"></div>
             </div>
             <div class="game-content">
-                <div class="game-question">${questionText}</div>
-                <div class="game-answer-area" id="gameAnswerArea"></div>
-                <div class="game-word-bank">
-                    ${bankWords.map((w, i) => `<div class="game-word" onclick="GameManager.addWord('${w}', this, ${i})">${w}</div>`).join('')}
+                <div class="game-question" dir="${questionDir}" style="display:flex; justify-content:center; align-items:center; text-align:center;">
+                    <span>${questionText}</span> ${ttsBtn}
+                </div>
+                <div class="game-answer-area" id="gameAnswerArea" dir="${answerDir}"></div>
+                <div class="game-word-bank" dir="${answerDir}">
+                    ${bankWords.map((w, i) => {
+                        // FIX: Safely escape quotes inside strings so tap doesn't silently break HTML attributes
+                        const escapedW = w.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                        return `<div class="game-word" onclick="GameManager.addWord('${escapedW}', this, ${i})">${w}</div>`;
+                    }).join('')}
                 </div>
                 <div class="game-feedback" id="gameFeedback"></div>
                 <div class="game-controls">
@@ -274,6 +295,9 @@ window.GameManager = {
     addWord(word, el, idx) {
         if (el.classList.contains('selected')) return;
         el.classList.add('selected');
+        
+        // FIX: Remove original word element visually to save space on small screens
+        el.style.display = 'none';
 
         const answerArea = document.getElementById('gameAnswerArea');
         const wordEl = document.createElement('div');
@@ -282,7 +306,11 @@ window.GameManager = {
         wordEl.dataset.idx = idx;
         wordEl.onclick = () => {
             el.classList.remove('selected');
+            
+            // FIX: Bring original word element back visually when un-tapped
+            el.style.display = ''; 
             wordEl.remove();
+            
             this.userWords = this.userWords.filter(w => w.idx !== idx);
             document.getElementById('gameCheckBtn').disabled = this.userWords.length === 0;
         };
@@ -299,15 +327,24 @@ window.GameManager = {
         const feedback = document.getElementById('gameFeedback');
         const checkBtn = document.getElementById('gameCheckBtn');
 
+        const isToTrans = this.currentMode === 'to-translation';
+        const item = this.examples[this.currentIdx];
+        const engTextEscaped = item.english.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+        // Add TTS button to feedback if the correct answer they were working towards was English
+        const feedbackTTSBtn = !isToTrans
+            ? `<button onclick="GameManager.playTTS('${engTextEscaped}')" style="background:none; border:none; cursor:pointer; font-size:1.2em; vertical-align:middle; margin-left:10px;" title="Listen">🔊</button>`
+            : '';
+
         if (userStr === correctStr) {
-            feedback.innerText = "CORRECT!";
+            feedback.innerHTML = `<span>CORRECT!</span> ${feedbackTTSBtn}`;
             feedback.className = "game-feedback correct";
             this.score++;
             checkBtn.innerText = "NEXT";
             checkBtn.style.background = "#4caf50";
             checkBtn.onclick = () => this.next();
         } else {
-            feedback.innerText = `WRONG! Correct: ${this.correctWords.join(' ')}`;
+            feedback.innerHTML = `<span>WRONG! Correct: ${this.correctWords.join(' ')}</span> ${feedbackTTSBtn}`;
             feedback.className = "game-feedback wrong";
             checkBtn.innerText = "GOT IT";
             checkBtn.style.background = "#f44336";
@@ -356,4 +393,4 @@ window.GameManager = {
     }
 };
 
-GameManager.init();
+window.GameManager.init();
