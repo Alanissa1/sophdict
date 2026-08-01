@@ -12,6 +12,45 @@ window.GameManager = {
     init() {
         this.targetLang = localStorage.getItem('translation_target_lang') || 'tr';
         this.createOverlay();
+        window.addEventListener('popstate', () => this.handleRoute());
+
+        // Wait for AppSearch to be ready before handling the initial route
+        if (window.AppSearch) {
+            this.handleRoute();
+        } else {
+            const check = setInterval(() => {
+                if (window.AppSearch) {
+                    clearInterval(check);
+                    this.handleRoute();
+                }
+            }, 50);
+        }
+    },
+
+    handleRoute() {
+        const path = window.location.pathname;
+        const match = path.match(/^\/([^/]+)\/cardsgame\/?$/);
+        if (match) {
+            const word = decodeURIComponent(match[1]);
+            const currentData = window._lastData;
+
+            if (currentData && currentData.word === word) {
+                this.start(currentData, this.currentMode, false, true);
+            } else {
+                // Fetch data first using AppSearch to ensure UI states are set
+                if (window.AppSearch) {
+                    window.AppSearch(word, true, true).then(success => {
+                        if (success) {
+                            this.start(window._lastData, this.currentMode, false, true);
+                        }
+                    });
+                }
+            }
+        } else {
+            if (document.getElementById('gameOverlay')?.style.display === 'flex') {
+                this.close(true);
+            }
+        }
     },
 
     createOverlay() {
@@ -22,7 +61,7 @@ window.GameManager = {
         document.body.appendChild(overlay);
     },
 
-    async start(data, mode = 'to-translation', isAppend = false) {
+    async start(data, mode = 'to-translation', isAppend = false, isHistoryNav = false) {
         // 1. Determine the active translation language (only if not appending)
         if (!isAppend) {
             let activeLang = null;
@@ -43,6 +82,13 @@ window.GameManager = {
             this.targetLang = activeLang;
             this.currentMode = mode;
             this.usedIndices = new Set();
+        }
+
+        if (!isAppend && !isHistoryNav) {
+            const word = data?.word || localStorage.getItem('lastWord');
+            if (word) {
+                window.history.pushState({ game: true, word, mode }, "", `/${encodeURIComponent(word)}/cardsgame`);
+            }
         }
 
         const loader = document.getElementById('loader');
@@ -104,8 +150,8 @@ window.GameManager = {
 
         // 3. Ensure we have translations (Prefetch if missing)
         const pool = [];
-        // Limit to first 40 potential candidates to translate
-        const candidates = allEnglishExamples.slice(0, 40);
+        // Limit to first 20 potential candidates to translate
+        const candidates = allEnglishExamples.slice(0, 20);
 
         const translationPromises = candidates.map(async (eng) => {
             const trans = await this.getTranslation(eng);
@@ -266,6 +312,8 @@ window.GameManager = {
                         return `<div class="game-word" onclick="GameManager.addWord('${escapedW}', this, ${i})">${w}</div>`;
                     }).join('')}
                 </div>
+            </div>
+            <div class="game-footer">
                 <div class="game-feedback" id="gameFeedback"></div>
                 <div class="game-controls">
                     <button class="game-check-btn" id="gameCheckBtn" onclick="GameManager.check()" disabled>CHECK</button>
@@ -376,22 +424,34 @@ window.GameManager = {
             <div class="game-header">
                 <button class="game-close-btn" onclick="GameManager.close()">&times;</button>
             </div>
-            <div class="game-content">
+            <div class="game-content" style="justify-content: center;">
                 <div class="game-finished">
                     <h2 style="color:var(--text-main);">Practice Finished!</h2>
                     <div class="game-score">${this.score} / ${this.usedIndices.size}</div>
                     <div style="margin-bottom:30px; color:var(--text-sub);">Great job! You are improving your vocabulary.</div>
-                    <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
-                        ${hasMore ? `<button class="game-check-btn" onclick="GameManager.start(null, '${this.currentMode}', true)">PRACTICE 10 MORE</button>` : ''}
-                        <button class="game-check-btn" style="background:var(--bg-color); color:var(--text-main); border:1px solid var(--border-color);" onclick="GameManager.close()">RETURN TO DICTIONARY</button>
-                    </div>
+                </div>
+            </div>
+            <div class="game-footer">
+                <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
+                    ${hasMore ? `<button class="game-check-btn" onclick="GameManager.start(null, '${this.currentMode}', true)">PRACTICE 10 MORE</button>` : ''}
+                    <button class="game-check-btn" style="background:var(--bg-color); color:var(--text-main); border:1px solid var(--border-color);" onclick="GameManager.close()">RETURN TO DICTIONARY</button>
                 </div>
             </div>
         `;
     },
 
-    close() {
+    close(isHistoryNav = false) {
         document.getElementById('gameOverlay').style.display = 'none';
+        if (!isHistoryNav) {
+            const word = localStorage.getItem('lastWord');
+            if (window.history.state?.game) {
+                window.history.back();
+            } else if (word) {
+                window.history.pushState({ word }, "", `/${encodeURIComponent(word)}`);
+            } else {
+                window.history.pushState({}, "", "/");
+            }
+        }
     },
 
     toggleMode() {

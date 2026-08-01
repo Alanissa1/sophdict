@@ -161,7 +161,7 @@
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
-        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport') return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
 
         // Open empty page first as requested
         if (window.AppClearSearch) window.AppClearSearch(true);
@@ -201,7 +201,7 @@
     window.addEventListener('popstate', (e) => {
         const path = window.location.pathname.substring(1);
 
-        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport') return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
 
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
