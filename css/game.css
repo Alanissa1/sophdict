@@ -62,7 +62,7 @@
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 0 17px 0;
     background: var(--bg-color);
     border-top: 1px solid var(--border-color);
     box-sizing: border-box;
@@ -123,8 +123,11 @@ body.dark-mode .game-answer-area {
 }
 
 .game-word.selected {
-    opacity: 0.3;
+    background: var(--border-color);
+    border-color: var(--border-color);
+    opacity: 0.2;
     pointer-events: none;
+    color: transparent;
 }
 
 .game-word.placed {

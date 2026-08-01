@@ -127,6 +127,7 @@ window.GameManager = {
             if (!isAppend) this.score = 0;
 
             document.getElementById('gameOverlay').style.display = 'flex';
+            if (window.UIUtils) UIUtils.updateSharedDimmer();
             this.renderQuestion();
         } finally {
             if (loader) loader.style.display = 'none';
@@ -340,9 +341,6 @@ window.GameManager = {
         if (el.classList.contains('selected')) return;
         el.classList.add('selected');
         
-        // Hide original placeholder word element to save space on small screens
-        el.style.display = 'none';
-
         const answerArea = document.getElementById('gameAnswerArea');
         const wordEl = document.createElement('div');
         wordEl.className = 'game-word placed';
@@ -351,8 +349,6 @@ window.GameManager = {
         wordEl.onclick = () => {
             el.classList.remove('selected');
             
-            // Restore original placeholder visibility when un-tapped
-            el.style.display = ''; 
             wordEl.remove();
             
             this.userWords = this.userWords.filter(w => w.idx !== idx);
@@ -442,6 +438,7 @@ window.GameManager = {
 
     close(isHistoryNav = false) {
         document.getElementById('gameOverlay').style.display = 'none';
+        if (window.UIUtils) UIUtils.updateSharedDimmer();
         if (!isHistoryNav) {
             const word = localStorage.getItem('lastWord');
             if (window.history.state?.game) {
