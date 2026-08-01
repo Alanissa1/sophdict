@@ -75,7 +75,7 @@ window.GameManager = {
             }
 
             if (activeLang === 'en') {
-                alert("Practice mode is only available when translating to a non-English language.");
+                alert(window.UII18n ? window.UII18n.get('practiceEnError', activeLang) : "Practice mode is only available when translating to a non-English language.");
                 return;
             }
 
@@ -102,7 +102,7 @@ window.GameManager = {
             if (!isAppend) {
                 this.fullPool = await this.preparePool(data);
                 if (this.fullPool.length === 0) {
-                    alert("Not enough examples found to practice! Try searching for common words first.");
+                    alert(window.UII18n ? window.UII18n.get('practiceNoExamples', this.targetLang) : "Not enough examples found to practice! Try searching for common words first.");
                     return;
                 }
             }
@@ -110,7 +110,7 @@ window.GameManager = {
             // Pick 10 unused examples
             const available = this.fullPool.filter((_, i) => !this.usedIndices.has(i));
             if (available.length === 0) {
-                alert("No more new examples found for this session!");
+                alert(window.UII18n ? window.UII18n.get('practiceNoMore', this.targetLang) : "No more new examples found for this session!");
                 if (isAppend) return;
             }
 
@@ -286,16 +286,19 @@ window.GameManager = {
         const questionDir = (!isToTrans && isRTL) ? 'rtl' : 'ltr';
         const answerDir = (isToTrans && isRTL) ? 'rtl' : 'ltr';
 
+        const lang = this.targetLang;
+        const t = (key) => window.UII18n ? window.UII18n.get(key, lang) : key;
+
         overlay.innerHTML = `
             <div class="game-header">
                 <div style="display:flex; flex-direction:column;">
-                    <div style="font-weight:bold; color:var(--text-main);">Practice Mode</div>
+                    <div style="font-weight:bold; color:var(--text-main);">${t('practiceMode')}</div>
                     <div style="font-size:1em; color:var(--text-sub);">
                         ${isToTrans ? 'English ➔ ' + this.targetLang.toUpperCase() : this.targetLang.toUpperCase() + ' ➔ English'}
                     </div>
                 </div>
                 <div style="display:flex; gap:10px; align-items:left;">
-                    <button class="add-lang-btn" style="margin:0; padding:5px 10px; font-size:12px; border:1px solid var(--border-color); background:none; color:var(--text-main); cursor:pointer; border-radius:5px;" onclick="GameManager.toggleMode()">Switch Mode</button>
+                    <button class="add-lang-btn" style="margin:0; padding:5px 10px; font-size:12px; border:1px solid var(--border-color); background:none; color:var(--text-main); cursor:pointer; border-radius:5px;" onclick="GameManager.toggleMode()">${t('switchMode')}</button>
                     <button class="game-close-btn" onclick="GameManager.close()">&times;</button>
                 </div>
             </div>
@@ -317,7 +320,7 @@ window.GameManager = {
             <div class="game-footer">
                 <div class="game-feedback" id="gameFeedback"></div>
                 <div class="game-controls">
-                    <button class="game-check-btn" id="gameCheckBtn" onclick="GameManager.check()" disabled>CHECK</button>
+                    <button class="game-check-btn" id="gameCheckBtn" onclick="GameManager.check()" disabled>${t('check')}</button>
                 </div>
             </div>
         `;
@@ -375,17 +378,20 @@ window.GameManager = {
         feedback.innerHTML = "";
         const textSpan = document.createElement('span');
 
+        const lang = this.targetLang;
+        const t = (key) => window.UII18n ? window.UII18n.get(key, lang) : key;
+
         if (userStr === correctStr) {
-            textSpan.innerText = "CORRECT!";
+            textSpan.innerText = t('correct');
             feedback.className = "game-feedback correct";
             this.score++;
-            checkBtn.innerText = "NEXT";
+            checkBtn.innerText = t('next');
             checkBtn.style.background = "#4caf50";
             checkBtn.onclick = () => this.next();
         } else {
-            textSpan.innerText = `WRONG! Correct: ${this.correctWords.join(' ')}`;
+            textSpan.innerText = `${t('wrong')} ${this.correctWords.join(' ')}`;
             feedback.className = "game-feedback wrong";
-            checkBtn.innerText = "GOT IT";
+            checkBtn.innerText = t('gotIt');
             checkBtn.style.background = "#f44336";
             checkBtn.onclick = () => this.next();
         }
@@ -419,6 +425,8 @@ window.GameManager = {
     renderFinished() {
         const overlay = document.getElementById('gameOverlay');
         const hasMore = this.fullPool.length > this.usedIndices.size;
+        const lang = this.targetLang;
+        const t = (key) => window.UII18n ? window.UII18n.get(key, lang) : key;
 
         overlay.innerHTML = `
             <div class="game-header">
@@ -426,15 +434,15 @@ window.GameManager = {
             </div>
             <div class="game-content" style="justify-content: center;">
                 <div class="game-finished">
-                    <h2 style="color:var(--text-main);">Practice Finished!</h2>
+                    <h2 style="color:var(--text-main);">${t('practiceFinished')}</h2>
                     <div class="game-score">${this.score} / ${this.usedIndices.size}</div>
-                    <div style="margin-bottom:30px; color:var(--text-sub);">Great job! You are improving your vocabulary.</div>
+                    <div style="margin-bottom:30px; color:var(--text-sub);">${t('practiceFinishedHint')}</div>
                 </div>
             </div>
             <div class="game-footer">
                 <div style="display:flex; flex-direction:column; gap:10px; width:100%;">
-                    ${hasMore ? `<button class="game-check-btn" onclick="GameManager.start(null, '${this.currentMode}', true)">PRACTICE 10 MORE</button>` : ''}
-                    <button class="game-check-btn" style="background:var(--bg-color); color:var(--text-main); border:1px solid var(--border-color);" onclick="GameManager.close()">RETURN TO DICTIONARY</button>
+                    ${hasMore ? `<button class="game-check-btn" onclick="GameManager.start(null, '${this.currentMode}', true)">${t('practiceMore')}</button>` : ''}
+                    <button class="game-check-btn" style="background:var(--bg-color); color:var(--text-main); border:1px solid var(--border-color);" onclick="GameManager.close()">${t('returnToDictionary')}</button>
                 </div>
             </div>
         `;

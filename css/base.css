@@ -717,6 +717,10 @@ input:checked + .slider {
     background-color: var(--primary-color) !important;
 }
 
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
 input:focus + .slider {
     box-shadow: 0 0 1px var(--primary-color);
 }

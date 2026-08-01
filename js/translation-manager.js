@@ -44,11 +44,18 @@ window.TranslationManager = {
 
     init() {
         this.isEnabled = localStorage.getItem('translation_enabled') === 'true';
-        this.targetLanguage = localStorage.getItem('translation_target_lang') || 'tr';
+        this.targetLanguage = localStorage.getItem('translation_target_lang') || 'en';
         try {
             const savedCache = localStorage.getItem('translation_cache');
             if (savedCache) this.cache = JSON.parse(savedCache);
         } catch (e) { this.cache = {}; }
+
+        // Wait for DOM to be ready for initial localization
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.localizeUI());
+        } else {
+            this.localizeUI();
+        }
     },
 
     toggleEnabled(enabled) {
@@ -65,8 +72,74 @@ window.TranslationManager = {
     setLanguage(langCode) {
         this.targetLanguage = langCode;
         localStorage.setItem('translation_target_lang', langCode);
+        this.localizeUI();
         // Clear cache when language changes? Or just keep it scoped by lang?
         // Let's just keep it, but the buttons will need to re-fetch if they want new lang.
+    },
+
+    localizeUI() {
+        if (!window.UII18n) return;
+
+        const lang = this.targetLanguage;
+
+        // Update Search Input
+        const wordInput = document.getElementById('wordInput');
+        if (wordInput) wordInput.placeholder = window.UII18n.get('searchPlaceholder', lang);
+
+        // Update Loader Text
+        const loaderText = document.getElementById('loaderText');
+        if (loaderText) loaderText.innerText = window.UII18n.get('searching', lang);
+
+        // Update Favorites Title in Panel
+        const pinnedPanel = document.getElementById('pinnedPanel');
+        if (pinnedPanel) {
+            const title = pinnedPanel.querySelector('div[style*="font-weight:bold"]');
+            if (title) title.innerText = window.UII18n.get('favorites', lang);
+        }
+
+        // Update Word Lists Title in Side Panel
+        const sideListHeader = document.querySelector('.side-list-header span');
+        if (sideListHeader) sideListHeader.innerText = window.UII18n.get('wordLists', lang);
+
+        // Update Footer elements
+        const footer = document.querySelector('footer');
+        if (footer) {
+            const poweredText = footer.querySelector('.powered');
+            if (poweredText) {
+                // Keep the SVG and Link, just change text node
+                const link = poweredText.querySelector('a');
+                poweredText.childNodes[0].textContent = window.UII18n.get('definitionsPoweredBy', lang) + ' ';
+            }
+
+            const licenseBtn = footer.querySelector('.license-trigger[onclick*="LicenseManager"]');
+            if (licenseBtn) licenseBtn.innerText = window.UII18n.get('viewLicense', lang);
+
+            const privacyBtn = footer.querySelector('.license-trigger[onclick*="PrivacyManager"]');
+            if (privacyBtn) privacyBtn.innerText = window.UII18n.get('privacyPolicy', lang);
+
+            const feedbackBtn = document.getElementById('feedback-support-link');
+            if (feedbackBtn) feedbackBtn.innerText = window.UII18n.get('feedbackSupport', lang);
+        }
+
+        // Update Welcome/Home screens if they exist
+        const welcomeTitle = document.querySelector('.welcome-text');
+        if (welcomeTitle) welcomeTitle.innerText = window.UII18n.get('welcomeTitle', lang);
+
+        const welcomeHint = document.querySelector('.welcome-hint');
+        if (welcomeHint) welcomeHint.innerText = window.UII18n.get('welcomeHintText', lang);
+
+        // Update labels in dynamic content if currently rendered
+        this.updateGlobalVisibility();
+
+        // If we are on home screen, re-render home lists to update their titles
+        if (document.body.classList.contains('home-state') && window.renderHomeLists) {
+            window.renderHomeLists();
+        }
+
+        // If side list is open, re-render it
+        if (document.getElementById('sideListPanel')?.classList.contains('active') && window.renderSideListContent) {
+            window.renderSideListContent();
+        }
     },
 
     updateGlobalVisibility() {

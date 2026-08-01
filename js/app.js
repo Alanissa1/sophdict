@@ -41,8 +41,8 @@ window.renderSideListContent = () => {
 
     const deleteControl = isDeleteMode ? `
         <div style="display: flex; gap: 5px; width: 100%; margin-top: 10px;">
-            <button class="action-btn" onclick="CustomLists.toggleDeleteMode()" style="flex: 1; padding: 10px; border-radius: 12px; background: var(--accent);">Save</button>
-            <button class="action-btn" onclick="CustomLists.cancelDeleteMode()" style="flex: 1; padding: 10px; border-radius: 12px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 15px;">Cancel</button>
+            <button class="action-btn" onclick="CustomLists.toggleDeleteMode()" style="flex: 1; padding: 10px; border-radius: 12px; background: var(--accent);">${window.UII18n ? window.UII18n.get('save') : 'Save'}</button>
+            <button class="action-btn" onclick="CustomLists.cancelDeleteMode()" style="flex: 1; padding: 10px; border-radius: 12px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 15px;">${window.UII18n ? window.UII18n.get('cancel') : 'Cancel'}</button>
         </div>
     ` : `
         <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -129,8 +129,9 @@ window.renderHomeLists = () => {
     const ls = Object.entries(stats.wordLastActive || {}).filter(([w]) => !stats.ignoredWords.includes(w)).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
     const lt = Object.entries(stats.tagLastActive || {}).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
     let h = '';
-    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" onclick="window.AppSearch('${w}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${w}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
-    if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Opened Tags</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" onclick="window.ModalManager.show('${t}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${t}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
+    const lang = window.TranslationManager?.targetLanguage || 'en';
+    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">${window.UII18n ? window.UII18n.get('lastSearched', lang) : 'Last Searched'}</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" onclick="window.AppSearch('${w}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${w}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
+    if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">${window.UII18n ? window.UII18n.get('lastOpenedTags', lang) : 'Last Opened Tags'}</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" onclick="window.ModalManager.show('${t}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${t}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
     root.innerHTML = h;
 };
 
@@ -160,12 +161,15 @@ window.AppClearSearch = (skipPush = false) => {
 
     if (wordInput) wordInput.value = '';
     if (rc) {
+        const lang = window.TranslationManager?.targetLanguage || 'en';
+        const welcomeText = window.UII18n ? window.UII18n.get('searchPlaceholder', lang).replace('...', '') : 'Search for definitions, synonyms, and more';
+
         rc.innerHTML = `
             <button class="side-list-toggle-btn" onclick="window.toggleSideList()" aria-label="Word Lists">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
             </button>
             <div class="welcome-screen" style="padding-top: 5vh;">
-                <img src="sophdict.svg" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">Search for definitions, synonyms, and more</div><div id="home-lists-root" class="home-lists-container"></div>
+                <img src="sophdict.svg" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">${welcomeText}</div><div id="home-lists-root" class="home-lists-container"></div>
             </div>`;
 
         const ws = rc.querySelector('.welcome-screen'), currentSc = document.querySelector('.search-container');
