@@ -22,7 +22,7 @@ window.UIEntry = {
                             </div>
                         </div>
                         <div style="padding:40px; text-align:center; color:var(--text-sub);">
-                            ${data.error === 'Network error' ? (window.UII18n ? window.UII18n.get('networkError') : 'Network error. Please check your connection.') : (window.UII18n ? window.UII18n.get('wordNotFound') : 'Word not found in dictionary.')}
+                            ${data.error === 'Network error' ? 'Network error. Please check your connection.' : 'Word not found in dictionary.'}
                         </div>
                     `;
                     const pronRow = targetContainer.querySelector('.pron-row');
@@ -40,10 +40,9 @@ window.UIEntry = {
             const isPinned = await DBManager.isPinned(word);
             const isAcademic = window.ACADEMIC_WORDS && window.ACADEMIC_WORDS.has(word.toLowerCase());
 
-            const lang = window.TranslationManager?.targetLanguage || 'en';
             let levelLabel = "";
             let levelColor = "";
-            if (isAcademic) { levelLabel = window.UII18n ? window.UII18n.get('academic', lang) : "Academic"; levelColor = "#e1364f"; }
+            if (isAcademic) { levelLabel = "Academic"; levelColor = "#e1364f"; }
             else if (window.C2_WORDS && window.C2_WORDS.has(word.toLowerCase())) { levelLabel = "C2"; levelColor = "#4a148c"; }
             else if (window.C1_WORDS && window.C1_WORDS.has(word.toLowerCase())) { levelLabel = "C1"; levelColor = "#1a237e"; }
             else if (window.B2_WORDS && window.B2_WORDS.has(word.toLowerCase())) { levelLabel = "B2"; levelColor = "#01579b"; }
@@ -74,15 +73,15 @@ window.UIEntry = {
                             <div style="display:flex; flex-direction:column; align-items:flex-end;">
                                 <div id="offline-status-container" style="display:flex; align-items:baseline; gap:5px;">
                                     <div id="page-fetch-status" class="fetch-progress-meter" style="font-weight: bold; font-size: 10px; margin: -10px 0 -10px 0"></div>
-                                    <span style="font-size:12px; color:var(--text-sub);">${window.UII18n ? window.UII18n.get('wordsOffline', lang) : 'words offline'}</span>
+                                    <span style="font-size:12px; color:var(--text-sub);">words offline</span>
                                 </div>
                                 <div style="display:flex; align-items:center;">
                                     <div id="fetch-ui-container" class="fetch-ui-container">
-                                        <button class="icon-btn fetch-btn" title="${window.UII18n ? window.UII18n.get('downloadAllWords', lang) : 'Download all words from tags'}" onclick="PreFetcher.showInput()">
+                                        <button class="icon-btn fetch-btn" title="Download all words from tags" onclick="PreFetcher.showInput()">
                                             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#1f1f1f"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
                                         </button>
                                     </div>
-                                    <button class="icon-btn" title="${window.UII18n ? window.UII18n.get('practiceExamples', lang) : 'Practice Examples'}" onclick="GameManager.start(window._lastData)" style="margin-right: 5px;">
+                                    <button class="icon-btn" title="Practice Examples" onclick="GameManager.start(window._lastData)" style="margin-right: 5px;">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="m608-368 46-166-142-98-46 166 142 98ZM160-207l-33-16q-31-13-42-44.5t3-62.5l72-156v279Zm160 87q-33 0-56.5-24T240-201v-239l107 294q3 7 5 13.5t7 12.5h-39Zm206-5q-31 11-62-3t-42-45L245-662q-11-31 3-61.5t45-41.5l301-110q31-11 61.5 3t41.5 45l178 489q11 31-3 61.5T827-235L526-125Zm-28-75 302-110-179-490-301 110 178 490Zm62-300Z"/></svg>
                                     </button>
                                     <span class="pin-btn-main"></span>
@@ -179,7 +178,7 @@ window.UIEntry = {
                 }
 
                 let html = UIDictionary.generateHtml(data, targetContext, true);
-                html += `<button id="full-page-btn" class="view-full-btn">${window.UII18n ? window.UII18n.get('viewFullMainPage', lang) : 'View Full Main Page'}</button>`;
+                html += `<button id="full-page-btn" class="view-full-btn">View Full Main Page</button>`;
                 targetContainer.innerHTML = html;
                 PreFetcher.updatePageStatus(); // Initialize persistent meter
 

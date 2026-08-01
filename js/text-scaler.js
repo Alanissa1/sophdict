@@ -356,9 +356,6 @@ window.TextScaler = {
         const container = document.getElementById('language-section-container');
         if (!container) return;
 
-        const lang = window.TranslationManager?.targetLanguage || 'en';
-        const t = (key) => window.UII18n ? window.UII18n.get(key, lang) : key;
-
         if (this.voices.length === 0) {
             container.innerHTML = `<div class="settings-section-divider"></div><div style="text-align:center; padding:10px; color:gray; font-size:12px;">Loading voices...</div>`;
             return;
@@ -390,7 +387,7 @@ window.TextScaler = {
 
         container.innerHTML = `
             <div class="settings-section-divider"></div>
-            <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-bottom:1px;">${t('languages')}</div>
+            <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-bottom:1px;">Languages</div>
             <div id="added-languages-list">
                 ${languagesToShow.map(lang => {
                     const isCurrentLang = currentSelectedLocale === lang.locale;
@@ -416,8 +413,8 @@ window.TextScaler = {
                 }).join('')}
             </div>
             <div style="display:flex; gap:10px;">
-                <button class="add-lang-btn" style="flex:1;" onclick="window.TextScaler.showAllLanguages()">+ ${t('addLanguage')}</button>
-                <button class="add-lang-btn" style="flex:1; border-color:#ff4b6b; color:#ff4b6b;" onclick="window.TextScaler.showRemoveLanguages()">- ${t('removeLanguage')}</button>
+                <button class="add-lang-btn" style="flex:1;" onclick="window.TextScaler.showAllLanguages()">+ Add Language</button>
+                <button class="add-lang-btn" style="flex:1; border-color:#ff4b6b; color:#ff4b6b;" onclick="window.TextScaler.showRemoveLanguages()">- Remove Language</button>
             </div>
         `;
     },
@@ -445,8 +442,6 @@ window.TextScaler = {
     showRemoveLanguages() {
         const removeList = document.getElementById('removeLangList');
         const content = removeList.querySelector('.remove-list-content');
-        const lang = window.TranslationManager?.targetLanguage || 'en';
-        const t = (key) => window.UII18n ? window.UII18n.get(key, lang) : key;
 
         const languagesInList = [];
         const seenLocales = new Set();
@@ -461,7 +456,7 @@ window.TextScaler = {
         content.innerHTML = languagesInList.map(lang => `
             <div class="lang-item" style="color:#ff4b6b; display:flex; justify-content:space-between;" onclick="window.TextScaler.performRemoveLanguage('${lang.locale}')">
                 <span>${lang.display}</span>
-                <span><b>${t('removeLanguage').split(' ')[0]}</b></span>
+                <span><b>Remove</b></span>
             </div>
         `).join('');
 
@@ -654,12 +649,9 @@ window.TextScaler = {
             document.body.appendChild(control);
         }
 
-        const lang = window.TranslationManager?.targetLanguage || 'en';
-        const t = (key) => window.UII18n ? window.UII18n.get(key, lang) : key;
-
         control.innerHTML = `
             <div class="settings-scroll-area">
-                <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-bottom:2px;">${t('textSize')}</div>
+                <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-bottom:2px;">Text Size</div>
                 <div class="scale-input-container">
                     <button class="scale-btn" id="scale-down">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M188-438v-86h584v86H188Z"/></svg>
@@ -671,10 +663,10 @@ window.TextScaler = {
                 </div>
                 <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:2px;">
                     <div style="font-weight:bold; color:var(--primary-color);" class="scale-label">${Math.round(this.scale * 100)}%</div>
-                    <button class="reset-scale-btn" id="reset-scale" style="background:none; border:1px solid var(--border-color); color:var(--text-sub); border-radius:4px; padding:2px 8px; font-size:12px; cursor:pointer;">${t('reset')}</button>
+                    <button class="reset-scale-btn" id="reset-scale" style="background:none; border:1px solid var(--border-color); color:var(--text-sub); border-radius:4px; padding:2px 8px; font-size:12px; cursor:pointer;">RESET</button>
                 </div>
 
-                <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-bottom:2px;">${t('speechSpeed')}</div>
+                <div style="font-weight:bold; color:var(--text-main); font-size:14px; margin-bottom:2px;">Speech Speed</div>
                 <div class="scale-input-container">
                     <button class="scale-btn" id="speed-down">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M188-438v-86h584v86H188Z"/></svg>
@@ -686,7 +678,7 @@ window.TextScaler = {
                 </div>
                 <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:2px;">
                     <div style="font-weight:bold; color:var(--primary-color); font-six-size:18px" class="speed-label">${this.speechRate.toFixed(1)}x</div>
-                    <button class="reset-scale-btn" id="reset-speed" style="background:none; border:1px solid var(--border-color); color:var(--text-sub); border-radius:4px; padding:2px 8px; font-size:12px; cursor:pointer;">${t('reset')}</button>
+                    <button class="reset-scale-btn" id="reset-speed" style="background:none; border:1px solid var(--border-color); color:var(--text-sub); border-radius:4px; padding:2px 8px; font-size:12px; cursor:pointer;">RESET</button>
                 </div>
 
                 <div id="language-section-container"></div>
@@ -694,8 +686,8 @@ window.TextScaler = {
                 <div class="settings-section-divider"></div>
                 <div class="input-group checkbox-row" style="margin-bottom: 10px;">
                     <div style="display:flex; flex-direction:column;">
-                        <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${t('offlineFirst')}</span>
-                        <span style="font-size:11px; color:var(--text-sub);">${t('offlineFirstHint')}</span>
+                        <span style="font-weight:bold; color:var(--text-main); font-size:14px;">Offline First</span>
+                        <span style="font-size:11px; color:var(--text-sub);">Prioritize local cache for speed. (Updates disabled while ON)</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="offlineFirstToggle">
@@ -707,7 +699,7 @@ window.TextScaler = {
 
                 <div class="settings-section-translation" style="margin-top: 10px; display:none;">
                     <div class="input-group checkbox-row">
-                        <span style="font-weight:bold; color:var(--text-main); font-size:14px;">${t('modalSliding')}</span>
+                        <span style="font-weight:bold; color:var(--text-main); font-size:14px;">Modal Sliding</span>
                         <label class="switch">
                             <input type="checkbox" id="modalSlidingToggle" ${window.ModalManager && window.ModalManager.settings.slidingEnabled ? 'checked' : ''}>
                             <span class="slider"></span>
@@ -723,9 +715,9 @@ window.TextScaler = {
             <!-- Full Language Selection List -->
             <div class="full-lang-list" id="fullLangList">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                    <div style="font-weight:bold; font-size:16px;">${t('addLanguage')}</div>
+                    <div style="font-weight:bold; font-size:16px;">Add Language</div>
                     <div style="display:flex; align-items:center; gap:10px;">
-                        <button class="refresh-list-btn" onclick="window.TextScaler.refreshLanguageList()" style="background:none; border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; padding:2px 8px; font-size:12px; cursor:pointer;">${t('refresh')}</button>
+                        <button class="refresh-list-btn" onclick="window.TextScaler.refreshLanguageList()" style="background:none; border:1px solid var(--border-color); color:var(--text-main); border-radius:4px; padding:2px 8px; font-size:12px; cursor:pointer;">Refresh</button>
                         <span class="micro-close" style="font-size:24px; cursor:pointer;" onclick="document.getElementById('fullLangList').classList.remove('show')">&times;</span>
                     </div>
                 </div>
@@ -735,7 +727,7 @@ window.TextScaler = {
             <!-- Remove Language Selection List -->
             <div class="full-lang-list" id="removeLangList">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                    <div style="font-weight:bold; font-size:16px; color:#ff4b6b;">${t('removeLanguage')}</div>
+                    <div style="font-weight:bold; font-size:16px; color:#ff4b6b;">Remove Language</div>
                     <span class="micro-close" style="font-size:24px; cursor:pointer;" onclick="document.getElementById('removeLangList').classList.remove('show')">&times;</span>
                 </div>
                 <div class="remove-list-content"></div>
