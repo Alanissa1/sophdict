@@ -3,6 +3,7 @@ window.TTSManager = {
     activeButton: null,
     lastText: null,
     voicesLoaded: false,
+    voiceCache: {}, // Cache found voice objects by lang/name
 
     init() {
         console.log("[TTS] Initializing TTSManager...");
@@ -16,6 +17,7 @@ window.TTSManager = {
         this.synth.getVoices();
         const updateVoices = () => {
             this.voicesLoaded = true;
+            this.voiceCache = {}; // Clear cache when voices change
             console.log("[TTS] Voices loaded:", this.synth.getVoices().length);
         };
         if (this.synth.addEventListener) {
@@ -37,28 +39,46 @@ window.TTSManager = {
             return;
         }
 
-        // Stop any current speech before starting new one
-        this.stop();
+        // Only stop current speech if it's different to avoid "re-loading" feel
+        if (this.synth && this.synth.speaking) {
+             this.synth.cancel();
+        }
 
         this.lastText = cleanText;
         this.activeButton = buttonEl;
 
         // Get settings from TextScaler if available
-        let selectedVoice = null;
+        let voiceObject = null;
         let speechRate = 1.0;
         let lang = langOverride || 'en';
 
-        if (window.TextScaler && !langOverride) {
-            selectedVoice = window.TextScaler.voices.find(v => v.name === window.TextScaler.currentVoiceName);
-            speechRate = window.TextScaler.speechRate || 1.0;
-            if (selectedVoice) {
-                lang = selectedVoice.locale;
-            }
-        } else if (langOverride) {
+        const cacheKey = langOverride ? `override:${langOverride}` : 'default';
+
+        if (this.voiceCache[cacheKey]) {
+            voiceObject = this.voiceCache[cacheKey].voice;
+            lang = this.voiceCache[cacheKey].lang;
             speechRate = window.TextScaler?.speechRate || 1.0;
-            // Try to find a voice for the override language
-            const voices = this.synth.getVoices();
-            selectedVoice = voices.find(v => v.lang.startsWith(langOverride) || v.lang.includes(langOverride.replace('-', '_')));
+        } else {
+            const allVoices = this.synth.getVoices();
+
+            if (window.TextScaler && !langOverride) {
+                const preferredVoiceName = window.TextScaler.currentVoiceName;
+                voiceObject = allVoices.find(v => v.name === preferredVoiceName);
+                speechRate = window.TextScaler.speechRate || 1.0;
+                if (voiceObject) {
+                    lang = voiceObject.lang;
+                }
+            } else if (langOverride) {
+                speechRate = window.TextScaler?.speechRate || 1.0;
+                // Try to find a voice for the override language
+                voiceObject = allVoices.find(v => v.lang.startsWith(langOverride) || v.lang.replace('_', '-').startsWith(langOverride));
+            }
+
+            // Store in cache
+            if (voiceObject) {
+                this.voiceCache[cacheKey] = { voice: voiceObject, lang: voiceObject.lang };
+                lang = voiceObject.lang;
+            }
         }
 
         // Normalize language code for compatibility (e.g., en_US -> en-US)
@@ -90,12 +110,8 @@ window.TTSManager = {
             utterance.lang = lang;
 
             // Set Voice if we have a match
-            if (selectedVoice) {
-                const voices = this.synth.getVoices();
-                const voice = voices.find(v => v.name === selectedVoice.name);
-                if (voice) {
-                    utterance.voice = voice;
-                }
+            if (voiceObject) {
+                utterance.voice = voiceObject;
             }
 
             utterance.rate = speechRate;
