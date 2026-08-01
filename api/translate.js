@@ -54,49 +54,45 @@ export default async function handler(req, res) {
         const azureRegion = process.env.AZURE_TRANSLATOR_REGION || 'global';
         const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
 
-        let translatedText;
-
-        if (lang === 'us' || lang === 'en') {
-            translatedText = text;
-        } else {
-            if (!azureKey) {
-                console.error('[Azure] Missing API Key in Environment Variables');
-                return res.status(500).json({ error: 'Translation service not configured' });
-            }
-
-            // IMPROVEMENT: Force from=en and textType=plain for higher quality dictionary translations
-            const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&from=en&to=${lang}&textType=plain`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Ocp-Apim-Subscription-Key': azureKey,
-                    'Ocp-Apim-Subscription-Region': azureRegion,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify([{ text: text }])
-            }).catch(err => {
-                console.error('[Azure] Fetch network error:', err.message);
-                return null;
-            });
-
-            if (!response || !response.ok) {
-                const status = response ? response.status : 'Network Error';
-                const errorBody = response ? await response.text() : 'No response from Azure';
-                console.error(`[Azure] API Error (${status}):`, errorBody);
-
-                return res.status(status === 401 || status === 403 ? 401 : 502).json({
-                    error: 'Translation API failed',
-                    message: errorBody,
-                    suggestion: 'Check your AZURE_TRANSLATOR_KEY and AZURE_TRANSLATOR_REGION'
-                });
-            }
-
-            const azureData = await response.json();
-            translatedText = azureData?.[0]?.translations?.[0]?.text;
+        if (!azureKey) {
+            console.error('[Azure] Missing API Key in Environment Variables');
+            return res.status(500).json({ error: 'Translation service not configured' });
         }
 
+        // IMPROVEMENT: Force from=en and textType=plain for higher quality dictionary translations
+        const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&from=en&to=${lang}&textType=plain`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Ocp-Apim-Subscription-Key': azureKey,
+                'Ocp-Apim-Subscription-Region': azureRegion,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify([{ text: text }])
+        }).catch(err => {
+            console.error('[Azure] Fetch network error:', err.message);
+            return null;
+        });
+
+        if (!response || !response.ok) {
+            const status = response ? response.status : 'Network Error';
+            const errorBody = response ? await response.text() : 'No response from Azure';
+            console.error(`[Azure] API Error (${status}):`, errorBody);
+
+            // Provide a very clear error to the user
+            return res.status(status === 401 || status === 403 ? 401 : 502).json({
+                error: 'Translation API failed',
+                message: errorBody,
+                suggestion: 'Check your AZURE_TRANSLATOR_KEY and AZURE_TRANSLATOR_REGION'
+            });
+        }
+
+        const azureData = await response.json();
+
+        // Safety check for Azure response structure
+        const translatedText = azureData?.[0]?.translations?.[0]?.text;
         if (!translatedText) {
-            console.error('[Azure] Invalid response structure');
+            console.error('[Azure] Invalid response structure:', azureData);
             return res.status(502).json({ error: 'Invalid response from Azure' });
         }
 
