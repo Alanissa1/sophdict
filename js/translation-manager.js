@@ -43,7 +43,10 @@ window.TranslationManager = {
     ],
 
     init() {
-        this.isEnabled = localStorage.getItem('translation_enabled') === 'true';
+        // Default to true if not set
+        const saved = localStorage.getItem('translation_enabled');
+        this.isEnabled = saved === null ? true : saved === 'true';
+
         this.targetLanguage = localStorage.getItem('translation_target_lang') || 'tr';
         try {
             const savedCache = localStorage.getItem('translation_cache');

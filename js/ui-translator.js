@@ -23,7 +23,63 @@
             'Thesaurus data not available for this word.',
             'View Full Main Page',
             'Similar:',
-            'Opposite:'
+            'Opposite:',
+            'Usage Statistics',
+            'Total Time Spent',
+            'Words Searched',
+            'Tags Opened',
+            'Reset All Statistics',
+            'Reset all usage statistics? This cannot be undone.',
+            'Yes, Reset',
+            'Cancel',
+            'Text Size',
+            'RESET',
+            'Speech Speed',
+            'Languages',
+            '+ Add Language',
+            '- Remove Language',
+            'Offline First',
+            'Prioritize local cache for speed. (Updates disabled while ON)',
+            'Modal Sliding',
+            'Enable Translation',
+            'Translate to',
+            'Add Language',
+            'Refresh',
+            'Remove Language',
+            'Remove',
+            'Loading voices...',
+            'Refreshing...',
+            'Voice',
+            '[Selected]',
+            '(Current)',
+            'Feedback & Support',
+            'We value your input. Please fill out the form below to reach us.',
+            'Name (Optional)',
+            'Your name',
+            'Email Address',
+            'your@email.com',
+            'Message',
+            'How can we help?',
+            'Send Feedback',
+            'No items yet',
+            'Type how many words to store offline',
+            'All words from tags are already downloaded.',
+            'Qty',
+            'Download all words from tags',
+            'Stop',
+            'Last Searched',
+            'Last Opened Tags',
+            '570 Academic Words',
+            'C2 Words',
+            'C1 Words',
+            'B2 Words',
+            'B1 Words',
+            'A2 Words',
+            'A1 Words',
+            'Save',
+            'Statistics',
+            'Settings',
+            'Favorites'
         ]
     };
 
@@ -117,11 +173,11 @@
         const lang = window.TranslationManager.targetLanguage;
 
         UI_STRINGS.dynamic.forEach(text => {
+            // 1. Handle Text Nodes
             const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
             let node;
             while (node = walker.nextNode()) {
                 const trimmed = node.textContent.trim();
-                // Exact match check
                 if (trimmed === text) {
                     const parent = node.parentElement;
                     if (parent && EXCLUDED_SELECTORS.some(sel => parent.closest(sel))) continue;
@@ -134,6 +190,21 @@
                     });
                 }
             }
+
+            // 2. Handle Attributes (placeholder, title, aria-label)
+            const attrElements = root.querySelectorAll(`[placeholder="${text}"], [title="${text}"], [aria-label="${text}"]`);
+            attrElements.forEach(el => {
+                if (EXCLUDED_SELECTORS.some(sel => el.closest(sel))) return;
+
+                registerInUpstash(text);
+                getTranslation(text, lang).then(translated => {
+                    if (translated && translated !== text) {
+                        if (el.getAttribute('placeholder') === text) el.setAttribute('placeholder', translated);
+                        if (el.getAttribute('title') === text) el.setAttribute('title', translated);
+                        if (el.getAttribute('aria-label') === text) el.setAttribute('aria-label', translated);
+                    }
+                });
+            });
         });
     }
 

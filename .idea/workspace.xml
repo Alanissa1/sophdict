@@ -6,7 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="040e67d8-38a4-46ca-a3e0-6cabd3ff8d6f" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/css/base.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/base.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/js/translation-manager.js" beforeDir="false" afterPath="$PROJECT_DIR$/js/translation-manager.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/js/ui-translator.js" beforeDir="false" afterPath="$PROJECT_DIR$/js/ui-translator.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,6 +25,9 @@
   &quot;fromUser&quot;: false
 }</component>
   <component name="ProjectId" id="3HJAAFq9QPxkXMHmMKwmdBnxjOx" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
