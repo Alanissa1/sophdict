@@ -49,126 +49,24 @@ window.TranslationManager = {
             const savedCache = localStorage.getItem('translation_cache');
             if (savedCache) this.cache = JSON.parse(savedCache);
         } catch (e) { this.cache = {}; }
-
-        if (this.isEnabled) {
-            this.translateUI();
-            this.observeUI();
-        }
     },
 
     toggleEnabled(enabled) {
         this.isEnabled = enabled;
         localStorage.setItem('translation_enabled', enabled);
-        this.updateGlobalVisibility();
-        if (enabled) {
-            this.translateUI();
-            this.observeUI();
-        } else if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
+        // Refresh UI to show/hide buttons
+        if (window.UIDictionary && document.getElementById('content-body')) {
+             // In a real app we might want a cleaner way to refresh,
+             // but here we can just let the next search handle it or manually toggle visibility
+             this.updateGlobalVisibility();
         }
     },
 
     setLanguage(langCode) {
         this.targetLanguage = langCode;
         localStorage.setItem('translation_target_lang', langCode);
-        if (this.isEnabled) this.translateUI();
-    },
-
-    observer: null,
-    observeUI() {
-        if (this.observer) return;
-        this.observer = new MutationObserver((mutations) => {
-            let shouldTranslate = false;
-            for (const mutation of mutations) {
-                if (mutation.addedNodes.length > 0) {
-                    shouldTranslate = true;
-                    break;
-                }
-            }
-            if (shouldTranslate) {
-                clearTimeout(this._translateTimer);
-                this._translateTimer = setTimeout(() => this.translateUI(), 300);
-            }
-        });
-        this.observer.observe(document.body, { childList: true, subtree: true });
-    },
-
-    async translateUI() {
-        if (!this.isEnabled || this.targetLanguage === 'en') return;
-
-        // Static UI Elements
-        const staticMap = [
-            { sel: '.welcome-text', text: 'SophDict - The Sophisticated Dictionary' },
-            { sel: '.welcome-hint', text: 'Search for definitions, synonyms, and more' },
-            { sel: '#wordInput', attr: 'placeholder', text: 'Search dictionary...' },
-            { sel: '.side-list-header span', text: 'Word Lists' },
-            { sel: '#loaderText', text: 'Searching...' },
-            { sel: '.powered', text: 'Definitions powered by', complex: true },
-            { sel: '.rights', text: 'All rights reserved.', complex: true },
-            { sel: '.contact', text: 'Contact:', complex: true }
-        ];
-
-        staticMap.forEach(async item => {
-            const el = document.querySelector(item.sel);
-            if (el) {
-                // Populating Upstash as "us" language
-                this.prefetchFromCache(item.text, null, null, 'us');
-
-                const trans = await this.getTranslation(item.text);
-                if (trans && trans !== item.text) {
-                    if (item.attr) el.setAttribute(item.attr, trans);
-                    else if (item.complex) {
-                        if (el.firstChild && el.firstChild.nodeType === 3) {
-                             el.firstChild.textContent = trans + ' ';
-                        }
-                    } else el.innerText = trans;
-                }
-            }
-        });
-
-        // Dynamic Elements (Labels injected by UIRenderer)
-        const labels = ['Similar:', 'Opposite:', 'Word Origin', 'Related Words', 'Word not found', 'Dictionary definition not available.', 'Thesaurus data not available for this word.'];
-        labels.forEach(text => {
-            // Find elements containing this text exactly (or as a primary label)
-            // This is a bit expensive but effective for "automatic" translation
-            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-            let node;
-            while (node = walker.nextNode()) {
-                const trimmed = node.textContent.trim();
-                if (trimmed === text) {
-                     this.prefetchFromCache(text, null, null, 'us');
-                     this.getTranslation(text).then(trans => {
-                         if (trans && trans !== text) node.textContent = node.textContent.replace(text, trans);
-                     });
-                }
-            }
-        });
-    },
-
-    async getTranslation(text) {
-        const cacheKey = `${this.targetLanguage}:${text}`;
-        if (this.cache[cacheKey]) return this.cache[cacheKey];
-
-        try {
-            const url = `/api/translate?lang=${this.targetLanguage}&text=${encodeURIComponent(text)}`;
-            const response = await fetch(url);
-            if (response.ok) {
-                const data = await response.json();
-                let translatedText = "";
-                if (data && data[0]) {
-                    data[0].forEach(part => { if (part[0]) translatedText += part[0]; });
-                }
-                if (translatedText) {
-                    this.cache[cacheKey] = translatedText;
-                    try {
-                        localStorage.setItem('translation_cache', JSON.stringify(this.cache));
-                    } catch(e) {}
-                    return translatedText;
-                }
-            }
-        } catch (e) {}
-        return null;
+        // Clear cache when language changes? Or just keep it scoped by lang?
+        // Let's just keep it, but the buttons will need to re-fetch if they want new lang.
     },
 
     updateGlobalVisibility() {
@@ -377,16 +275,14 @@ window.TranslationManager = {
         }, 500);
     },
 
-    async prefetchFromCache(text, targetElement, buttonEl, overrideLang = null) {
-        const lang = overrideLang || this.targetLanguage;
-        const cacheKey = `${lang}:${text}`;
+    async prefetchFromCache(text, targetElement, buttonEl) {
+        const cacheKey = `${this.targetLanguage}:${text}`;
         // Skip if already in local cache
         if (this.cache[cacheKey]) return;
 
         try {
-            // Call API with cacheOnly=true by default, but false if we are "registering" UI strings
-            const cacheOnly = overrideLang ? 'false' : 'true';
-            const url = `/api/translate?lang=${lang}&cacheOnly=${cacheOnly}&text=${encodeURIComponent(text)}`;
+            // Call API with cacheOnly=true
+            const url = `/api/translate?lang=${this.targetLanguage}&cacheOnly=true&text=${encodeURIComponent(text)}`;
             const response = await fetch(url);
 
             if (response.ok) {
@@ -397,9 +293,11 @@ window.TranslationManager = {
                 }
 
                 if (translatedText) {
-                    // Store in local cache
+                    // Store in local cache for instant click later
                     this.cache[cacheKey] = translatedText;
-                    try { localStorage.setItem('translation_cache', JSON.stringify(this.cache)); } catch(e) {}
+                    localStorage.setItem('translation_cache', JSON.stringify(this.cache));
+                    // Highlight the button slightly to show translation is ready?
+                    // No, "do not do anything else".
                 }
             }
         } catch (e) {
