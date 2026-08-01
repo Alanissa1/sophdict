@@ -29,13 +29,6 @@
     max-height: 57px;
 }
 
-.translated-text .translate-btn svg {
-    min-width: 0;
-    min-height: 0;
-    width: 1.2em;
-    height: 1.2em;
-}
-
 .translate-btn svg {
     width: 1.5em;
     height: 1.5em;

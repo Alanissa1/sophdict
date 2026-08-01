@@ -14,9 +14,8 @@
     min-height: 66px;
 }
 
-.title-row .translated-text .tts-btn svg {
-    width: 1.7em;
-    height: 1.7em;
+.title-row .translated-text .tts-btn svg,
+.micro-header-top .translated-text .tts-btn svg {
     min-width: 0;
     min-height: 0;
 }
