@@ -14,18 +14,18 @@
     min-height: 66px;
 }
 
-.title-row .translated-text .tts-btn svg,
-.micro-header-top .translated-text .tts-btn svg {
-    min-width: 0;
-    min-height: 0;
-    height: 1.6em;
-}
-
 .tts-btn svg {
     width: 1.7em;
     height: 1.7em;
     min-width: 28px;
     min-height: 28px;
+}
+
+.title-row .translated-text .tts-btn svg,
+.micro-header-top .translated-text .tts-btn svg {
+    min-width: 0;
+    min-height: 0;
+    height: 1.7em;
 }
 
 .tts-btn:hover, .tts-btn.nav-focus {
