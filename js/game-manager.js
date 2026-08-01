@@ -322,14 +322,16 @@ window.GameManager = {
             </div>
         `;
 
-        // Integrate with the pre-existing TTSManager for English questions
-        if (isToTrans && window.TTSManager) {
+        // Integrate with the pre-existing TTSManager for questions
+        if (window.TTSManager) {
             const qContainer = overlay.querySelector('.game-question');
-            const ttsBtn = window.TTSManager.createButton(item.english, "tts-btn");
+            const ttsText = isToTrans ? item.english : item.translation;
+            const ttsLang = isToTrans ? 'en' : this.targetLang;
+            const ttsBtn = window.TTSManager.createButton(ttsText, "tts-btn", ttsLang);
             if (ttsBtn) {
                 ttsBtn.style.marginLeft = "10px";
                 ttsBtn.style.display = "inline-flex";
-                ttsBtn.style.alignItems = "left";
+                ttsBtn.style.alignItems = "center";
                 ttsBtn.style.cursor = "pointer";
                 ttsBtn.style.verticalAlign = "middle";
                 qContainer.appendChild(ttsBtn);
@@ -389,13 +391,15 @@ window.GameManager = {
         }
         feedback.appendChild(textSpan);
 
-        // Integrate with TTSManager for correct English sentence revelation in example mode
-        if (!isToTrans && window.TTSManager) {
-            const ttsBtn = window.TTSManager.createButton(item.english, "tts-btn");
+        // Integrate with TTSManager for correct sentence revelation
+        if (window.TTSManager) {
+            const ttsText = isToTrans ? item.translation : item.english;
+            const ttsLang = isToTrans ? this.targetLang : 'en';
+            const ttsBtn = window.TTSManager.createButton(ttsText, "tts-btn", ttsLang);
             if (ttsBtn) {
                 ttsBtn.style.marginLeft = "10px";
                 ttsBtn.style.display = "inline-flex";
-                ttsBtn.style.alignItems = "left";
+                ttsBtn.style.alignItems = "center";
                 ttsBtn.style.cursor = "pointer";
                 ttsBtn.style.verticalAlign = "middle";
                 feedback.appendChild(ttsBtn);

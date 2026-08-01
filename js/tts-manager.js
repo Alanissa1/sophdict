@@ -25,7 +25,7 @@ window.TTSManager = {
         }
     },
 
-    speak(text, buttonEl) {
+    speak(text, buttonEl, langOverride = null) {
         if (!text) return;
 
         // Strip HTML tags (like <b>) so they aren't read aloud
@@ -46,14 +46,19 @@ window.TTSManager = {
         // Get settings from TextScaler if available
         let selectedVoice = null;
         let speechRate = 1.0;
-        let lang = 'en';
+        let lang = langOverride || 'en';
 
-        if (window.TextScaler) {
+        if (window.TextScaler && !langOverride) {
             selectedVoice = window.TextScaler.voices.find(v => v.name === window.TextScaler.currentVoiceName);
             speechRate = window.TextScaler.speechRate || 1.0;
             if (selectedVoice) {
                 lang = selectedVoice.locale;
             }
+        } else if (langOverride) {
+            speechRate = window.TextScaler?.speechRate || 1.0;
+            // Try to find a voice for the override language
+            const voices = this.synth.getVoices();
+            selectedVoice = voices.find(v => v.lang.startsWith(langOverride) || v.lang.includes(langOverride.replace('-', '_')));
         }
 
         // Normalize language code for compatibility (e.g., en_US -> en-US)
@@ -154,7 +159,7 @@ window.TTSManager = {
         }
     },
 
-    createButton(text, className = "tts-btn") {
+    createButton(text, className = "tts-btn", lang = null) {
         const btn = document.createElement('span');
         btn.className = className;
         btn.setAttribute('tabindex', '0');
@@ -167,7 +172,7 @@ window.TTSManager = {
         `;
         btn.onclick = (e) => {
             e.stopPropagation();
-            this.speak(text, btn);
+            this.speak(text, btn, lang);
         };
         btn.title = "Read Aloud (Tap to Start/Stop)";
         return btn;

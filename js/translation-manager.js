@@ -159,6 +159,14 @@ window.TranslationManager = {
 
         transDiv.innerText = translatedText;
         transDiv.classList.add('show');
+
+        // Add TTS button for the translated text
+        const ttsBtn = window.TTSManager.createButton(translatedText, 'tts-btn', this.targetLanguage);
+        ttsBtn.style.marginLeft = '8px';
+        ttsBtn.style.display = 'inline-flex';
+        ttsBtn.style.verticalAlign = 'middle';
+        transDiv.appendChild(ttsBtn);
+
         transDiv.appendChild(buttonEl);
         buttonEl.focus();
     },
@@ -168,6 +176,9 @@ window.TranslationManager = {
         const transDiv = targetElement.querySelector('.translated-text');
         if (transDiv) {
             transDiv.classList.remove('show');
+            // Remove TTS button if it exists
+            const oldTts = transDiv.querySelector('.tts-btn');
+            if (oldTts) oldTts.remove();
         }
 
         // Restore original position
