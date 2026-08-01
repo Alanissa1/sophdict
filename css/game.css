@@ -80,7 +80,7 @@ body.dark-mode .game-question b {
 }
 
 .game-answer-area {
-    min-height: 100px;
+    min-height: 70px;
     width: 100%;
     border-bottom: 2px solid var(--border-color);
     background: rgba(0, 0, 0, 0.02);
