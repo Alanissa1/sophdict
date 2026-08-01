@@ -22,6 +22,23 @@ export default async function handler(req, res) {
     const textHash = Buffer.from(text).toString('hex').substring(0, 120);
     const cacheKey = `trans:${lang}:${textHash}`;
 
+    // Optimization: If target is English/US and source is English, return immediately or check cache
+    if (['en', 'us', 'en-US'].includes(lang.toLowerCase())) {
+        const data = [[[text, text]]];
+        // Still save to cache if not there to satisfy the "send to upstash" part
+        if (upstashUrl && upstashToken) {
+             try {
+                await fetch(upstashUrl, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${upstashToken}` },
+                    body: JSON.stringify(["SET", cacheKey, JSON.stringify(data), "EX", 31536000])
+                }).catch(() => null);
+             } catch(e) {}
+        }
+        res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
+        return res.status(200).json(data);
+    }
+
     try {
         // 1. Try Upstash Cache using POST for both read/write (more reliable for long keys)
         if (upstashUrl && upstashToken) {
