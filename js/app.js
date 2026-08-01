@@ -5,6 +5,69 @@
     }
 })();
 
+window.toggleSideList = () => {
+    const p = document.getElementById('sideListPanel'), md = document.getElementById('microDimmer');
+    if (!p) return;
+    const isActive = p.classList.toggle('active');
+    UIUtils.updateSharedDimmer();
+    if (isActive && md) UIUtils.setupQuickClose(md, window.closeSideList);
+};
+window.closeSideList = () => {
+    const p = document.getElementById('sideListPanel');
+    if (p) p.classList.remove('active');
+    UIUtils.updateSharedDimmer();
+};
+
+window.renderSideListContent = () => {
+    const content = document.getElementById('sideListContent');
+    if (!content) return;
+
+    const isDeleteMode = window.CustomLists?.deleteMode;
+    const customListsHtml = Object.entries(window.CustomLists?.lists || {})
+        .map(([name]) => {
+            if (isDeleteMode) {
+                return `
+                    <button class="academic-list-trigger list-btn-delete" onclick="CustomLists.deleteList('${name}')">
+                        ${name} <span style="font-size: 16px;">&times;</span>
+                    </button>
+                `;
+            }
+            const list = window.CustomLists?.lists[name];
+            const prefix = list?.type === 'local' ? '/llistname/' : '/listname/';
+            return `
+                <button class="academic-list-trigger list-btn-custom" onclick="window.closeSideList(); window.history.pushState({}, '', '${prefix}${encodeURIComponent(name)}'); CustomLists.handleRoute();">${name}</button>
+            `;
+        }).join('');
+
+    const deleteControl = isDeleteMode ? `
+        <div style="display: flex; gap: 5px; width: 100%; margin-top: 10px;">
+            <button class="action-btn" onclick="CustomLists.toggleDeleteMode()" style="flex: 1; padding: 10px; border-radius: 12px; background: var(--accent);">Save</button>
+            <button class="action-btn" onclick="CustomLists.cancelDeleteMode()" style="flex: 1; padding: 10px; border-radius: 12px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 15px;">Cancel</button>
+        </div>
+    ` : `
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="academic-list-trigger" onclick="CustomLists.toggleDeleteMode()" title="Remove Lists" style="flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; padding: 12px; border-radius: 12px;">
+                ${window.CustomLists?.icons?.trash || ''}
+            </button>
+            <button class="academic-list-trigger" onclick="window.closeSideList(); window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();" title="Create Custom List" style="flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; padding: 12px; border-radius: 12px;">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
+            </button>
+        </div>
+    `;
+
+    content.innerHTML = `
+        <button class="academic-list-trigger list-btn-academic" onclick="window.closeSideList(); AcademicList.open('academic')">570 Academic Words</button>
+        <button class="academic-list-trigger list-btn-c2" onclick="window.closeSideList(); FormalList.open('c2')">C2 Words</button>
+        <button class="academic-list-trigger list-btn-c1" onclick="window.closeSideList(); FormalList.open('c1')">C1 Words</button>
+        <button class="academic-list-trigger list-btn-b2" onclick="window.closeSideList(); FormalList.open('b2')">B2 Words</button>
+        <button class="academic-list-trigger list-btn-b1" onclick="window.closeSideList(); FormalList.open('b1')">B1 Words</button>
+        <button class="academic-list-trigger list-btn-a2" onclick="window.closeSideList(); FormalList.open('a2')">A2 Words</button>
+        <button class="academic-list-trigger list-btn-a1" onclick="window.closeSideList(); FormalList.open('a1')">A1 Words</button>
+        ${customListsHtml}
+        ${deleteControl}
+    `;
+};
+
 window.RestoreSearchUI = () => {
     const sc = document.querySelector('.search-container'), h = document.getElementById('appHeader');
     if (!sc || !h) return;
@@ -97,50 +160,10 @@ window.AppClearSearch = (skipPush = false) => {
 
     if (wordInput) wordInput.value = '';
     if (rc) {
-        const isDeleteMode = window.CustomLists?.deleteMode;
-        const customListsHtml = Object.entries(window.CustomLists?.lists || {})
-            .map(([name]) => {
-                if (isDeleteMode) {
-                    return `
-                        <button class="academic-list-trigger list-btn-delete" onclick="CustomLists.deleteList('${name}')">
-                            ${name} <span style="font-size: 16px;">&times;</span>
-                        </button>
-                    `;
-                }
-                const list = window.CustomLists?.lists[name];
-                const prefix = list?.type === 'local' ? '/llistname/' : '/listname/';
-                return `
-                    <button class="academic-list-trigger list-btn-custom" onclick="window.history.pushState({}, '', '${prefix}${encodeURIComponent(name)}'); CustomLists.handleRoute();">${name}</button>
-                `;
-            }).join('');
-
-        const deleteControl = isDeleteMode ? `
-            <div style="display: flex; gap: 5px;">
-                <button class="action-btn" onclick="CustomLists.toggleDeleteMode()" style="padding: 6px 12px; font-size: 11px; background: var(--accent); border-radius: 15px;">Save</button>
-                <button class="action-btn" onclick="CustomLists.cancelDeleteMode()" style="padding: 6px 12px; font-size: 11px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 15px;">Cancel</button>
-            </div>
-        ` : `
-            <button class="custom-list-trigger" onclick="CustomLists.toggleDeleteMode()" title="Remove Lists" style="background: transparent; border: none; color: var(--text-sub); display: flex; align-items: center; justify-content: center; padding: 4px; cursor: pointer;">
-                ${window.CustomLists?.icons?.trash || ''}
-            </button>
-        `;
-
         rc.innerHTML = `
-            <div style="width: 100%; display: flex; justify-content: flex-start; gap: 10px; padding: 15px 0 0 0; flex-wrap: wrap; align-items: center;">
-                <button id="academic-list-btn" class="academic-list-trigger list-btn-academic" onclick="AcademicList.open('academic')">570 Academic Words</button>
-                <button class="academic-list-trigger list-btn-c2" onclick="FormalList.open('c2')">C2 Words</button>
-                <button class="academic-list-trigger list-btn-c1" onclick="FormalList.open('c1')">C1 Words</button>
-                <button class="academic-list-trigger list-btn-b2" onclick="FormalList.open('b2')">B2 Words</button>
-                <button class="academic-list-trigger list-btn-b1" onclick="FormalList.open('b1')">B1 Words</button>
-                <button class="academic-list-trigger list-btn-a2" onclick="FormalList.open('a2')">A2 Words</button>
-                <button class="academic-list-trigger list-btn-a1" onclick="FormalList.open('a1')">A1 Words</button>
-                ${customListsHtml}
-                ${deleteControl}
-                <button id="create-list-btn" class="custom-list-trigger" onclick="window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();" title="Create Custom List">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-                </button>
-                <div class="home-settings-bar"></div>
-            </div>
+            <button class="side-list-toggle-btn" onclick="window.toggleSideList()" aria-label="Word Lists">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
+            </button>
             <div class="welcome-screen" style="padding-top: 5vh;">
                 <img src="sophdict.svg" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">Search for definitions, synonyms, and more</div><div id="home-lists-root" class="home-lists-container"></div>
             </div>`;
@@ -149,15 +172,9 @@ window.AppClearSearch = (skipPush = false) => {
         if (ws && currentSc) {
             const logo = ws.querySelector('.welcome-logo');
             if (logo) logo.after(currentSc);
-            let sb = document.querySelector('.home-settings-bar');
-            if (sb) {
-                const st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn');
-                if (st) { sb.appendChild(st); st.style.display = ''; }
-                if (ts) { sb.appendChild(ts); ts.style.display = ''; }
-                if (pt) { sb.appendChild(pt); pt.style.display = ''; }
-            }
         }
         window.renderHomeLists();
+        window.renderSideListContent();
     }
     localStorage.removeItem('lastWord');
     if (!skipPush && window.location.pathname !== '/') {

@@ -167,6 +167,7 @@ window.UIUtils = {
                 e.stopPropagation();
                 if (callback) callback();
                 else {
+                    if (window.closeSideList) window.closeSideList();
                     if (window.ModalManager) window.ModalManager.hide();
                     if (window.StatsManager && document.getElementById('statsPanel')?.style.display === 'flex') {
                         window.StatsManager.togglePanel();
@@ -273,8 +274,9 @@ window.UIUtils = {
         const isVideoModalOpen = document.getElementById('videoModal')?.classList.contains('active');
         const isLicenseModalOpen = document.getElementById('licenseModal')?.classList.contains('active');
         const isGameOpen = document.getElementById('gameOverlay')?.style.display === 'flex';
+        const isSideListOpen = document.getElementById('sideListPanel')?.classList.contains('active');
 
-        if (isModalOpen || isStatsOpen || isPinnedOpen || isListSettingsOpen || isVideoModalOpen || isLicenseModalOpen || isGameOpen) {
+        if (isModalOpen || isStatsOpen || isPinnedOpen || isListSettingsOpen || isVideoModalOpen || isLicenseModalOpen || isGameOpen || isSideListOpen) {
             dimmer.style.display = 'block';
             document.body.classList.add('modal-open');
             // Ensure the dimmer is always clickable when shown
