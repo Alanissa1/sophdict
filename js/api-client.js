@@ -30,95 +30,23 @@ window.APIClient = {
 
                 if (isDictEmpty) {
                     const wordsCount = cleanWord.split(/\s+/).filter(w => w.length > 0).length;
+                    if (wordsCount >= 2) {
+                        try {
+                            const target = window.TranslationManager?.targetLanguage || 'tr';
+                            const isEnabled = window.TranslationManager?.isEnabled || false;
+                            const cb = Date.now();
 
-                    try {
-                        const target = window.TranslationManager?.targetLanguage || 'tr';
-                        const isTransEnabled = localStorage.getItem('translation_enabled') === 'true';
-
-                        // 1. Try to translate to English (auto-detect source)
-                        const toEnRes = await fetch(`/api/translate?lang=en&text=${encodeURIComponent(cleanWord)}`);
-                        if (toEnRes.ok) {
-                            const toEnData = await toEnRes.json();
-                            let toEnText = "";
-                            if (toEnData && toEnData[0]) toEnData[0].forEach(p => { if (p[0]) toEnText += p[0]; });
-
-                            // If the translation result is significantly different, assume it was NOT English
-                            if (toEnText && toEnText.toLowerCase().trim() !== cleanWord.toLowerCase().trim()) {
-                                // Fetch verified dictionary words for the translation
-                                let verifiedWords = [];
-                                try {
-                                    const sugRes = await fetch(`/api/suggestions?q=${encodeURIComponent(toEnText)}&target=en`);
-                                    if (sugRes.ok) {
-                                        const sugData = await sugRes.json();
-                                        verifiedWords = sugData.filter(i => i.type === 'dictionary').map(i => i.word);
-                                    }
-                                } catch (e) {}
-
-                                const result = {
-                                    word: cleanWord,
-                                    isSentence: true,
-                                    translation: toEnText,
-                                    targetLangName: 'English',
-                                    sourceLang: target,
-                                    targetLang: 'en',
-                                    verifiedWords: verifiedWords,
-                                    error: null
-                                };
-                                await DBManager.saveWord(cleanWord, result);
-                                return result;
-                            }
-                        }
-
-                        // 2. If it's English (or same as En), and Translation is enabled, translate to System Language
-                        if (isTransEnabled && target !== 'en' && wordsCount >= 2) {
-                            const toTargetRes = await fetch(`/api/translate?lang=${target}&text=${encodeURIComponent(cleanWord)}`);
-                            if (toTargetRes.ok) {
-                                const toTargetData = await toTargetRes.json();
-                                let toTargetText = "";
-                                if (toTargetData && toTargetData[0]) toTargetData[0].forEach(p => { if (p[0]) toTargetText += p[0]; });
-
-                                if (toTargetText && toTargetText.toLowerCase().trim() !== cleanWord.toLowerCase().trim()) {
-                                    // Fetch verified dictionary words for the ORIGINAL English sentence
-                                    let verifiedWords = [];
-                                    try {
-                                        const sugRes = await fetch(`/api/suggestions?q=${encodeURIComponent(cleanWord)}&target=${target}`);
-                                        if (sugRes.ok) {
-                                            const sugData = await sugRes.json();
-                                            verifiedWords = sugData.filter(i => i.type === 'dictionary').map(i => i.word);
-                                        }
-                                    } catch (e) {}
-
-                                    const langObj = window.TranslationManager?.languages?.find(l => l.code === target);
-                                    const result = {
-                                        word: cleanWord,
-                                        isSentence: true,
-                                        translation: toTargetText,
-                                        targetLangName: langObj?.name || target.toUpperCase(),
-                                        sourceLang: 'en',
-                                        targetLang: target,
-                                        verifiedWords: verifiedWords,
-                                        error: null
-                                    };
-                                    await DBManager.saveWord(cleanWord, result);
-                                    return result;
+                            const res = await fetch(`/api/sentence?q=${encodeURIComponent(cleanWord)}&target=${target}&enabled=${isEnabled}&_cb=${cb}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data && !data.error) {
+                                    await DBManager.saveWord(cleanWord, data);
+                                    return data;
                                 }
                             }
-                        }
-
-                        // 3. If no translation was found but it's a multi-word search,
-                        // treat it as a sentence with no translation (error UI handles it)
-                        if (wordsCount >= 2) {
-                            let verifiedWords = [];
-                            try {
-                                const sugRes = await fetch(`/api/suggestions?q=${encodeURIComponent(cleanWord)}&target=en`);
-                                if (sugRes.ok) {
-                                    const sugData = await sugRes.json();
-                                    verifiedWords = sugData.filter(i => i.type === 'dictionary').map(i => i.word);
-                                }
-                            } catch (e) {}
-                            return { word: cleanWord, isSentence: true, verifiedWords: verifiedWords, error: 'Word not found' };
-                        }
-                    } catch (e) { console.error("Sentence search handler error:", e); }
+                            return { word: cleanWord, isSentence: true, error: 'Word not found' };
+                        } catch (e) { console.error("Sentence search fallback error:", e); }
+                    }
 
                     if (cleanWord.includes(' ')) {
                         return { word: cleanWord, isSentence: true, error: 'Word not found' };

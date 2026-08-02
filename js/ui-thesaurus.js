@@ -157,6 +157,8 @@ window.UIThesaurus = {
         }
 
         if (!html) {
+            // For sentences, we don't want to show this message because UIEntry handles it
+            if (data.isSentence) return "";
             return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found.</div>`;
         }
         return html;

@@ -35,18 +35,21 @@ window.UIEntry = {
 
                     if (data.isSentence) {
                         const body = targetContainer.querySelector('#content-body');
-                        const words = word.split(/\s+/).filter(w => w.length > 2);
-                        if (body && data.verifiedWords && data.verifiedWords.length > 0) {
-                            body.innerHTML = `
-                                <div class="context-card suggestions-card">
-                                    <div class="context-type">Individual Words</div>
-                                    <div class="tags-section">
-                                        <div class="tags-row">
-                                            ${data.verifiedWords.map(w => `<span class="tag syn-tag" data-word="${w}" tabindex="0">${w}</span>`).join('')}
+                        if (body) {
+                            if (data.verifiedWords && data.verifiedWords.length > 0) {
+                                body.innerHTML = `
+                                    <div class="context-card suggestions-card">
+                                        <div class="context-type">Individual Words</div>
+                                        <div class="tags-section">
+                                            <div class="tags-row">
+                                                ${data.verifiedWords.map(w => `<span class="tag syn-tag" data-word="${w}" tabindex="0">${w}</span>`).join('')}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            `;
+                                `;
+                            } else if (!data.translation) {
+                                body.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found.</div>`;
+                            }
                         }
                     }
                 } else {
