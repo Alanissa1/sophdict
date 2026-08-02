@@ -25,6 +25,7 @@ export default async function handler(req, res) {
             const azureRegion = process.env.AZURE_TRANSLATOR_REGION || 'global';
             const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
 
+            // We request translation to BOTH English and the user's Target Language
             const transRes = await fetch(`${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&to=en&to=${targetLang}&textType=plain`, {
                 method: 'POST',
                 headers: {
@@ -65,9 +66,21 @@ export default async function handler(req, res) {
             if (translationInfo) results.push(translationInfo);
             results.push(...suggestions);
 
-            if (translatedToEn) {
-                // إرسال الكلمة المترجمة مباشرة دون فحص قاعدة البيانات
-                results.push({ word: translatedToEn, type: 'dictionary' });
+            // If it's a single non-English word, check if the translation is in MW
+            if (translatedToEn && upstashUrl && upstashToken) {
+                // تم التعديل هنا للحفاظ على الفاصلة العليا
+                const transWord = translatedToEn.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '');
+                try {
+                    const cacheRes = await fetch(`${upstashUrl}/pipeline`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${upstashToken}` },
+                        body: JSON.stringify([["SISMEMBER", "all_words_index", transWord]])
+                    });
+                    const cacheData = await cacheRes.json();
+                    if (cacheData[0]?.result === 1) {
+                        results.push({ word: translatedToEn, type: 'dictionary' });
+                    }
+                } catch (e) {}
             }
 
             return res.status(200).json(results);
@@ -77,6 +90,7 @@ export default async function handler(req, res) {
             if (translationInfo) results.push(translationInfo);
             results.push({ word: cleanQ, type: 'sentence' });
 
+            // تم التعديل هنا للحفاظ على الفاصلة العليا
             const uniqueWords = [...new Set(words.map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')))]
                 .filter(w => w.length > 0)
                 .slice(0, 15);
@@ -99,15 +113,28 @@ export default async function handler(req, res) {
                 } catch (e) {}
             }
 
-            // قص كلمات الترجمة الإنجليزية وإرسالها مباشرة كأزرار (دون فحصها في Upstash)
+            // If we have a translation to English, also check words from it
             if (translatedToEn) {
-                // نحافظ على الكلمات كما هي وننظف الفواصل العادية فقط، ونحتفظ بالفاصلة العليا
-                const transWords = translatedToEn.split(/\s+/).map(w => w.replace(/[^a-zA-Z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
-                const transUnique = [...new Set(transWords)].filter(w => !uniqueWords.includes(w.toLowerCase()));
+                // تم التعديل هنا للحفاظ على الفاصلة العليا
+                const transWords = translatedToEn.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
+                const transUnique = [...new Set(transWords)].filter(w => !uniqueWords.includes(w));
 
-                transUnique.forEach(w => {
-                    dictionaryWords.push({ word: w, type: 'dictionary' }); // إضافتها مباشرة
-                });
+                if (upstashUrl && upstashToken && transUnique.length > 0) {
+                    try {
+                        const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
+                        const cacheRes = await fetch(pipelineUrl, {
+                            method: 'POST',
+                            headers: { Authorization: `Bearer ${upstashToken}` },
+                            body: JSON.stringify(transUnique.map(w => ["SISMEMBER", "all_words_index", w]))
+                        });
+                        const cacheData = await cacheRes.json();
+                        if (Array.isArray(cacheData)) {
+                            cacheData.forEach((r, idx) => {
+                                if (r.result === 1) dictionaryWords.push({ word: transUnique[idx], type: 'dictionary' });
+                            });
+                        }
+                    } catch (e) {}
+                }
             }
 
             results.push(...dictionaryWords);
