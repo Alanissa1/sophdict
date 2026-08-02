@@ -42,7 +42,8 @@ export default async function handler(req, res) {
         }
 
         // 2. Conditional Translation & Second Dictionary Check
-        const needsTranslation = words.length === 1 ? (dictionaryWords.length === 0) : (dictionaryWords.length < 2);
+        const threshold = Math.ceil(words.length / 4) * 2;
+        const needsTranslation = dictionaryWords.length < threshold;
         const azureKey = process.env.AZURE_TRANSLATOR_KEY;
 
         if (needsTranslation && azureKey) {
