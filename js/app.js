@@ -80,7 +80,7 @@ window.RestoreSearchUI = () => {
 
 window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
     const wordInput = document.getElementById('wordInput');
-    const word = decodeURIComponent(target || wordInput?.value || "").trim().toLowerCase();
+    const word = (target || wordInput?.value || "").trim().toLowerCase();
     if (!word) return false;
     const loader = document.getElementById('loader');
     if (window.PreFetcher) window.PreFetcher.reset();
@@ -102,17 +102,14 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
             if (wordInput) wordInput.value = word;
             if (window.HistoryManager && !isHistoryNav) window.HistoryManager.addToRAM(word);
             return true;
-        } else {
-            // Render the error state even if silent if it's a history/routing navigation
-            if (!isSilent || isHistoryNav) {
-                window.RestoreSearchUI();
-                document.body.classList.remove('home-state');
-                await UIEntry.render({ ...(data || {}), word: word });
-                UIUtils.updateSharedDimmer();
-            }
-
-            if (!isSilent && isHistoryNav) window.AppClearSearch();
-            else if (isSilent && !isHistoryNav) window.AppClearSearch();
+        } else if (!isSilent) {
+            window.RestoreSearchUI();
+            document.body.classList.remove('home-state');
+            await UIEntry.render({ ...(data || {}), word: word });
+            UIUtils.updateSharedDimmer();
+            if (isHistoryNav) window.AppClearSearch();
+        } else if (isSilent && !isHistoryNav) {
+            window.AppClearSearch();
         }
     } catch (e) {
         console.error(e);

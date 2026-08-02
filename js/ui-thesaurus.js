@@ -157,7 +157,7 @@ window.UIThesaurus = {
         }
 
         if (!html) {
-            return "";
+            return `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found.</div>`;
         }
         return html;
     },

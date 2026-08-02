@@ -112,9 +112,9 @@ export default async function handler(req, res) {
             }
         }
 
-        const isSame = translatedText.toLowerCase().trim() === text.toLowerCase().trim();
-        if (isSame) {
-            res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
+        const isError = !translatedText;
+        if (isError) {
+            res.setHeader('Cache-Control', 'public, s-maxage=60'); // Don't cache errors for long
         } else {
             res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
         }
