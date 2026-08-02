@@ -17,12 +17,11 @@ export default async function handler(req, res) {
     try {
         let translationInfo = null;
         let dictionaryWords = [];
-        let isEnglishInput = false; 
+        let isEnglishInput = false; // متغير جديد لمعرفة ما إذا كان الإدخال باللغة الإنجليزية
 
         // 1. Language Detection & Translation
         const azureKey = process.env.AZURE_TRANSLATOR_KEY;
         let translatedToEn = null;
-        
         if (azureKey) {
             const azureRegion = process.env.AZURE_TRANSLATOR_REGION || 'global';
             const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
@@ -52,7 +51,7 @@ export default async function handler(req, res) {
 
                     if (targetLang === 'en') {
                          // IF SYSTEM IS EN: Do not show translation suggestions 
-                    } else if (detected !== 'en' && toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
+                    } else if (detected === targetLang && toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
                         translatedToEn = toEn;
                         translationInfo = { original: cleanQ, translated: toEn, type: 'translation' };
                     } else if (detected === 'en' && toTarget && toTarget.toLowerCase() !== cleanQ.toLowerCase() && isTransEnabled && words.length >= 2) {
@@ -62,9 +61,8 @@ export default async function handler(req, res) {
             }
         }
 
-        // 2. معالجة الكلمات لاستخراج البطاقات
         if (words.length === 1) {
-            // حالة الكلمة الواحدة
+            // Single Word: Datamuse completions + Translation if found
             const datamuseRes = await fetch(`https://api.datamuse.com/sug?s=${encodeURIComponent(cleanQ)}&max=7`);
             const datamuseData = await datamuseRes.json();
             const suggestions = datamuseData.map(s => ({ word: s.word, type: 'completion' }));
@@ -73,11 +71,9 @@ export default async function handler(req, res) {
             if (translationInfo) results.push(translationInfo);
             results.push(...suggestions);
 
-            // تحديد الكلمة الإنجليزية (من الإدخال المباشر أو من الترجمة)
-            const wordForCard = isEnglishInput ? cleanQ : translatedToEn;
-
-            if (wordForCard && upstashUrl && upstashToken) {
-                const transWord = wordForCard.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '');
+            // إصلاح الـ Regex هنا أيضاً للحفاظ على I'm
+            if (translatedToEn && upstashUrl && upstashToken) {
+                const transWord = translatedToEn.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '');
                 try {
                     const cacheRes = await fetch(`${upstashUrl}/pipeline`, {
                         method: 'POST',
@@ -86,54 +82,61 @@ export default async function handler(req, res) {
                     });
                     const cacheData = await cacheRes.json();
                     if (cacheData[0]?.result === 1) {
-                        results.push({ word: wordForCard, type: 'dictionary' });
+                        results.push({ word: translatedToEn, type: 'dictionary' });
                     }
                 } catch (e) {}
             }
 
             return res.status(200).json(results);
         } else {
-            // حالة الجمل والكلمات المتعددة
+            // Multi-word: Sentence analysis
             const results = [];
             if (translationInfo) results.push(translationInfo);
             results.push({ word: cleanQ, type: 'sentence' });
 
-            // تحديد قائمة الكلمات الإنجليزية فقط لاستخراج البطاقات
-            let englishWordsRaw = [];
-            if (isEnglishInput) {
-                englishWordsRaw = words; // أخذ الكلمات الأصلية لأن الإدخال إنجليزي
-            } else if (translatedToEn) {
-                englishWordsRaw = translatedToEn.split(/\s+/); // أخذ الكلمات من الترجمة الإنجليزية
-            }
-
-            // تنظيف الكلمات وحذف المكرر
-            const uniqueEnglishWords = [...new Set(englishWordsRaw.map(w => w.replace(/[^a-zA-Z0-9']/g, '').replace(/^'|'$/g, '')))]
+            // إصلاح الـ Regex للحفاظ على الفاصلة العليا للأحرف الإنجليزية
+            const uniqueWords = [...new Set(words.map(w => w.replace(/[^a-zA-Z0-9']/g, '').replace(/^'|'$/g, '')))]
                 .filter(w => w.length > 0)
                 .slice(0, 15);
 
-            // فحص الكلمات الإنجليزية في قاعدة البيانات لإظهارها كبطاقات
-            if (upstashUrl && upstashToken && uniqueEnglishWords.length > 0) {
+            // إبقاء البحث في قاعدة البيانات كما طلبت (في حال لم تكن اللغة إنجليزية)
+            if (upstashUrl && upstashToken && uniqueWords.length > 0 && !isEnglishInput) {
                 try {
                     const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
                     const cacheRes = await fetch(pipelineUrl, {
                         method: 'POST',
                         headers: { Authorization: `Bearer ${upstashToken}` },
-                        body: JSON.stringify(uniqueEnglishWords.map(w => ["SISMEMBER", "all_words_index", w.toLowerCase()]))
+                        body: JSON.stringify(uniqueWords.map(w => ["SISMEMBER", "all_words_index", w.toLowerCase()]))
                     });
                     const cacheData = await cacheRes.json();
 
                     if (Array.isArray(cacheData)) {
                         cacheData.forEach((r, idx) => {
-                            if (r.result === 1) {
-                                dictionaryWords.push({ word: uniqueEnglishWords[idx], type: 'dictionary' });
-                            }
+                            if (r.result === 1) dictionaryWords.push({ word: uniqueWords[idx], type: 'dictionary' });
                         });
                     }
                 } catch (e) {}
-            } else if (!upstashUrl && uniqueEnglishWords.length > 0) {
-                // في حال عدم توفر اتصال بقاعدة البيانات، اعرض الكلمات مباشرة
-                uniqueEnglishWords.forEach(w => {
-                    dictionaryWords.push({ word: w, type: 'dictionary' });
+            }
+
+            // === المنطق الجديد الذي طلبته: إرسال الكلمات الإنجليزية كبطاقات مباشرة ===
+            
+            // الحالة الأولى: إذا كان الإدخال عربي/تركي وتم ترجمته للإنجليزية
+            if (translatedToEn) {
+                const transWords = translatedToEn.split(/\s+/).map(w => w.replace(/[^a-zA-Z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
+                const transUnique = [...new Set(transWords)];
+                
+                transUnique.forEach(w => {
+                    if (!dictionaryWords.find(dw => dw.word.toLowerCase() === w.toLowerCase())) {
+                        dictionaryWords.push({ word: w, type: 'dictionary' });
+                    }
+                });
+            } 
+            // الحالة الثانية: إذا كانت الجملة الأصلية التي بحث عنها المستخدم بالإنجليزية
+            else if (isEnglishInput) {
+                uniqueWords.forEach(w => {
+                    if (!dictionaryWords.find(dw => dw.word.toLowerCase() === w.toLowerCase())) {
+                        dictionaryWords.push({ word: w, type: 'dictionary' });
+                    }
                 });
             }
 
