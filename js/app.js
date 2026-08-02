@@ -198,8 +198,7 @@ window.AppClearSearch = (skipPush = false) => {
     if (window.CustomLists) window.CustomLists.closeSettings();
     UIUtils.updateSharedDimmer();
     document.body.classList.add('home-state');
-    if (window.ScrollFixer) window.ScrollFixer.restore();
-};
+}
 
 (async () => {
     await DBManager.init();

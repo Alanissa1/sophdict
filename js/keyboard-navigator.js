@@ -125,13 +125,13 @@ window.KeyboardNavigator = {
     handleTab(rev) {
         this.updateElements(); if (this.elements.length === 0) return;
         this.currentIndex = rev ? (this.currentIndex <= 0 ? this.elements.length - 1 : this.currentIndex - 1) : (this.currentIndex >= this.elements.length - 1 ? 0 : this.currentIndex + 1);
-        const t = this.elements[this.currentIndex]; t.focus(); t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const t = this.elements[this.currentIndex]; t.focus();
     },
 
     handleArrow(rev) {
         if (this.elements.length === 0) return;
         this.currentIndex = rev ? (this.currentIndex <= 0 ? this.elements.length - 1 : this.currentIndex - 1) : (this.currentIndex >= this.elements.length - 1 ? 0 : this.currentIndex + 1);
-        const t = this.elements[this.currentIndex]; t.focus(); if (t.offsetParent !== null) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const t = this.elements[this.currentIndex]; t.focus();
         const ap = this.getActivePanelInfo()?.panel; if (ap && t.classList.contains('tag') && !ap.contains(t)) t.click();
     },
 
