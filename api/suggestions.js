@@ -94,8 +94,8 @@ export default async function handler(req, res) {
 
             // Extract words and check dictionary index
             const uniqueWords = [...new Set(words.map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')))]
-                .filter(w => w.length > 2)
-                .slice(0, 15);
+                .filter(w => w.length > 0)
+                .slice(0, 25);
 
             if (upstashUrl && upstashToken && uniqueWords.length > 0) {
                 try {
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
 
             // If we have a translation to English, also check words from it
             if (translatedToEn) {
-                const transWords = translatedToEn.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(w => w.length > 2);
+                const transWords = translatedToEn.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(w => w.length > 0);
                 const transUnique = [...new Set(transWords)].filter(w => !uniqueWords.includes(w));
 
                 if (upstashUrl && upstashToken && transUnique.length > 0) {
