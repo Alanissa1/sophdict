@@ -32,10 +32,10 @@ window.APIClient = {
                             const target = window.TranslationManager?.targetLanguage || 'tr';
                             const isTransEnabled = localStorage.getItem('translation_enabled') === 'true';
 
-                            // 1. Check if it's the System Language (translate to English)
-                            const toEnRes = await fetch(`/api/translate?lang=en&from=${target}&text=${encodeURIComponent(cleanWord)}`);
+                            // 1. Try to translate to English (to see if it's NOT English)
+                            const toEnRes = await fetch(`/api/translate?lang=en&text=${encodeURIComponent(cleanWord)}`);
                             if (toEnRes.ok) {
-                                const toEnData = await toEnRes.ok ? await toEnRes.json() : null;
+                                const toEnData = await toEnRes.json();
                                 let toEnText = "";
                                 if (toEnData && toEnData[0]) toEnData[0].forEach(p => { if (p[0]) toEnText += p[0]; });
 
@@ -45,14 +45,15 @@ window.APIClient = {
                                         isSentence: true,
                                         translation: toEnText,
                                         targetLangName: 'English',
+                                        sourceLang: target, // Best guess
+                                        targetLang: 'en',
                                         error: null
                                     };
                                 }
                             }
 
-                            // 2. If it's English and Translation is enabled, translate to System Language
-                            if (isTransEnabled) {
-                                // Try translating to target. We use auto-detection but check if detected was English
+                            // 2. If it's English, and Translation is enabled, translate to System Language
+                            if (isTransEnabled && target !== 'en') {
                                 const toTargetRes = await fetch(`/api/translate?lang=${target}&text=${encodeURIComponent(cleanWord)}`);
                                 if (toTargetRes.ok) {
                                     const toTargetData = await toTargetRes.json();
@@ -66,6 +67,8 @@ window.APIClient = {
                                             isSentence: true,
                                             translation: toTargetText,
                                             targetLangName: langObj?.name || target.toUpperCase(),
+                                            sourceLang: 'en',
+                                            targetLang: target,
                                             error: null
                                         };
                                     }

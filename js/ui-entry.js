@@ -27,7 +27,10 @@ window.UIEntry = {
                         <div id="content-body"></div>
                     `;
                     const pronRow = targetContainer.querySelector('.pron-row');
-                    if (pronRow && word) pronRow.appendChild(TTSManager.createButton(word));
+                    if (pronRow && word) {
+                        const target = window.TranslationManager?.targetLanguage || 'tr';
+                        pronRow.appendChild(TTSManager.createButton(word, 'tts-btn', data.isSentence ? target : 'en'));
+                    }
 
                     if (data.isSentence) {
                         const body = targetContainer.querySelector('#content-body');
@@ -84,9 +87,9 @@ window.UIEntry = {
                     </div>
                 `;
                 const pronRow = targetContainer.querySelector('.pron-row');
-                if (pronRow) pronRow.appendChild(TTSManager.createButton(word));
+                if (pronRow) pronRow.appendChild(TTSManager.createButton(word, "tts-btn", data.sourceLang));
                 const pronRowTrans = targetContainer.querySelector('.pron-row-trans');
-                if (pronRowTrans) pronRowTrans.appendChild(TTSManager.createButton(data.translation));
+                if (pronRowTrans) pronRowTrans.appendChild(TTSManager.createButton(data.translation, "tts-btn", data.targetLang));
 
                 if (containerId === 'results-container') window.scrollTo({ top: 0, behavior: 'instant' });
                 UIUtils.attachInlineTTS(targetContainer);
