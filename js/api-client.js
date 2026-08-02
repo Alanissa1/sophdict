@@ -11,9 +11,11 @@ window.APIClient = {
             return this.pending.get(cleanWord);
         }
 
-        // Check cache first
+        // Check cache first (Only return if it has actual results)
         const cached = await DBManager.getWord(cleanWord);
-        if (cached) return cached;
+        if (cached && (cached.dictionary || cached.translation)) {
+            return cached;
+        }
 
         const requestPromise = (async () => {
             try {
@@ -42,15 +44,28 @@ window.APIClient = {
 
                             // If the translation result is significantly different, assume it was NOT English
                             if (toEnText && toEnText.toLowerCase().trim() !== cleanWord.toLowerCase().trim()) {
-                                return {
+                                // Fetch verified dictionary words for the translation
+                                let verifiedWords = [];
+                                try {
+                                    const sugRes = await fetch(`/api/suggestions?q=${encodeURIComponent(toEnText)}&target=en`);
+                                    if (sugRes.ok) {
+                                        const sugData = await sugRes.json();
+                                        verifiedWords = sugData.filter(i => i.type === 'dictionary').map(i => i.word);
+                                    }
+                                } catch (e) {}
+
+                                const result = {
                                     word: cleanWord,
                                     isSentence: true,
                                     translation: toEnText,
                                     targetLangName: 'English',
-                                    sourceLang: target, // Best guess
+                                    sourceLang: target,
                                     targetLang: 'en',
+                                    verifiedWords: verifiedWords,
                                     error: null
                                 };
+                                await DBManager.saveWord(cleanWord, result);
+                                return result;
                             }
                         }
 
@@ -63,23 +78,46 @@ window.APIClient = {
                                 if (toTargetData && toTargetData[0]) toTargetData[0].forEach(p => { if (p[0]) toTargetText += p[0]; });
 
                                 if (toTargetText && toTargetText.toLowerCase().trim() !== cleanWord.toLowerCase().trim()) {
+                                    // Fetch verified dictionary words for the ORIGINAL English sentence
+                                    let verifiedWords = [];
+                                    try {
+                                        const sugRes = await fetch(`/api/suggestions?q=${encodeURIComponent(cleanWord)}&target=${target}`);
+                                        if (sugRes.ok) {
+                                            const sugData = await sugRes.json();
+                                            verifiedWords = sugData.filter(i => i.type === 'dictionary').map(i => i.word);
+                                        }
+                                    } catch (e) {}
+
                                     const langObj = window.TranslationManager?.languages?.find(l => l.code === target);
-                                    return {
+                                    const result = {
                                         word: cleanWord,
                                         isSentence: true,
                                         translation: toTargetText,
                                         targetLangName: langObj?.name || target.toUpperCase(),
                                         sourceLang: 'en',
                                         targetLang: target,
+                                        verifiedWords: verifiedWords,
                                         error: null
                                     };
+                                    await DBManager.saveWord(cleanWord, result);
+                                    return result;
                                 }
                             }
                         }
 
                         // 3. If no translation was found but it's a multi-word search,
                         // treat it as a sentence with no translation (error UI handles it)
-                        if (wordsCount >= 2) return { word: cleanWord, isSentence: true, error: 'Word not found' };
+                        if (wordsCount >= 2) {
+                            let verifiedWords = [];
+                            try {
+                                const sugRes = await fetch(`/api/suggestions?q=${encodeURIComponent(cleanWord)}&target=en`);
+                                if (sugRes.ok) {
+                                    const sugData = await sugRes.json();
+                                    verifiedWords = sugData.filter(i => i.type === 'dictionary').map(i => i.word);
+                                }
+                            } catch (e) {}
+                            return { word: cleanWord, isSentence: true, verifiedWords: verifiedWords, error: 'Word not found' };
+                        }
                     } catch (e) { console.error("Sentence search handler error:", e); }
 
                     if (cleanWord.includes(' ')) {

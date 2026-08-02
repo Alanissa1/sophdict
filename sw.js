@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sophdict-v51';
+const CACHE_NAME = 'sophdict-v52';
 const SETTINGS_CACHE = 'sophdict-settings';
 
 // Essential files for the app to function
@@ -120,6 +120,13 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('translate.googleapis.com')) return;
+
+  // DO NOT CACHE API calls in Service Worker (they are already cached in IndexedDB)
+  // This prevents the "forever cache" issue where empty results are never forgotten.
+  if (event.request.url.includes('/api/')) {
+      event.respondWith(fetch(event.request));
+      return;
+  }
 
   if (offlineFirst) {
       // CACHE FIRST Strategy

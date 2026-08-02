@@ -51,7 +51,12 @@ export default async function handler(req, res) {
             }
         }
 
-        res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
+        const isNotFound = !data || (Array.isArray(data) && (data.length === 0 || typeof data[0] === 'string'));
+        if (isNotFound) {
+            res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
+        } else {
+            res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
+        }
         res.status(200).json(data);
     } catch (error) {
         console.error(error);

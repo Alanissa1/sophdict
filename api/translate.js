@@ -112,7 +112,12 @@ export default async function handler(req, res) {
             }
         }
 
-        res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
+        const isError = !translatedText;
+        if (isError) {
+            res.setHeader('Cache-Control', 'public, s-maxage=60'); // Don't cache errors for long
+        } else {
+            res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
+        }
         res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
         res.setHeader('X-Robots-Tag', 'noindex');
         return res.status(200).json(data);

@@ -72,7 +72,14 @@ export default async function handler(req, res) {
             }
         }
 
-        res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
+        const isNotFound = !data || (Array.isArray(data) && (data.length === 0 || typeof data[0] === 'string'));
+        if (isNotFound) {
+            // Short cache for not found results (1 hour)
+            res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
+        } else {
+            res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
+        }
+
         res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
         res.setHeader('X-Robots-Tag', 'noindex');
         res.status(200).json(data);

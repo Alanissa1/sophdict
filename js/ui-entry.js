@@ -36,13 +36,13 @@ window.UIEntry = {
                     if (data.isSentence) {
                         const body = targetContainer.querySelector('#content-body');
                         const words = word.split(/\s+/).filter(w => w.length > 2);
-                        if (body && words.length > 0) {
+                        if (body && data.verifiedWords && data.verifiedWords.length > 0) {
                             body.innerHTML = `
                                 <div class="context-card suggestions-card">
                                     <div class="context-type">Individual Words</div>
                                     <div class="tags-section">
                                         <div class="tags-row">
-                                            ${words.map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
+                                            ${data.verifiedWords.map(w => `<span class="tag syn-tag" data-word="${w}" tabindex="0">${w}</span>`).join('')}
                                         </div>
                                     </div>
                                 </div>
@@ -77,12 +77,12 @@ window.UIEntry = {
                             <div class="definition" style="font-size: 1.2em; font-weight: 500;">${data.translation}</div>
                             <div class="pron-row-trans" style="margin-top:10px;"></div>
                         </div>
-                        ${data.targetLang === 'en' ? `
+                        ${data.targetLang === 'en' && data.verifiedWords && data.verifiedWords.length > 0 ? `
                         <div class="context-card suggestions-card">
                             <div class="context-type">Words in Translation</div>
                             <div class="tags-section">
                                 <div class="tags-row">
-                                    ${data.translation.split(/\s+/).filter(w => w.length > 2).map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
+                                    ${data.verifiedWords.map(w => `<span class="tag syn-tag" data-word="${w}" tabindex="0">${w}</span>`).join('')}
                                 </div>
                             </div>
                         </div>` : ''}
