@@ -11,10 +11,10 @@ body.dark-mode {
 }
 
 /* Dark scrollbars */
-body.dark-mode *::-webkit-scrollbar {
+/* body.dark-mode *::-webkit-scrollbar {
     width: 10px;
     height: 10px;
-}
+} */
 
 body.dark-mode *::-webkit-scrollbar-track {
     background: #0b0b0b;
