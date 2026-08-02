@@ -27,7 +27,7 @@ window.renderSideListContent = () => {
         .map(([name]) => {
             if (isDeleteMode) {
                 return `
-                    <button class="academic-list-trigger list-btn-delete" onclick="CustomLists.deleteList('${UIUtils.escapeJS(name)}')">
+                    <button class="academic-list-trigger list-btn-delete" onclick="CustomLists.deleteList('${name}')">
                         ${name} <span style="font-size: 16px;">&times;</span>Delete
                     </button>
                 `;
@@ -129,8 +129,8 @@ window.renderHomeLists = () => {
     const ls = Object.entries(stats.wordLastActive || {}).filter(([w]) => !stats.ignoredWords.includes(w)).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
     const lt = Object.entries(stats.tagLastActive || {}).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
     let h = '';
-    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" onclick="window.AppSearch('${UIUtils.escapeJS(w)}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${UIUtils.escapeJS(w)}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
-    if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Opened Tags</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" onclick="window.ModalManager.show('${UIUtils.escapeJS(t)}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${UIUtils.escapeJS(t)}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
+    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" onclick="window.AppSearch('${w}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${w}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
+    if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Opened Tags</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" onclick="window.ModalManager.show('${t}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${t}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
     root.innerHTML = h;
 };
 
@@ -303,7 +303,7 @@ window.AppClearSearch = (skipPush = false) => {
                 else if (item.type === 'dictionary') icon = '<svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor" style="margin-right:8px;"><path d="M560-320h160v-80H560v80Zm0-160h160v-80H560v80ZM240-160q-33 0-56.5-23.5T160-240v-560q0-33 23.5-56.5T240-880h480q33 0 56.5 23.5T800-800v560q0 33-23.5 56.5T720-160H240Zm0-80h480v-560H240v560Zm0 0v-560 560Z"/></svg>';
             }
 
-            return `<div class="suggestion-item" onclick="window.AppSearch('${UIUtils.escapeJS(word)}'); window.hideSuggestions();"><span style="display:flex; align-items:center;">${icon}${label}</span></div>`;
+            return `<div class="suggestion-item" onclick="window.AppSearch('${word.replace(/'/g, "\\'")}'); window.hideSuggestions();"><span style="display:flex; align-items:center;">${icon}${label}</span></div>`;
         }).join('');
         box.style.display = 'block';
     };
