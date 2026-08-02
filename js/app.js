@@ -28,7 +28,7 @@ window.renderSideListContent = () => {
             if (isDeleteMode) {
                 return `
                     <button class="academic-list-trigger list-btn-delete" onclick="CustomLists.deleteList('${name}')">
-                        ${name} <span style="font-size: 16px;">&times;</span>
+                        ${name} <span style="font-size: 16px;">&times;</span>Delete
                     </button>
                 `;
             }
@@ -51,7 +51,7 @@ window.renderSideListContent = () => {
             </button>
             <button class="academic-list-trigger" onclick="window.closeSideList(); window.history.pushState({}, '', '/create-list'); CustomLists.handleRoute();" title="Create Custom List" style="flex: 1; background: var(--card-bg); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; padding: 12px; border-radius: 12px;">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
-            </button>
+            Add</button>
         </div>
     `;
 
