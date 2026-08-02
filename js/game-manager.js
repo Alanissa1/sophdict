@@ -303,7 +303,7 @@ window.GameManager = {
                 <div class="game-progress-bar" style="width: ${progress}%"></div>
             </div>
             <div class="game-content">
-                <div class="game-question" dir="${questionDir}" style="display:flex; justify-content:center; align-items:left; text-align:center; margin: -5px 0 5px 0;">
+                <div class="game-question" dir="${questionDir}" style="display:flex; justify-content:center; align-items:left; text-align:center; margin: 0 0 5px 0;">
                     <span>${questionText}</span>
                 </div>
                 <div class="game-answer-area" id="gameAnswerArea" dir="${answerDir}"></div>
