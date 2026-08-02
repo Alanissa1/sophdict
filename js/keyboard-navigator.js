@@ -12,7 +12,7 @@ window.KeyboardNavigator = {
                 if (pi) {
                     const id = pi.panel.id;
                     if (id === 'microWindow') window.ModalManager.hide();
-                    else if (id === 'statsPanel') window.StatsManager.togglePanel();
+                    else if (id === 'statsPanel') window.StatsManager.hide();
                     else if (id === 'text-scale-control') window.TextScaler.hide();
                     else if (id === 'pinnedPanel') window.AppClosePinnedPanel();
                 }
@@ -143,7 +143,7 @@ window.KeyboardNavigator = {
                 e.preventDefault();
                 const id = pi.panel.id;
                 if (id === 'microWindow') window.ModalManager.hide();
-                else if (id === 'statsPanel') window.StatsManager.togglePanel();
+                else if (id === 'statsPanel') window.StatsManager.hide();
                 else if (id === 'text-scale-control') window.TextScaler.hide();
                 else if (id === 'pinnedPanel') window.AppClosePinnedPanel();
                 return;

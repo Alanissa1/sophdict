@@ -169,9 +169,7 @@ window.UIUtils = {
                 else {
                     if (window.closeSideList) window.closeSideList();
                     if (window.ModalManager) window.ModalManager.hide();
-                    if (window.StatsManager && document.getElementById('statsPanel')?.style.display === 'flex') {
-                        window.StatsManager.togglePanel();
-                    }
+                    if (window.StatsManager) window.StatsManager.hide();
                     if (window.AppClosePinnedPanel) window.AppClosePinnedPanel();
                 }
             }

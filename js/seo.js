@@ -262,9 +262,7 @@
 
         // Close panels on any back navigation
         if (window.AppClosePinnedPanel) window.AppClosePinnedPanel(true);
-        if (window.StatsManager && document.getElementById('statsPanel')?.style.display === 'flex') {
-            window.StatsManager.togglePanel(true);
-        }
+        if (window.StatsManager) window.StatsManager.hide(true);
         if (window.TextScaler && document.getElementById('text-scale-control')?.style.display === 'flex') {
             window.TextScaler.hide(true);
         }

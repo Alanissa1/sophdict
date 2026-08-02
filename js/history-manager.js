@@ -62,7 +62,7 @@ window.HistoryManager = {
 
     onItemClick(word) {
         this.hideDetails();
-        if (window.StatsManager) window.StatsManager.togglePanel();
+        if (window.StatsManager) window.StatsManager.hide();
         const wordInput = document.getElementById('wordInput');
         if (wordInput) wordInput.focus();
         if (window.AppSearch) window.AppSearch(word, false);
