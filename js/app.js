@@ -276,7 +276,15 @@ window.AppClearSearch = (skipPush = false) => {
         document.addEventListener('click', hideOnOutside);
         document.addEventListener('focusin', hideOnOutside);
     }
-    async function getOnlineSuggestions(q) { try { const res = await fetch(`/api/suggestions?q=${encodeURIComponent(q)}`); return await res.json(); } catch (e) { return []; } }
+    async function getOnlineSuggestions(q) {
+        const target = window.TranslationManager?.targetLanguage || 'tr';
+        try {
+            const res = await fetch(`/api/suggestions?q=${encodeURIComponent(q)}&target=${target}`);
+            return await res.json();
+        } catch (e) {
+            return [];
+        }
+    }
     window.showSuggestions = (items) => {
         const box = document.getElementById('suggestions-box');
         if (!box || items.length === 0) { window.hideSuggestions(); return; }
