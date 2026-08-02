@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+Export default async function handler(req, res) {
     const { q, target, enabled } = req.query;
     if (!q) return res.status(200).json([]);
 
@@ -26,6 +26,7 @@ export default async function handler(req, res) {
             const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
 
             // We request translation to BOTH English and the user's Target Language
+            // (If target is en, we only need toEn, which is redundant but safe)
             const transRes = await fetch(`${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&to=en&to=${targetLang}&textType=plain`, {
                 method: 'POST',
                 headers: {
@@ -45,11 +46,13 @@ export default async function handler(req, res) {
                     const toTarget = result.translations.find(t => t.to === targetLang)?.text;
 
                     if (targetLang === 'en') {
-                         // IF SYSTEM IS EN: Do not show translation suggestions
+                         // IF SYSTEM IS EN: Do not show translation suggestions (user's request)
                     } else if (detected === targetLang && toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
+                        // Input was System Language -> Suggest English (helps finding dictionary entries)
                         translatedToEn = toEn;
                         translationInfo = { original: cleanQ, translated: toEn, type: 'translation' };
                     } else if (detected === 'en' && toTarget && toTarget.toLowerCase() !== cleanQ.toLowerCase() && isTransEnabled && words.length >= 2) {
+                        // Input was English Sentence -> Suggest System Language
                         translationInfo = { original: cleanQ, translated: toTarget, type: 'translation' };
                     }
                 }
@@ -68,8 +71,7 @@ export default async function handler(req, res) {
 
             // If it's a single non-English word, check if the translation is in MW
             if (translatedToEn && upstashUrl && upstashToken) {
-                // تم التعديل هنا للحفاظ على الفاصلة العليا
-                const transWord = translatedToEn.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '');
+                const transWord = translatedToEn.toLowerCase().replace(/[^a-z0-9]/g, '');
                 try {
                     const cacheRes = await fetch(`${upstashUrl}/pipeline`, {
                         method: 'POST',
@@ -90,8 +92,8 @@ export default async function handler(req, res) {
             if (translationInfo) results.push(translationInfo);
             results.push({ word: cleanQ, type: 'sentence' });
 
-            // تم التعديل هنا للحفاظ على الفاصلة العليا
-            const uniqueWords = [...new Set(words.map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')))]
+            // Extract words and check dictionary index
+            const uniqueWords = [...new Set(words.map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')))]
                 .filter(w => w.length > 0)
                 .slice(0, 15);
 
@@ -115,8 +117,7 @@ export default async function handler(req, res) {
 
             // If we have a translation to English, also check words from it
             if (translatedToEn) {
-                // تم التعديل هنا للحفاظ على الفاصلة العليا
-                const transWords = translatedToEn.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
+                const transWords = translatedToEn.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')).filter(w => w.length > 0);
                 const transUnique = [...new Set(transWords)].filter(w => !uniqueWords.includes(w));
 
                 if (upstashUrl && upstashToken && transUnique.length > 0) {
