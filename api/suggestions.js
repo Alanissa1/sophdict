@@ -17,7 +17,12 @@ export default async function handler(req, res) {
     try {
         let translationInfo = null;
         let dictionaryWords = [];
-        let isEnglishInput = false; // متغير جديد لمعرفة ما إذا كان الإدخال باللغة الإنجليزية
+        let isEnglishInput = false;
+
+        // التحقق يدويًا إذا كان النص المدخل يحتوي على أحرف إنجليزية لضمان السرعة والدقة
+        if (/^[a-zA-Z0-9\s.,?!'-]+$/.test(cleanQ)) {
+            isEnglishInput = true;
+        }
 
         // 1. Language Detection & Translation
         const azureKey = process.env.AZURE_TRANSLATOR_KEY;
@@ -44,13 +49,12 @@ export default async function handler(req, res) {
                     const toEn = result.translations.find(t => t.to === 'en')?.text;
                     const toTarget = result.translations.find(t => t.to === targetLang)?.text;
 
-                    // تحديد إذا كانت الجملة المدخلة هي الإنجليزية
                     if (detected === 'en') {
                         isEnglishInput = true;
                     }
 
                     if (targetLang === 'en') {
-                         // IF SYSTEM IS EN: Do not show translation suggestions 
+                         // IF SYSTEM IS EN
                     } else if (detected === targetLang && toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
                         translatedToEn = toEn;
                         translationInfo = { original: cleanQ, translated: toEn, type: 'translation' };
@@ -62,7 +66,6 @@ export default async function handler(req, res) {
         }
 
         if (words.length === 1) {
-            // Single Word: Datamuse completions + Translation if found
             const datamuseRes = await fetch(`https://api.datamuse.com/sug?s=${encodeURIComponent(cleanQ)}&max=7`);
             const datamuseData = await datamuseRes.json();
             const suggestions = datamuseData.map(s => ({ word: s.word, type: 'completion' }));
@@ -71,7 +74,6 @@ export default async function handler(req, res) {
             if (translationInfo) results.push(translationInfo);
             results.push(...suggestions);
 
-            // إصلاح الـ Regex هنا أيضاً للحفاظ على I'm
             if (translatedToEn && upstashUrl && upstashToken) {
                 const transWord = translatedToEn.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '');
                 try {
@@ -89,17 +91,15 @@ export default async function handler(req, res) {
 
             return res.status(200).json(results);
         } else {
-            // Multi-word: Sentence analysis
             const results = [];
             if (translationInfo) results.push(translationInfo);
             results.push({ word: cleanQ, type: 'sentence' });
 
-            // إصلاح الـ Regex للحفاظ على الفاصلة العليا للأحرف الإنجليزية
             const uniqueWords = [...new Set(words.map(w => w.replace(/[^a-zA-Z0-9']/g, '').replace(/^'|'$/g, '')))]
                 .filter(w => w.length > 0)
                 .slice(0, 15);
 
-            // إبقاء البحث في قاعدة البيانات كما طلبت (في حال لم تكن اللغة إنجليزية)
+            // إذا لم يكن الإدخال إنجليزياً، افحص قاعدة البيانات للاستخراج العادي
             if (upstashUrl && upstashToken && uniqueWords.length > 0 && !isEnglishInput) {
                 try {
                     const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
@@ -118,22 +118,18 @@ export default async function handler(req, res) {
                 } catch (e) {}
             }
 
-            // === المنطق الجديد الذي طلبته: إرسال الكلمات الإنجليزية كبطاقات مباشرة ===
-            
-            // الحالة الأولى: إذا كان الإدخال عربي/تركي وتم ترجمته للإنجليزية
-            if (translatedToEn) {
-                const transWords = translatedToEn.split(/\s+/).map(w => w.replace(/[^a-zA-Z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
-                const transUnique = [...new Set(transWords)];
-                
-                transUnique.forEach(w => {
+            // التعديل الجذري هنا: إذا كان الإدخال بالإنجليزية، أرسل جميع الكلمات كبطاقات فوراً ودون شروط
+            if (isEnglishInput) {
+                uniqueWords.forEach(w => {
                     if (!dictionaryWords.find(dw => dw.word.toLowerCase() === w.toLowerCase())) {
                         dictionaryWords.push({ word: w, type: 'dictionary' });
                     }
                 });
-            } 
-            // الحالة الثانية: إذا كانت الجملة الأصلية التي بحث عنها المستخدم بالإنجليزية
-            else if (isEnglishInput) {
-                uniqueWords.forEach(w => {
+            } else if (translatedToEn) {
+                const transWords = translatedToEn.split(/\s+/).map(w => w.replace(/[^a-zA-Z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
+                const transUnique = [...new Set(transWords)];
+                
+                transUnique.forEach(w => {
                     if (!dictionaryWords.find(dw => dw.word.toLowerCase() === w.toLowerCase())) {
                         dictionaryWords.push({ word: w, type: 'dictionary' });
                     }
