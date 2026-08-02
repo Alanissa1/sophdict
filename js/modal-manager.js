@@ -54,7 +54,10 @@ window.ModalManager = {
         this.lastTriggerElement = document.activeElement;
 
         if (window.ScrollFixer) window.ScrollFixer.save();
-        if (window.StatsManager) window.StatsManager.recordTagOpen(word);
+        if (window.StatsManager) {
+            window.StatsManager.recordTagOpen(word);
+            window.StatsManager.hide(true);
+        }
 
         if (window.updateMetadata) window.updateMetadata(word);
 

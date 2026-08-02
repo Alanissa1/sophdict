@@ -90,6 +90,7 @@ window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
             document.body.classList.add('modal-open');
         }
         ModalManager.hide(true);
+        if (window.StatsManager) window.StatsManager.hide(true);
     }
     try {
         const data = await APIClient.fetchWordData(word);
@@ -129,8 +130,9 @@ window.renderHomeLists = () => {
     const ls = Object.entries(stats.wordLastActive || {}).filter(([w]) => !stats.ignoredWords.includes(w)).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
     const lt = Object.entries(stats.tagLastActive || {}).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
     let h = '';
-    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" onclick="window.AppSearch('${w}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${w}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
-    if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Opened Tags</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" onclick="window.ModalManager.show('${t}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${t}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
+    const esc = (s) => (s || '').replace(/'/g, "\\'");
+    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" onclick="window.AppSearch('${esc(w)}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(w)}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
+    if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Opened Tags</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" onclick="window.ModalManager.show('${esc(t)}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(t)}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
     root.innerHTML = h;
 };
 
