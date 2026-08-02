@@ -59,9 +59,8 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Translation service not configured' });
         }
 
-        // Force 'from' if provided, otherwise fallback to 'en' when translating to target,
-        // or 'auto' when translating to English (if not specified)
-        const sourceLang = from || (lang === 'en' ? '' : 'en');
+        // IMPROVEMENT: Use 'from' if provided, otherwise allow Azure to auto-detect
+        const sourceLang = from || '';
         const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0${sourceLang ? `&from=${sourceLang}` : ''}&to=${lang}&textType=plain`;
         const response = await fetch(url, {
             method: 'POST',

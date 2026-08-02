@@ -29,7 +29,8 @@ window.UIEntry = {
                     const pronRow = targetContainer.querySelector('.pron-row');
                     if (pronRow && word) {
                         const target = window.TranslationManager?.targetLanguage || 'tr';
-                        pronRow.appendChild(TTSManager.createButton(word, 'tts-btn', data.isSentence ? target : 'en'));
+                        // Best guess for lang: if multi-word it might be system language
+                        pronRow.appendChild(TTSManager.createButton(word, 'tts-btn', word.includes(' ') ? target : 'en'));
                     }
 
                     if (data.isSentence) {
@@ -76,6 +77,7 @@ window.UIEntry = {
                             <div class="definition" style="font-size: 1.2em; font-weight: 500;">${data.translation}</div>
                             <div class="pron-row-trans" style="margin-top:10px;"></div>
                         </div>
+                        ${data.targetLang === 'en' ? `
                         <div class="context-card suggestions-card">
                             <div class="context-type">Words in Translation</div>
                             <div class="tags-section">
@@ -83,7 +85,7 @@ window.UIEntry = {
                                     ${data.translation.split(/\s+/).filter(w => w.length > 2).map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
                                 </div>
                             </div>
-                        </div>
+                        </div>` : ''}
                     </div>
                 `;
                 const pronRow = targetContainer.querySelector('.pron-row');

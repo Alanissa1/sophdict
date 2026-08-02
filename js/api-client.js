@@ -32,13 +32,14 @@ window.APIClient = {
                             const target = window.TranslationManager?.targetLanguage || 'tr';
                             const isTransEnabled = localStorage.getItem('translation_enabled') === 'true';
 
-                            // 1. Try to translate to English (to see if it's NOT English)
+                            // 1. Try to translate to English (auto-detect source)
                             const toEnRes = await fetch(`/api/translate?lang=en&text=${encodeURIComponent(cleanWord)}`);
                             if (toEnRes.ok) {
                                 const toEnData = await toEnRes.json();
                                 let toEnText = "";
                                 if (toEnData && toEnData[0]) toEnData[0].forEach(p => { if (p[0]) toEnText += p[0]; });
 
+                                // If the translation result is significantly different, assume it was NOT English
                                 if (toEnText && toEnText.toLowerCase().trim() !== cleanWord.toLowerCase().trim()) {
                                     return {
                                         word: cleanWord,
@@ -52,8 +53,7 @@ window.APIClient = {
                                 }
                             }
 
-                            // 2. Fallback: If it's English (or the above failed to return a *different* text),
-                            // and Translation is enabled, translate to System Language
+                            // 2. If it's English (or same as En), and Translation is enabled, translate to System Language
                             if (isTransEnabled && target !== 'en') {
                                 const toTargetRes = await fetch(`/api/translate?lang=${target}&text=${encodeURIComponent(cleanWord)}`);
                                 if (toTargetRes.ok) {
@@ -75,6 +75,10 @@ window.APIClient = {
                                     }
                                 }
                             }
+
+                            // 3. If no translation was found but it's a multi-word search,
+                            // treat it as a sentence with no translation (error UI handles it)
+                            return { word: cleanWord, isSentence: true, error: 'Word not found' };
                         } catch (e) { console.error("Sentence search handler error:", e); }
                     }
 
