@@ -164,7 +164,8 @@ window.AppClearSearch = (skipPush = false) => {
             <button class="side-list-toggle-btn" onclick="window.toggleSideList()" aria-label="Word Lists">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M120-240v-80h720v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/></svg>
             </button>
-            <div class="welcome-screen" style="padding-top: 5vh;">
+            <div class="welcome-screen">
+                <div class="home-settings-bar"></div>
                 <img src="sophdict.svg" alt="SophDict" class="welcome-logo"><p class="welcome-text">The Sophisticated Dictionary</p><div class="welcome-hint">Search for definitions, synonyms, and more</div><div id="home-lists-root" class="home-lists-container"></div>
             </div>`;
 
@@ -172,6 +173,16 @@ window.AppClearSearch = (skipPush = false) => {
         if (ws && currentSc) {
             const logo = ws.querySelector('.welcome-logo');
             if (logo) logo.after(currentSc);
+
+            const hsb = ws.querySelector('.home-settings-bar'),
+                  st = document.getElementById('statsToggleBtn'),
+                  ts = document.getElementById('textScaleToggleBtn'),
+                  pt = document.getElementById('pinnedToggleBtn');
+            if (hsb) {
+                if (st) hsb.appendChild(st);
+                if (pt) hsb.appendChild(pt);
+                if (ts) hsb.appendChild(ts);
+            }
         }
         window.renderHomeLists();
         window.renderSideListContent();
@@ -270,13 +281,12 @@ window.AppClearSearch = (skipPush = false) => {
     window.hideSuggestions = () => { const box = document.getElementById('suggestions-box'); if (box) box.style.display = 'none'; };
     if (ll) ll.onclick = (e) => { e.preventDefault(); window.AppClearSearch(); };
     let pinnedTrigger = null;
-    window.AppClosePinnedPanel = (fromHistory = false) => {
+    window.AppClosePinnedPanel = () => {
         const pp = document.getElementById('pinnedPanel');
         if (pp) pp.style.display = 'none';
         UIUtils.updateSharedDimmer();
         if (window.ScrollFixer) window.ScrollFixer.restore();
         if (pinnedTrigger) pinnedTrigger.focus({ preventScroll: true });
-        if (!fromHistory && window.history.state?.panel) window.history.back();
     };
     if (pt) pt.onclick = () => {
         const pp = document.getElementById('pinnedPanel'), md = document.getElementById('microDimmer');
@@ -286,7 +296,6 @@ window.AppClearSearch = (skipPush = false) => {
             pp.style.display = 'block';
             UIUtils.updateSharedDimmer();
             if (md) UIUtils.setupQuickClose(md);
-            window.history.pushState({ panel: true }, "");
             PinManager.renderList(w => { window.AppClosePinnedPanel(); window.AppSearch(w); });
         }
     };

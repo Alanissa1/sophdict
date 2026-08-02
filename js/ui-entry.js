@@ -70,7 +70,7 @@ window.UIEntry = {
                                     </div>
                                 </div>
                             </div>
-                            <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                            <div style="display:flex; flex-direction:column; align-items:flex-end; margin: 0 0 0 auto;">
                                 <div id="offline-status-container" style="display:flex; align-items:baseline; gap:5px;">
                                     <div id="page-fetch-status" class="fetch-progress-meter" style="font-weight: bold; font-size: 10px; margin: -10px 0 -10px 0"></div>
                                     <span style="font-size:12px; color:var(--text-sub);">words offline</span>
