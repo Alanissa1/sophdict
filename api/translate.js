@@ -5,7 +5,7 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'Direct access not allowed' });
     }
 
-    const { text, lang, cacheOnly } = req.query;
+    const { text, lang, from, cacheOnly } = req.query;
     let upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
     const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
     // Use Hex encoding and limit length to ensure key is URL-safe and compatible with Redis
     const textHash = Buffer.from(text).toString('hex').substring(0, 120);
-    const cacheKey = `trans:${lang}:${textHash}`;
+    const cacheKey = `trans:${lang}:${from || 'auto'}:${textHash}`;
 
     try {
         // 1. Try Upstash Cache using POST for both read/write (more reliable for long keys)
@@ -59,8 +59,9 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Translation service not configured' });
         }
 
-        // IMPROVEMENT: Force from=en and textType=plain for higher quality dictionary translations
-        const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&from=en&to=${lang}&textType=plain`;
+        // IMPROVEMENT: Force from=en if lang is not en, otherwise detect
+        const sourceLang = from || (lang === 'en' ? '' : 'en');
+        const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0${sourceLang ? `&from=${sourceLang}` : ''}&to=${lang}&textType=plain`;
         const response = await fetch(url, {
             method: 'POST',
             headers: {

@@ -22,14 +22,69 @@ window.UIEntry = {
                             </div>
                         </div>
                         <div style="padding:40px; text-align:center; color:var(--text-sub);">
-                            ${data.error === 'Network error' ? 'Network error. Please check your connection.' : 'Word not found in dictionary.'}
+                            ${data.isSentence ? 'This looks like a sentence. Try searching for individual words below.' : (data.error === 'Network error' ? 'Network error. Please check your connection.' : 'Word not found in dictionary.')}
                         </div>
+                        <div id="content-body"></div>
                     `;
                     const pronRow = targetContainer.querySelector('.pron-row');
                     if (pronRow && word) pronRow.appendChild(TTSManager.createButton(word));
+
+                    if (data.isSentence) {
+                        const body = targetContainer.querySelector('#content-body');
+                        const words = word.split(/\s+/).filter(w => w.length > 2);
+                        if (body && words.length > 0) {
+                            body.innerHTML = `
+                                <div class="context-card suggestions-card">
+                                    <div class="context-type">Individual Words</div>
+                                    <div class="tags-container" style="margin-top:10px;">
+                                        ${words.map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
                 } else {
                     targetContainer.innerHTML = `<div style="padding:40px; text-align:center;">Word not found</div>`;
                 }
+                return;
+            }
+
+            if (data.isSentence && data.translation) {
+                const word = data.word || "";
+                targetContainer.innerHTML = `
+                    <div class="word-header">
+                        <div class="title-row">
+                            <div class="word-info">
+                                <div style="display: flex; align-items: center; ">
+                                    <div class="pron-row"></div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <h1 class="word-title">${word}</h1>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="content-body">
+                        <div class="context-card translation-card" style="border-left: 4px solid var(--accent);">
+                            <div class="context-type">English Translation</div>
+                            <div class="definition" style="font-size: 1.2em; font-weight: 500;">${data.translation}</div>
+                            <div class="pron-row-trans" style="margin-top:10px;"></div>
+                        </div>
+                        <div class="context-card suggestions-card">
+                            <div class="context-type">Words in Translation</div>
+                            <div class="tags-container" style="margin-top:10px;">
+                                ${data.translation.split(/\s+/).filter(w => w.length > 2).map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const pronRow = targetContainer.querySelector('.pron-row');
+                if (pronRow) pronRow.appendChild(TTSManager.createButton(word));
+                const pronRowTrans = targetContainer.querySelector('.pron-row-trans');
+                if (pronRowTrans) pronRowTrans.appendChild(TTSManager.createButton(data.translation));
+
+                if (containerId === 'results-container') window.scrollTo({ top: 0, behavior: 'instant' });
+                UIUtils.attachInlineTTS(targetContainer);
                 return;
             }
 

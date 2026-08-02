@@ -25,7 +25,32 @@ window.APIClient = {
                 ]);
 
                 if (!Array.isArray(dictData) || (dictData.length > 0 && typeof dictData[0] === 'string')) {
-                     return { error: 'Word not found', suggestions: dictData };
+                    // Word not found. Check if it's a sentence or non-English word and try to translate
+                    try {
+                        // Translate to English to detect if it's not English or if it's a phrase
+                        const transRes = await fetch(`/api/translate?lang=en&text=${encodeURIComponent(cleanWord)}`);
+                        if (transRes.ok) {
+                            const transData = await transRes.json();
+                            let translatedText = "";
+                            if (transData && transData[0]) {
+                                transData[0].forEach(part => { if (part[0]) translatedText += part[0]; });
+                            }
+
+                            if (translatedText && translatedText.toLowerCase() !== cleanWord.toLowerCase()) {
+                                return {
+                                    word: cleanWord,
+                                    isSentence: true, // We treat non-English single words as a "sentence" to trigger translation UI
+                                    translation: translatedText,
+                                    error: null
+                                };
+                            }
+                        }
+                    } catch (e) { console.error("Search translation error:", e); }
+
+                    if (cleanWord.includes(' ')) {
+                        return { word: cleanWord, isSentence: true, error: 'Word not found' };
+                    }
+                    return { error: 'Word not found', suggestions: dictData };
                 }
 
                 const data = {
