@@ -39,7 +39,7 @@ window.StatsManager = {
 
     lastTriggerElement: null,
 
-    togglePanel(fromHistory = false) {
+    togglePanel() {
         const panel = document.getElementById('statsPanel'), dimmer = document.getElementById('microDimmer');
         if (!panel || !dimmer) return;
 
@@ -48,7 +48,6 @@ window.StatsManager = {
             if (window.ScrollFixer) window.ScrollFixer.restore();
             UIUtils.updateSharedDimmer();
             if (this.lastTriggerElement) this.lastTriggerElement.focus({ preventScroll: true });
-            if (!fromHistory && window.history.state?.stats) window.history.back();
         } else {
             this.lastTriggerElement = document.activeElement;
             this.currentOpenSection = null;
@@ -57,7 +56,6 @@ window.StatsManager = {
             panel.style.display = 'flex';
             UIUtils.updateSharedDimmer();
             UIUtils.setupQuickClose(dimmer);
-            if (!fromHistory) window.history.pushState({ stats: true }, "");
         }
     },
 

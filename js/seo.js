@@ -180,7 +180,6 @@
                     // After main word is loaded, show the modal with the second word
                     if (success && window.ModalManager) {
                         window.ModalManager.show(modalWord, null, true);
-                        window.history.replaceState({ modal: true, word: modalWord }, "", window.location.pathname);
                     }
                 });
             }
@@ -189,14 +188,11 @@
             const word = decodeURIComponent(path.substring(6).replace(/\/$/, ""));
             if (word && window.ModalManager) {
                 window.ModalManager.show(word, null, true);
-                window.history.replaceState({ modal: true, word }, "", window.location.pathname);
             }
         } else if (!path.includes('/')) {
             // Simple word search (Silent for errorless offline)
-            const word = decodeURIComponent(path);
             if (window.AppSearch) {
-                window.AppSearch(word, true, true);
-                window.history.replaceState({ word }, "", `/${encodeURIComponent(word)}`);
+                window.AppSearch(decodeURIComponent(path), true, true);
             }
         }
     };
@@ -212,15 +208,7 @@
         const currentMainWord = localStorage.getItem('lastWord');
 
         // Determine if the main word is actually changing
-        let nextMainWord = null;
-        if (modalMatch) {
-            nextMainWord = decodeURIComponent(modalMatch[1]);
-        } else if (path && !path.includes('/')) {
-            nextMainWord = decodeURIComponent(path);
-        } else if (e.state && e.state.word) {
-            nextMainWord = e.state.word;
-        }
-
+        const nextMainWord = modalMatch ? decodeURIComponent(modalMatch[1]) : (e.state && e.state.word ? e.state.word : null);
         if (nextMainWord && nextMainWord !== currentMainWord) {
             if (window.AppClearSearch) window.AppClearSearch(true);
         }
@@ -256,18 +244,12 @@
             }
         } else if (window.location.pathname === "/") {
             if (window.ModalManager) window.ModalManager.hide(true);
-            if (window.AppClearSearch && !document.body.classList.contains('home-state')) window.AppClearSearch();
+            if (window.AppClearSearch) window.AppClearSearch();
             document.title = 'SophDict - The Sophisticated Dictionary';
         }
 
         // Close panels on any back navigation
         if (window.AppClosePinnedPanel) window.AppClosePinnedPanel(true);
-        if (window.StatsManager && document.getElementById('statsPanel')?.style.display === 'flex') {
-            window.StatsManager.togglePanel(true);
-        }
-        if (window.TextScaler && document.getElementById('text-scale-control')?.style.display === 'flex') {
-            window.TextScaler.hide(true);
-        }
     });
 
     // Initialize
