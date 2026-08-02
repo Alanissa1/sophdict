@@ -39,7 +39,7 @@ window.APIClient = {
                                 let toEnText = "";
                                 if (toEnData && toEnData[0]) toEnData[0].forEach(p => { if (p[0]) toEnText += p[0]; });
 
-                                if (toEnText && toEnText.toLowerCase() !== cleanWord.toLowerCase()) {
+                                if (toEnText && toEnText.toLowerCase().trim() !== cleanWord.toLowerCase().trim()) {
                                     return {
                                         word: cleanWord,
                                         isSentence: true,
@@ -52,7 +52,8 @@ window.APIClient = {
                                 }
                             }
 
-                            // 2. If it's English, and Translation is enabled, translate to System Language
+                            // 2. Fallback: If it's English (or the above failed to return a *different* text),
+                            // and Translation is enabled, translate to System Language
                             if (isTransEnabled && target !== 'en') {
                                 const toTargetRes = await fetch(`/api/translate?lang=${target}&text=${encodeURIComponent(cleanWord)}`);
                                 if (toTargetRes.ok) {
@@ -60,7 +61,7 @@ window.APIClient = {
                                     let toTargetText = "";
                                     if (toTargetData && toTargetData[0]) toTargetData[0].forEach(p => { if (p[0]) toTargetText += p[0]; });
 
-                                    if (toTargetText && toTargetText.toLowerCase() !== cleanWord.toLowerCase()) {
+                                    if (toTargetText && toTargetText.toLowerCase().trim() !== cleanWord.toLowerCase().trim()) {
                                         const langObj = window.TranslationManager?.languages?.find(l => l.code === target);
                                         return {
                                             word: cleanWord,
