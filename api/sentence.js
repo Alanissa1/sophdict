@@ -61,7 +61,6 @@ export default async function handler(req, res) {
         }
 
         // Extract verified dictionary words
-        const searchWords = (translation && targetLangCode === 'en' ? translation : cleanQ);
         const uniqueWords = [...new Set(searchWords.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')))]
             .filter(w => w.length > 2)
             .slice(0, 20);
@@ -80,6 +79,35 @@ export default async function handler(req, res) {
                     cacheData.forEach((r, idx) => { if (r.result === 1) verifiedWords.push(uniqueWords[idx]); });
                 }
             } catch (e) {}
+        }
+
+        // Also check original words if they weren't checked (for non-English sentences)
+        if (translation && targetLangCode === 'en') {
+            const originalWords = [...new Set(cleanQ.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9]/g, '')))]
+                .filter(w => w.length > 2 && !uniqueWords.includes(w))
+                .slice(0, 10);
+
+            if (upstashUrl && upstashToken && originalWords.length > 0) {
+                try {
+                    const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
+                    const cacheRes = await fetch(pipelineUrl, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${upstashToken}` },
+                        body: JSON.stringify(originalWords.map(w => ["SISMEMBER", "all_words_index", w]))
+                    });
+                    const cacheData = await cacheRes.json();
+                    if (Array.isArray(cacheData)) {
+                        cacheData.forEach((r, idx) => { if (r.result === 1) verifiedWords.push(originalWords[idx]); });
+                    }
+                } catch (e) {}
+            }
+        }
+
+        const isNotFound = !translation && (!verifiedWords || verifiedWords.length === 0);
+        if (isNotFound) {
+            res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
+        } else {
+            res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
         }
 
         return res.status(200).json({

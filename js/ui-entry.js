@@ -7,6 +7,8 @@ window.UIEntry = {
 
             if (data.error) {
                 const word = data.word || "";
+                const isSentence = data.isSentence || word.includes(' ');
+
                 if (containerId === 'results-container') {
                     targetContainer.innerHTML = `
                         <div class="word-header">
@@ -22,18 +24,17 @@ window.UIEntry = {
                             </div>
                         </div>
                         <div style="padding:40px; text-align:center; color:var(--text-sub);">
-                            ${data.isSentence ? 'This looks like a sentence. Try searching for individual words below.' : (data.error === 'Network error' ? 'Network error. Please check your connection.' : 'Word not found in dictionary.')}
+                            ${isSentence ? 'This looks like a sentence. Try searching for individual words below.' : (data.error === 'Network error' ? 'Network error. Please check your connection.' : 'Word not found in dictionary.')}
                         </div>
                         <div id="content-body"></div>
                     `;
                     const pronRow = targetContainer.querySelector('.pron-row');
                     if (pronRow && word) {
                         const target = window.TranslationManager?.targetLanguage || 'tr';
-                        // Best guess for lang: if multi-word it might be system language
-                        pronRow.appendChild(TTSManager.createButton(word, 'tts-btn', word.includes(' ') ? target : 'en'));
+                        pronRow.appendChild(TTSManager.createButton(word, 'tts-btn', isSentence ? target : 'en'));
                     }
 
-                    if (data.isSentence) {
+                    if (isSentence) {
                         const body = targetContainer.querySelector('#content-body');
                         if (body) {
                             if (data.verifiedWords && data.verifiedWords.length > 0) {
@@ -48,7 +49,7 @@ window.UIEntry = {
                                     </div>
                                 `;
                             } else if (!data.translation) {
-                                body.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found.</div>`;
+                                body.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found for this sentence.</div>`;
                             }
                         }
                     }
@@ -57,6 +58,9 @@ window.UIEntry = {
                 }
                 return;
             }
+
+            const body = document.getElementById('content-body');
+            if (body) body.innerHTML = ''; // Clear previous content
 
             if (data.isSentence && data.translation) {
                 const word = data.word || "";
@@ -181,7 +185,25 @@ window.UIEntry = {
                 if (body) {
                     let html = UIThesaurus.generateHtml(data);
                     html += UIUtils.renderWordOrigin(data);
-                    body.innerHTML = html;
+
+                    if (!html && (data.isSentence || word.includes(' '))) {
+                        if (data.verifiedWords && data.verifiedWords.length > 0) {
+                            html = `
+                                <div class="context-card suggestions-card">
+                                    <div class="context-type">Individual Words</div>
+                                    <div class="tags-section">
+                                        <div class="tags-row">
+                                            ${data.verifiedWords.map(w => `<span class="tag syn-tag" data-word="${w}" tabindex="0">${w}</span>`).join('')}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            html = `<div style="padding:20px; text-align:center; color:var(--text-sub);">No dictionary results found for this phrase.</div>`;
+                        }
+                    }
+
+                    body.innerHTML = html || `<div style="padding:20px; text-align:center; color:var(--text-sub);">No relevant dictionary or thesaurus data found.</div>`;
                     PreFetcher.updatePageStatus(); // Initialize persistent meter
                 }
                 if (containerId === 'results-container') {

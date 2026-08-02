@@ -36,7 +36,7 @@
       ]
     },
     {
-      "source": "/api/(dictionary|thesaurus|translate|suggestions)(.*)",
+      "source": "/api/(dictionary|thesaurus|translate|suggestions|sentence)(.*)",
       "headers": [
         {
           "key": "Cache-Control",
