@@ -261,9 +261,9 @@
         }
 
         // Close panels on any back navigation
-        if (window.AppClosePinnedPanel) window.AppClosePinnedPanel();
+        if (window.AppClosePinnedPanel) window.AppClosePinnedPanel(true);
         if (window.StatsManager && document.getElementById('statsPanel')?.style.display === 'flex') {
-            window.StatsManager.togglePanel();
+            window.StatsManager.togglePanel(true);
         }
         if (window.TextScaler && document.getElementById('text-scale-control')?.style.display === 'flex') {
             window.TextScaler.hide(true);

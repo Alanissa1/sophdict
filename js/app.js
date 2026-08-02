@@ -281,12 +281,19 @@ window.AppClearSearch = (skipPush = false) => {
     window.hideSuggestions = () => { const box = document.getElementById('suggestions-box'); if (box) box.style.display = 'none'; };
     if (ll) ll.onclick = (e) => { e.preventDefault(); window.AppClearSearch(); };
     let pinnedTrigger = null;
-    window.AppClosePinnedPanel = () => {
+    window.AppClosePinnedPanel = (fromHistory = false) => {
+        if (fromHistory instanceof Event) fromHistory = false;
         const pp = document.getElementById('pinnedPanel');
-        if (pp) pp.style.display = 'none';
-        UIUtils.updateSharedDimmer();
-        if (window.ScrollFixer) window.ScrollFixer.restore();
-        if (pinnedTrigger) pinnedTrigger.focus({ preventScroll: true });
+        if (pp && pp.style.display !== 'none') {
+            pp.style.display = 'none';
+            UIUtils.updateSharedDimmer();
+            if (window.ScrollFixer) window.ScrollFixer.restore();
+            if (pinnedTrigger) pinnedTrigger.focus({ preventScroll: true });
+
+            if (!fromHistory && window.history.state?.favorites) {
+                window.history.back();
+            }
+        }
     };
     if (pt) pt.onclick = () => {
         const pp = document.getElementById('pinnedPanel'), md = document.getElementById('microDimmer');
@@ -295,8 +302,9 @@ window.AppClearSearch = (skipPush = false) => {
             pinnedTrigger = document.activeElement;
             pp.style.display = 'block';
             UIUtils.updateSharedDimmer();
-            if (md) UIUtils.setupQuickClose(md);
+            if (md) UIUtils.setupQuickClose(md, () => window.AppClosePinnedPanel());
             PinManager.renderList(w => { window.AppClosePinnedPanel(); window.AppSearch(w); });
+            window.history.pushState({ favorites: true }, "");
         }
     };
     document.addEventListener('click', (e) => {
