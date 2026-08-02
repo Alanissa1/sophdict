@@ -12,6 +12,11 @@ window.UIUtils = {
             .replace(/""$/, '"');
     },
 
+    escapeJS(str) {
+        if (!str) return "";
+        return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    },
+
     cleanMWExample(text, headword = null) {
         if (!text) return "";
         let cleaned = text

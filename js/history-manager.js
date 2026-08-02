@@ -46,7 +46,7 @@ window.HistoryManager = {
             </div>
             <div id="historyList">
                 ${list.length > 0 ?
-                    list.map(w => `<div class="history-item" onclick="HistoryManager.onItemClick('${w}')">${w}</div>`).reverse().join('') :
+                    list.map(w => `<div class="history-item" onclick="HistoryManager.onItemClick('${UIUtils.escapeJS(w)}')">${w}</div>`).reverse().join('') :
                     '<div style="text-align:center; padding:20px; color:#999;">No items yet</div>'
                 }
             </div>

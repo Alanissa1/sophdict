@@ -437,14 +437,14 @@ window.CustomLists = {
                     </div>
                     <div style="display: flex;">
                         ${unlockBtn}
-                        <button class="action-btn" style="padding: 6px 5px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${name}')">Settings</button>
+                        <button class="action-btn" style="padding: 6px 5px; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderSettingsUI('${UIUtils.escapeJS(name)}')">Settings</button>
                     </div>
                 </div>
 
                 ${canEdit ? `
                 <div class="search-container manual-add-container" style="width: 100%; margin-bottom: 15px;">
                     <input type="text" id="manualWordInput" placeholder="Add word manually..." autocomplete="off" readonly style="flex: 1;">
-                    <button class="icon-btn" onclick="CustomLists.addManualWord('${name}')" aria-label="Add Word">
+                    <button class="icon-btn" onclick="CustomLists.addManualWord('${UIUtils.escapeJS(name)}')" aria-label="Add Word">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                     </button>
                     <div id="manual-suggestions-box" class="suggestions-container"></div>
@@ -457,7 +457,7 @@ window.CustomLists = {
                 </div>
                 <div class="tags-row" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; margin-top: 20px;">
                     ${list.words.length === 0 ? '<div style="color: var(--text-sub);">No words added yet. Search a word or add it manually above!</div>' :
-                list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${w}'); event.stopPropagation();">${w}</span>`).join('')}
+                list.words.map(w => `<span class="tag syn-tag ${window.UIUtils ? UIUtils.getTagClass(w) : ''}" data-word="${w}" tabindex="0" onclick="window.ModalManager.show('${UIUtils.escapeJS(w)}'); event.stopPropagation();">${w}</span>`).join('')}
                 </div>
             </div>
         `;
@@ -602,8 +602,8 @@ window.CustomLists = {
         footer.style.display = 'flex';
         footer.innerHTML = `
             <div style="display: flex; gap: 10px; justify-content: flex-end; width: 100%;">
-                <button class="action-btn" onclick="CustomLists.saveSettings('${name}')">Save</button>
-                <button class="action-btn" style="background: #ff4b6b;" onclick="CustomLists.deleteList('${name}')">Delete</button>
+                <button class="action-btn" onclick="CustomLists.saveSettings('${UIUtils.escapeJS(name)}')">Save</button>
+                <button class="action-btn" style="background: #ff4b6b;" onclick="CustomLists.deleteList('${UIUtils.escapeJS(name)}')">Delete</button>
                 <button class="license-close-btn" style="margin: 0;" onclick="CustomLists.closeSettings()">Close</button>
             </div>
         `;
@@ -739,12 +739,12 @@ window.CustomLists = {
                 <p style="color: var(--text-sub);">This list is protected. Enter password to ${list.hidden ? 'view' : 'edit'}.</p>
                 <div class="input-group" style="max-width: 300px; margin: 20px auto;">
                     <input type="password" id="listPassInput" placeholder="Password" autocomplete="current-password"
-                        onkeydown="if(event.key==='Enter') CustomLists.checkPassword('${name}')">
+                        onkeydown="if(event.key==='Enter') CustomLists.checkPassword('${UIUtils.escapeJS(name)}')">
                 </div>
                 <div id="passError" style="color: #ff4b6b; text-align: center; margin-bottom: 10px; font-size: 14px;"></div>
                 <div style="display: flex; justify-content: center; gap: 10px;">
-                    <button class="action-btn" id="unlockBtn" onclick="CustomLists.checkPassword('${name}')">Unlock</button>
-                    ${!list.hidden ? `<button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderListView('${name}')">Cancel</button>` : ''}
+                    <button class="action-btn" id="unlockBtn" onclick="CustomLists.checkPassword('${UIUtils.escapeJS(name)}')">Unlock</button>
+                    ${!list.hidden ? `<button class="action-btn" style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);" onclick="CustomLists.renderListView('${UIUtils.escapeJS(name)}')">Cancel</button>` : ''}
                 </div>
             </div>
         `;
@@ -830,9 +830,9 @@ window.CustomLists = {
                 const canEdit = this.canEditList(name);
 
                 if (inList) {
-                    return `<div class="heart-menu-item" style="color: #ff4b6b;" onclick="${!canEdit ? '' : `CustomLists.removeWordFromList('${cleanWord}', '${name}');`} document.querySelector('.heart-menu')?.remove();">Remove from ${name}${!canEdit ? ' (Locked)' : ''}</div>`;
+                    return `<div class="heart-menu-item" style="color: #ff4b6b;" onclick="${!canEdit ? '' : `CustomLists.removeWordFromList('${UIUtils.escapeJS(cleanWord)}', '${UIUtils.escapeJS(name)}');`} document.querySelector('.heart-menu')?.remove();">Remove from ${name}${!canEdit ? ' (Locked)' : ''}</div>`;
                 } else {
-                    return `<div class="heart-menu-item" style="${!canEdit ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="${!canEdit ? '' : `CustomLists.addWordToList('${cleanWord}', '${name}')`}">${name}${!canEdit ? ' (Locked)' : ''}</div>`;
+                    return `<div class="heart-menu-item" style="${!canEdit ? 'opacity: 0.5; cursor: not-allowed;' : ''}" onclick="${!canEdit ? '' : `CustomLists.addWordToList('${UIUtils.escapeJS(cleanWord)}', '${UIUtils.escapeJS(name)}')`}">${name}${!canEdit ? ' (Locked)' : ''}</div>`;
                 }
             }).join('');
         }
@@ -892,7 +892,7 @@ window.CustomLists = {
         menu.innerHTML = `
             <div style="padding: 10px; font-weight: bold; border-bottom: 1px solid var(--border-color); color: var(--text-sub); font-size: 12px;">SELECT LIST</div>
             ${listNames.map(name => `
-                <div class="heart-menu-item" onclick="CustomLists.addWordToList('${word}', '${name}')">${name}</div>
+                <div class="heart-menu-item" onclick="CustomLists.addWordToList('${UIUtils.escapeJS(word)}', '${UIUtils.escapeJS(name)}')">${name}</div>
             `).join('')}
         `;
     },
