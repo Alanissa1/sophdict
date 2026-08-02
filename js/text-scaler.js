@@ -304,13 +304,13 @@ window.TextScaler = {
         }
     },
 
-    hide() {
+    hide(fromHistory = false) {
         document.getElementById('scaleDimmer').style.display = 'none';
         document.getElementById('text-scale-control').style.display = 'none';
         document.getElementById('fullLangList').classList.remove('show');
         document.getElementById('removeLangList').classList.remove('show');
         document.body.classList.remove('modal-open');
-        if (window.history.state?.settings) {
+        if (!fromHistory && window.history.state?.settings) {
             window.history.back();
         }
     },
