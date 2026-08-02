@@ -1,10 +1,11 @@
 export default async function handler(req, res) {
-    const { q, target } = req.query;
+    const { q, target, enabled } = req.query;
     if (!q) return res.status(200).json([]);
 
     const cleanQ = q.trim();
     const words = cleanQ.split(/\s+/);
     const targetLang = target || 'tr';
+    const isTransEnabled = enabled === 'true';
 
     let upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
     const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -24,6 +25,8 @@ export default async function handler(req, res) {
             const azureRegion = process.env.AZURE_TRANSLATOR_REGION || 'global';
             const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
 
+            // We request translation to BOTH English and the user's Target Language
+            // (If target is en, we only need toEn, which is redundant but safe)
             const transRes = await fetch(`${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&to=en&to=${targetLang}&textType=plain`, {
                 method: 'POST',
                 headers: {
@@ -42,10 +45,14 @@ export default async function handler(req, res) {
                     const toEn = result.translations.find(t => t.to === 'en')?.text;
                     const toTarget = result.translations.find(t => t.to === targetLang)?.text;
 
-                    if (detected !== 'en' && toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
+                    if (targetLang === 'en') {
+                         // IF SYSTEM IS EN: Do not show translation suggestions (user's request)
+                    } else if (detected === targetLang && toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
+                        // Input was System Language -> Suggest English (helps finding dictionary entries)
                         translatedToEn = toEn;
                         translationInfo = { original: cleanQ, translated: toEn, type: 'translation' };
-                    } else if (detected === 'en' && toTarget && toTarget.toLowerCase() !== cleanQ.toLowerCase()) {
+                    } else if (detected === 'en' && toTarget && toTarget.toLowerCase() !== cleanQ.toLowerCase() && isTransEnabled && words.length >= 2) {
+                        // Input was English Sentence -> Suggest System Language
                         translationInfo = { original: cleanQ, translated: toTarget, type: 'translation' };
                     }
                 }

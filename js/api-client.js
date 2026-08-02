@@ -25,27 +25,54 @@ window.APIClient = {
                 ]);
 
                 if (!Array.isArray(dictData) || (dictData.length > 0 && typeof dictData[0] === 'string')) {
-                    // Word not found. Check if it's a sentence or non-English word and try to translate
-                    try {
-                        // Translate to English to detect if it's not English or if it's a phrase
-                        const transRes = await fetch(`/api/translate?lang=en&text=${encodeURIComponent(cleanWord)}`);
-                        if (transRes.ok) {
-                            const transData = await transRes.json();
-                            let translatedText = "";
-                            if (transData && transData[0]) {
-                                transData[0].forEach(part => { if (part[0]) translatedText += part[0]; });
+                    const wordsCount = cleanWord.split(/\s+/).filter(w => w.length > 0).length;
+
+                    if (wordsCount >= 2) {
+                        try {
+                            const target = window.TranslationManager?.targetLanguage || 'tr';
+                            const isTransEnabled = localStorage.getItem('translation_enabled') === 'true';
+
+                            // 1. Check if it's the System Language (translate to English)
+                            const toEnRes = await fetch(`/api/translate?lang=en&from=${target}&text=${encodeURIComponent(cleanWord)}`);
+                            if (toEnRes.ok) {
+                                const toEnData = await toEnRes.ok ? await toEnRes.json() : null;
+                                let toEnText = "";
+                                if (toEnData && toEnData[0]) toEnData[0].forEach(p => { if (p[0]) toEnText += p[0]; });
+
+                                if (toEnText && toEnText.toLowerCase() !== cleanWord.toLowerCase()) {
+                                    return {
+                                        word: cleanWord,
+                                        isSentence: true,
+                                        translation: toEnText,
+                                        targetLangName: 'English',
+                                        error: null
+                                    };
+                                }
                             }
 
-                            if (translatedText && translatedText.toLowerCase() !== cleanWord.toLowerCase()) {
-                                return {
-                                    word: cleanWord,
-                                    isSentence: true, // We treat non-English single words as a "sentence" to trigger translation UI
-                                    translation: translatedText,
-                                    error: null
-                                };
+                            // 2. If it's English and Translation is enabled, translate to System Language
+                            if (isTransEnabled) {
+                                // Try translating to target. We use auto-detection but check if detected was English
+                                const toTargetRes = await fetch(`/api/translate?lang=${target}&text=${encodeURIComponent(cleanWord)}`);
+                                if (toTargetRes.ok) {
+                                    const toTargetData = await toTargetRes.json();
+                                    let toTargetText = "";
+                                    if (toTargetData && toTargetData[0]) toTargetData[0].forEach(p => { if (p[0]) toTargetText += p[0]; });
+
+                                    if (toTargetText && toTargetText.toLowerCase() !== cleanWord.toLowerCase()) {
+                                        const langObj = window.TranslationManager?.languages?.find(l => l.code === target);
+                                        return {
+                                            word: cleanWord,
+                                            isSentence: true,
+                                            translation: toTargetText,
+                                            targetLangName: langObj?.name || target.toUpperCase(),
+                                            error: null
+                                        };
+                                    }
+                                }
                             }
-                        }
-                    } catch (e) { console.error("Search translation error:", e); }
+                        } catch (e) { console.error("Sentence search handler error:", e); }
+                    }
 
                     if (cleanWord.includes(' ')) {
                         return { word: cleanWord, isSentence: true, error: 'Word not found' };

@@ -36,8 +36,10 @@ window.UIEntry = {
                             body.innerHTML = `
                                 <div class="context-card suggestions-card">
                                     <div class="context-type">Individual Words</div>
-                                    <div class="tags-container" style="margin-top:10px;">
-                                        ${words.map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
+                                    <div class="tags-section">
+                                        <div class="tags-row">
+                                            ${words.map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
+                                        </div>
                                     </div>
                                 </div>
                             `;
@@ -51,6 +53,7 @@ window.UIEntry = {
 
             if (data.isSentence && data.translation) {
                 const word = data.word || "";
+                const langName = data.targetLangName || 'English';
                 targetContainer.innerHTML = `
                     <div class="word-header">
                         <div class="title-row">
@@ -65,15 +68,17 @@ window.UIEntry = {
                         </div>
                     </div>
                     <div id="content-body">
-                        <div class="context-card translation-card" style="border-left: 4px solid var(--accent);">
-                            <div class="context-type">English Translation</div>
+                        <div class="context-card translation-card">
+                            <div class="context-type">${langName} Translation</div>
                             <div class="definition" style="font-size: 1.2em; font-weight: 500;">${data.translation}</div>
                             <div class="pron-row-trans" style="margin-top:10px;"></div>
                         </div>
                         <div class="context-card suggestions-card">
                             <div class="context-type">Words in Translation</div>
-                            <div class="tags-container" style="margin-top:10px;">
-                                ${data.translation.split(/\s+/).filter(w => w.length > 2).map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
+                            <div class="tags-section">
+                                <div class="tags-row">
+                                    ${data.translation.split(/\s+/).filter(w => w.length > 2).map(w => `<span class="tag syn-tag" data-word="${w.toLowerCase().replace(/[^a-z0-9]/g, '')}" tabindex="0">${w}</span>`).join('')}
+                                </div>
                             </div>
                         </div>
                     </div>

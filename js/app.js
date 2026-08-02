@@ -278,8 +278,9 @@ window.AppClearSearch = (skipPush = false) => {
     }
     async function getOnlineSuggestions(q) {
         const target = window.TranslationManager?.targetLanguage || 'tr';
+        const isEnabled = window.TranslationManager?.isEnabled || false;
         try {
-            const res = await fetch(`/api/suggestions?q=${encodeURIComponent(q)}&target=${target}`);
+            const res = await fetch(`/api/suggestions?q=${encodeURIComponent(q)}&target=${target}&enabled=${isEnabled}`);
             return await res.json();
         } catch (e) {
             return [];

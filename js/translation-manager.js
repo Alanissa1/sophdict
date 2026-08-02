@@ -99,7 +99,8 @@ window.TranslationManager = {
 
         try {
             // Point to our own API instead of Google directly to enable server-side caching
-            const url = `/api/translate?lang=${this.targetLanguage}&text=${encodeURIComponent(text)}`;
+            // Force from=en since we are translating definitions/examples
+            const url = `/api/translate?lang=${this.targetLanguage}&from=en&text=${encodeURIComponent(text)}`;
 
             const response = await fetch(url);
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
