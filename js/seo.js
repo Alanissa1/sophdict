@@ -10,7 +10,7 @@
             "name": "SophDict",
             "alternateName": "The Sophisticated Dictionary",
             "url": window.location.origin + "/",
-            "description": "SophDict - A sophisticated dictionary and thesaurus tool for definitions, synonyms, and language learning.",
+            "description": "SophDict - the sophisticated dictionary with thesaurus tool for definitions, synonyms, and language learning.",
             "potentialAction": {
                 "@type": "SearchAction",
                 "target": window.location.origin + "/?search={search_term_string}",
@@ -33,7 +33,7 @@
         document.title = `${capitalizedWord} Definition & Synonyms - SophDict`;
 
         // Update Description
-        const description = `Discover the meaning, pronunciation, synonyms, and antonyms of "${word}" on SophDict. Your go-to sophisticated dictionary.`;
+        const description = `Discover the meaning, pronunciation, synonyms, and antonyms of "${word}" on SophDict. the sophisticated dictionary.`;
         let metaDesc = document.querySelector('meta[name="description"]');
         if (metaDesc) {
             metaDesc.setAttribute('content', description);
