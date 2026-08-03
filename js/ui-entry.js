@@ -1,4 +1,4 @@
-Window.UIEntry = {
+window.UIEntry = {
     async render(data, containerId = 'results-container', targetContext = null) {
         try {
             window._lastData = data;
