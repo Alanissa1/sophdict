@@ -118,7 +118,7 @@
                         const pathname = window.location.pathname;
                         const isAlreadyInModal = pathname.includes('/modal/');
 
-                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/llistname/') || pathname.startsWith('/formal-')) {
+                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/llistname/') || pathname.startsWith('/formal-') || pathname.startsWith('/statistics_page')) {
                             const base = pathname.split('/modal/')[0];
                             if (isAlreadyInModal) {
                                 window.history.replaceState({ modal: true, word }, "", `${base}/modal/${encodeURIComponent(word)}`);
