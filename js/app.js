@@ -131,9 +131,10 @@ window.renderHomeLists = () => {
     const lt = Object.entries(stats.tagLastActive || {}).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
     let h = '';
     const esc = (s) => (s || '').replace(/'/g, "\\'");
-    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" onclick="window.AppSearch('${esc(w)}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(w)}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
-    if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Opened Tags</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" onclick="window.ModalManager.show('${esc(t)}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(t)}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
+    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" data-word="${esc(w)}" onclick="window.AppSearch('${esc(w)}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(w)}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
+    if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Opened Tags</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" data-word="${esc(t)}" onclick="window.ModalManager.show('${esc(t)}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(t)}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
     root.innerHTML = h;
+    if (window.PreFetcher) window.PreFetcher.updatePageStatus();
 };
 
 window.promptHomeRemoval = (btn, item, type, event) => {

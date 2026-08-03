@@ -219,9 +219,16 @@ window.PreFetcher = {
 
         const tagElements = document.querySelectorAll('.tag, .home-list-item');
         const uniqueWords = new Set();
+        const getWordFromEl = (el) => {
+            if (el.dataset.word) return el.dataset.word.toLowerCase().trim();
+            const firstSpan = el.querySelector('span');
+            if (firstSpan) return firstSpan.innerText.toLowerCase().trim();
+            return (el.innerText || "").replace(/[\×\&\times\;]/g, '').toLowerCase().trim();
+        };
+
         tagElements.forEach(el => {
-            const w = el.dataset.word || el.innerText;
-            if (w) uniqueWords.add(w.toLowerCase().trim());
+            const w = getWordFromEl(el);
+            if (w) uniqueWords.add(w);
         });
 
         const cachedSet = new Set();
@@ -235,7 +242,7 @@ window.PreFetcher = {
         }
 
         tagElements.forEach(el => {
-            const w = (el.dataset.word || el.innerText || "").toLowerCase().trim();
+            const w = getWordFromEl(el);
             if (cachedSet.has(w)) {
                 el.classList.add('offline-available');
             } else {
