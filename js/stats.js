@@ -91,7 +91,7 @@ window.StatsManager = {
         const trophyIcon = `<div class="prize-icon-container"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M280-120v-80h160v-124q-49-11-87.5-41.5T296-442q-75-9-125.5-61T120-630v-90q0-33 23.5-56.5T200-800h120v-40h320v40h120q33 0 56.5 23.5T840-720v90q0 75-50.5 127T664-442q-18 46-56.5 76.5T520-324v124h160v80H280Zm0-408v-192H200v90q0 42 31 71t69 31Zm400 0q38 0 69-31t31-71v-90h-80v192ZM480-400q58 0 99-41t41-99v-180H340v180q0 58 41 99t99 41Z"/></svg></div>`;
 
         let html = `
-            <div class="list-page stats-page" style="padding: 20px 0 100px 0;">
+            <div class="list-page stats-page" style="padding: 20px 0;">
                 <div class="stats-header" style="padding: 0; margin-bottom: 20px;">
                     <h2 style="margin: 0; color: var(--text-main); font-weight: 500;">Usage Statistics</h2>
                 </div>
@@ -129,7 +129,7 @@ window.StatsManager = {
                     ${pageItems.length === 0 ? `<div style="text-align: center; color: var(--text-sub); padding: 40px 0;">No items found in this section.</div>` : ''}
                 </div>
 
-                <div style="position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-color); padding: 20px; box-sizing: border-box; border-top: 1px solid var(--border-color); z-index: 1000; display: flex; justify-content: center;">
+                <div style="margin-top: 60px; padding: 20px 0; border-top: 1px solid var(--border-color); display: flex; justify-content: center;">
                     <button class="reset-stats-btn" onclick="StatsManager.showResetConfirm()" style="margin: 0; width: 100%; max-width: 600px;">Reset All Statistics</button>
                 </div>
 
