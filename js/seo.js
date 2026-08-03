@@ -179,7 +179,7 @@
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
-        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path.startsWith('statistics_page') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
 
         if (window.AppClearSearch) window.AppClearSearch(true);
 
@@ -218,7 +218,7 @@
     window.addEventListener('popstate', (e) => {
         const path = window.location.pathname.substring(1);
 
-        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path.startsWith('statistics_page') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
 
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
