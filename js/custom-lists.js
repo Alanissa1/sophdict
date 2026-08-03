@@ -71,7 +71,6 @@ window.CustomLists = {
 
     saveLocalLists() {
         localStorage.setItem('sophdict_custom_lists', JSON.stringify(this.lists));
-        if (window.AuthManager) window.AuthManager.syncDataToCloud();
     },
 
     // --- Check if current user can edit ---

@@ -57,15 +57,11 @@ window.DBManager = {
     },
 
     async addPin(word) {
-        const res = await this.put(PIN_STORE, { word: word.toLowerCase() });
-        if (window.AuthManager) window.AuthManager.syncDataToCloud();
-        return res;
+        return this.put(PIN_STORE, { word: word.toLowerCase() });
     },
 
     async removePin(word) {
-        const res = await this.delete(PIN_STORE, word.toLowerCase());
-        if (window.AuthManager) window.AuthManager.syncDataToCloud();
-        return res;
+        return this.delete(PIN_STORE, word.toLowerCase());
     },
 
     async isPinned(word) {

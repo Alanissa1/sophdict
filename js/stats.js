@@ -19,7 +19,6 @@ window.StatsManager = {
     save() {
         this.updateActiveTimers();
         localStorage.setItem('sophdict_stats_detailed', JSON.stringify({ totalTime: this.stats.totalTime, wordCounts: this.stats.wordCounts, tagCounts: this.stats.tagCounts, wordTime: this.stats.wordTime, tagTime: this.stats.tagTime, wordLastActive: this.stats.wordLastActive, tagLastActive: this.stats.tagLastActive, ignoredWords: this.stats.ignoredWords }));
-        if (window.AuthManager) window.AuthManager.syncDataToCloud();
     },
 
     updateActiveTimers() {
