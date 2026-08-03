@@ -69,8 +69,8 @@ window.APIClient = {
                             }
                         }
 
-                        // 2. If it's English (or same as En), and Translation is enabled, translate to System Language
-                        if (isTransEnabled && target !== 'en' && wordsCount >= 2) {
+                        // 2. If it's English (or same as En), translate to System Language
+                        if (target !== 'en' && wordsCount >= 2) {
                             const toTargetRes = await fetch(`/api/translate?lang=${target}&text=${encodeURIComponent(cleanWord)}`);
                             if (toTargetRes.ok) {
                                 const toTargetData = await toTargetRes.json();

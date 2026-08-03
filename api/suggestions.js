@@ -49,7 +49,7 @@ export default async function handler(req, res) {
                     } else if (detected === targetLang && toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
                         translatedToEn = toEn;
                         translationInfo = { original: cleanQ, translated: toEn, type: 'translation' };
-                    } else if (detected === 'en' && toTarget && toTarget.toLowerCase() !== cleanQ.toLowerCase() && isTransEnabled && words.length >= 2) {
+                    } else if (detected === 'en' && toTarget && toTarget.toLowerCase() !== cleanQ.toLowerCase() && words.length >= 2) {
                         translationInfo = { original: cleanQ, translated: toTarget, type: 'translation' };
                     }
                 }
