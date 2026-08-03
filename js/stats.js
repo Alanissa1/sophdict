@@ -114,7 +114,7 @@ window.StatsManager = {
                 <div class="stats-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
                     ${pageItems.map(([item, count]) => {
                         const time = this.currentOpenSection === 'words' ? this.stats.wordTime[item] : this.stats.tagTime[item];
-                        const onClick = this.currentOpenSection === 'words' ? `window.AppSearch('${UIUtils.escapeJS(item)}');` : `window.ModalManager.show('${UIUtils.escapeJS(item)}');`;
+                        const onClick = `window.ModalManager.show('${UIUtils.escapeJS(item)}');`;
                         const onRemove = this.currentOpenSection === 'words' ? `window.promptHomeRemoval(this, '${UIUtils.escapeJS(item)}', 'word', event)` : `window.promptHomeRemoval(this, '${UIUtils.escapeJS(item)}', 'tag', event)`;
                         return `
                             <div class="history-list-item" onclick="${onClick}" style="cursor: pointer; padding: 12px 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 15px;">
@@ -129,7 +129,9 @@ window.StatsManager = {
                     ${pageItems.length === 0 ? `<div style="text-align: center; color: var(--text-sub); padding: 40px 0;">No items found in this section.</div>` : ''}
                 </div>
 
-                <button class="reset-stats-btn" onclick="StatsManager.showResetConfirm()" style="margin: 40px 0 20px 0; width: 100%;">Reset All Statistics</button>
+                <div class="stats-footer" style="margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border-color); width: 100%; display: flex; flex-direction: column; align-items: center;">
+                    <button class="reset-stats-btn" onclick="StatsManager.showResetConfirm()" style="width: 100%; max-width: 400px; margin-bottom: 20px;">Reset All Statistics</button>
+                </div>
 
                 <div id="stats-confirm-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center; backdrop-filter: blur(5px);">
                     <div style="color:white; margin-bottom:20px; font-weight:bold; font-size: 18px;">Reset all usage statistics? This cannot be undone.</div>
