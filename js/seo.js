@@ -118,7 +118,7 @@
                         const pathname = window.location.pathname;
                         const isAlreadyInModal = pathname.includes('/modal/');
 
-                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/llistname/') || pathname.startsWith('/formal-') || pathname.startsWith('/statistics_page') || pathname.startsWith('/favorites_page')) {
+                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/llistname/') || pathname.startsWith('/formal-')) {
                             const base = pathname.split('/modal/')[0];
                             if (isAlreadyInModal) {
                                 window.history.replaceState({ modal: true, word }, "", `${base}/modal/${encodeURIComponent(word)}`);
@@ -179,7 +179,7 @@
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
-        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path.startsWith('statistics_page') || path.startsWith('favorites_page') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
 
         if (window.AppClearSearch) window.AppClearSearch(true);
 
@@ -218,10 +218,7 @@
     window.addEventListener('popstate', (e) => {
         const path = window.location.pathname.substring(1);
 
-        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path.startsWith('statistics_page') || path.startsWith('favorites_page') || path === 'feedbackandsupport' || path.includes('/cardsgame')) {
-            if (window.ModalManager) window.ModalManager.hide(true);
-            return;
-        }
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
 
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);

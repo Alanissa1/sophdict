@@ -131,7 +131,7 @@ window.renderHomeLists = () => {
     const lt = Object.entries(stats.tagLastActive || {}).sort((a, b) => b[1] - a[1]).slice(0, 10).map(e => e[0]);
     let h = '';
     const esc = (s) => (s || '').replace(/'/g, "\\'");
-    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" data-word="${esc(w)}" onclick="window.ModalManager.show('${esc(w)}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(w)}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
+    if (ls.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Searched</div><div class="home-list-items">${ls.map(w => `<div class="home-list-item" data-word="${esc(w)}" onclick="window.AppSearch('${esc(w)}')"><span>${w}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(w)}', 'word', event)">&times;</span></div>`).join('')}</div></div>`;
     if (lt.length > 0) h += `<div class="home-list-section"><div class="home-list-title">Last Opened Tags</div><div class="home-list-items">${lt.map(t => `<div class="home-list-item" data-word="${esc(t)}" onclick="window.ModalManager.show('${esc(t)}')"><span>${t}</span><span class="home-list-remove-btn" onclick="window.promptHomeRemoval(this, '${esc(t)}', 'tag', event)">&times;</span></div>`).join('')}</div></div>`;
     root.innerHTML = h;
     if (window.PreFetcher) window.PreFetcher.updatePageStatus();
@@ -312,11 +312,31 @@ window.AppClearSearch = (skipPush = false) => {
     };
     window.hideSuggestions = () => { const box = document.getElementById('suggestions-box'); if (box) box.style.display = 'none'; };
     if (ll) ll.onclick = (e) => { e.preventDefault(); window.AppClearSearch(); };
+    let pinnedTrigger = null;
+    window.AppClosePinnedPanel = (fromHistory = false) => {
+        if (fromHistory instanceof Event) fromHistory = false;
+        const pp = document.getElementById('pinnedPanel');
+        if (pp && pp.style.display !== 'none') {
+            pp.style.display = 'none';
+            UIUtils.updateSharedDimmer();
+            if (window.ScrollFixer) window.ScrollFixer.restore();
+            if (pinnedTrigger) pinnedTrigger.focus({ preventScroll: true });
+
+            if (!fromHistory && window.history.state?.favorites) {
+                window.history.back();
+            }
+        }
+    };
     if (pt) pt.onclick = () => {
-        if (window.location.pathname === '/favorites_page') {
-            window.AppClearSearch();
-        } else {
-            PinManager.open();
+        const pp = document.getElementById('pinnedPanel'), md = document.getElementById('microDimmer');
+        if (pp.style.display === 'block') window.AppClosePinnedPanel();
+        else {
+            pinnedTrigger = document.activeElement;
+            pp.style.display = 'block';
+            UIUtils.updateSharedDimmer();
+            if (md) UIUtils.setupQuickClose(md, () => window.AppClosePinnedPanel());
+            PinManager.renderList(w => { window.AppClosePinnedPanel(); window.AppSearch(w); });
+            window.history.pushState({ favorites: true }, "");
         }
     };
     document.addEventListener('click', (e) => {
