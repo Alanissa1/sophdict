@@ -73,9 +73,9 @@ window.RestoreSearchUI = () => {
     if (!sc || !h) return;
     sc.classList.remove('input-focused');
     if (sc.parentElement !== h) h.appendChild(sc);
-    const wi = document.getElementById('wordInput'), st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn'), bx = document.getElementById('suggestions-box');
+    const wi = document.getElementById('wordInput'), st = document.getElementById('statsToggleBtn'), ts = document.getElementById('textScaleToggleBtn'), pt = document.getElementById('pinnedToggleBtn'), ab = document.getElementById('authBtn'), bx = document.getElementById('suggestions-box');
     if (st && wi) sc.insertBefore(st, wi);
-    if (ts) sc.appendChild(ts); if (pt) sc.appendChild(pt); if (bx) sc.appendChild(bx);
+    if (ts) sc.appendChild(ts); if (pt) sc.appendChild(pt); if (ab) sc.appendChild(ab); if (bx) sc.appendChild(bx);
 };
 
 window.AppSearch = async (target, isSilent = false, isHistoryNav = false) => {
@@ -180,10 +180,12 @@ window.AppClearSearch = (skipPush = false) => {
             const hsb = ws.querySelector('.home-settings-bar'),
                   st = document.getElementById('statsToggleBtn'),
                   ts = document.getElementById('textScaleToggleBtn'),
-                  pt = document.getElementById('pinnedToggleBtn');
+                  pt = document.getElementById('pinnedToggleBtn'),
+                  ab = document.getElementById('authBtn');
             if (hsb) {
                 if (st) hsb.appendChild(st);
                 if (pt) hsb.appendChild(pt);
+                if (ab) hsb.appendChild(ab);
                 if (ts) hsb.appendChild(ts);
             }
         }
@@ -205,7 +207,9 @@ window.AppClearSearch = (skipPush = false) => {
 
 (async () => {
     await DBManager.init();
+    if (window.AuthManager) AuthManager.init();
     if (window.TextScaler) window.TextScaler.init();
+
     if (window.WallpaperManager) await window.WallpaperManager.init();
     if (window.ThemeManager) window.ThemeManager.init();
 

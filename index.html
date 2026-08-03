@@ -116,7 +116,11 @@
             <button class="icon-btn" id="pinnedToggleBtn" title="Favorites">
                 <svg width="26" height="26" viewBox="0 -960 960 960"><path fill="currentColor" d="m480-120-58-52q-101-91-167-157T150-447.5Q111-500 95.5-544T80-634q0-94 63-157t157-63q52 0 99 22t81 62q34-40 81-62t99-22q94 0 157 63t63 157q0 46-15.5 90T810-447.5Q771-395 705-329T538-172l-58 52Z"/></svg>
             </button>
+            <button class="icon-btn" id="authBtn" title="Sign In">
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T560-640q0-33-23.5-56.5T480-720q-33 0-56.5 23.5T400-640q0 33 23.5 56.5T480-560Zm0-80Zm0 400Z"/></svg>
+            </button>
             <div id="suggestions-box" class="suggestions-container"></div>
+
         </div>
 </header>
 
@@ -192,7 +196,13 @@
 <div id="microDimmer" class="backdrop"></div>
 <div id="scaleDimmer"></div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <!-- JavaScript Dependencies (Untouched to prevent breaking codes) -->
+
 <script src="js/config.js"></script>
 <script src="js/academic-list.js"></script>
 <script src="js/formal-lists.js"></script>
@@ -218,7 +228,9 @@
 <script src="js/text-scaler.js"></script>
 <script src="js/history-manager.js"></script>
 <script src="js/stats.js"></script>
+<script src="js/auth-manager.js"></script>
 <script src="js/theme-manager.js"></script>
+
 <script src="js/translation-manager.js"></script>
 <script src="js/license-manager.js"></script>
 <script src="js/game-manager.js"></script>
