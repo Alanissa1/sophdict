@@ -133,10 +133,15 @@ window.APIClient = {
                     timestamp: Date.now()
                 };
 
+                if (navigator.onLine) {
+                    document.body.classList.remove('is-offline');
+                }
                 await DBManager.saveWord(cleanWord, data);
                 return data;
             } catch (error) {
                 console.error(`[API] Error:`, error);
+                document.body.classList.add('is-offline');
+                if (window.PreFetcher) window.PreFetcher.updatePageStatus();
                 return { error: 'Network error' };
             } finally {
                 this.pending.delete(cleanWord);

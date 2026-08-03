@@ -216,26 +216,47 @@ window.PreFetcher = {
 
     async updatePageStatus() {
         const statusEl = document.getElementById('page-fetch-status');
-        if (!statusEl) return;
 
-        const tagElements = document.querySelectorAll('.tag');
+        const tagElements = document.querySelectorAll('.tag, .home-list-item');
         const uniqueWords = new Set();
         tagElements.forEach(el => {
             const w = el.dataset.word || el.innerText;
             if (w) uniqueWords.add(w.toLowerCase().trim());
         });
 
-        if (uniqueWords.size === 0) {
-            statusEl.innerText = "";
-            return;
-        }
-
+        const cachedSet = new Set();
         let cachedCount = 0;
         for (const word of uniqueWords) {
             const exists = await DBManager.getWord(word);
-            if (exists) cachedCount++;
+            if (exists) {
+                cachedCount++;
+                cachedSet.add(word);
+            }
         }
 
-        statusEl.innerText = `${cachedCount} / ${uniqueWords.size}`;
+        tagElements.forEach(el => {
+            const w = (el.dataset.word || el.innerText || "").toLowerCase().trim();
+            if (cachedSet.has(w)) {
+                el.classList.add('offline-available');
+            } else {
+                el.classList.remove('offline-available');
+            }
+        });
+
+        if (statusEl) {
+            const pageTags = document.querySelectorAll('.tag');
+            const pageWords = new Set();
+            pageTags.forEach(el => {
+                const w = el.dataset.word || el.innerText;
+                if (w) pageWords.add(w.toLowerCase().trim());
+            });
+            if (pageWords.size === 0) {
+                statusEl.innerText = "";
+            } else {
+                let pageCached = 0;
+                pageWords.forEach(w => { if (cachedSet.has(w)) pageCached++; });
+                statusEl.innerText = `${pageCached} / ${pageWords.size}`;
+            }
+        }
     }
 };

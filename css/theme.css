@@ -396,3 +396,16 @@ body.dark-mode .academic-list-trigger {
     text-shadow: 0px 0px 1px rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.2) !important;
 }
+
+/* Offline-available tags background effect: ONLY active when network is unavailable (body.is-offline) */
+body.is-offline .tag.offline-available,
+body.is-offline .home-list-item.offline-available {
+    background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+body.is-offline.dark-mode .tag.offline-available,
+body.is-offline.dark-mode .home-list-item.offline-available,
+body.dark-mode.is-offline .tag.offline-available,
+body.dark-mode.is-offline .home-list-item.offline-available {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+}

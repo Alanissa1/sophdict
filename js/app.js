@@ -350,4 +350,13 @@ window.AppClearSearch = (skipPush = false) => {
     if (window.AcademicList) AcademicList.init();
     if (window.FormalList) FormalList.init();
     if (window.FeedbackSupport) FeedbackSupport.init();
+
+    window.updateNetworkStatus = () => {
+        const isOffline = !navigator.onLine;
+        document.body.classList.toggle('is-offline', isOffline);
+        if (window.PreFetcher) window.PreFetcher.updatePageStatus();
+    };
+    window.addEventListener('online', window.updateNetworkStatus);
+    window.addEventListener('offline', window.updateNetworkStatus);
+    window.updateNetworkStatus();
 })();
