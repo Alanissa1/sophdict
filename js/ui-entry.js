@@ -1,4 +1,4 @@
-window.UIEntry = {
+Window.UIEntry = {
     async render(data, containerId = 'results-container', targetContext = null) {
         try {
             window._lastData = data;
@@ -77,9 +77,9 @@ window.UIEntry = {
                             <div class="definition" style="font-size: 1.2em; font-weight: 500;">${data.translation}</div>
                             <div class="pron-row-trans" style="margin-top:10px;"></div>
                         </div>
-                        ${data.targetLang === 'en' && data.verifiedWords && data.verifiedWords.length > 0 ? `
+                        ${data.verifiedWords && data.verifiedWords.length > 0 ? `
                         <div class="context-card suggestions-card">
-                            <div class="context-type">Words in Translation</div>
+                            <div class="context-type">${data.sourceLang === 'en' ? 'Individual Words' : 'Words in Translation'}</div>
                             <div class="tags-section">
                                 <div class="tags-row">
                                     ${data.verifiedWords.map(w => `<span class="tag syn-tag" data-word="${w}" tabindex="0">${w}</span>`).join('')}
