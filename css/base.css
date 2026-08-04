@@ -224,11 +224,13 @@ main,
 .word-title {
     font-size: 2.0em !important;
     font-weight: bold;
+    font-family: Georgia, "Times New Roman", Garamond, serif !important;
 }
 
 .micro-title {
     font-size: 1.8em !important;
     font-weight: bold;
+font-family: Georgia, "Times New Roman", Garamond, serif !important;
 }
 
 /* Pronunciation */
@@ -496,6 +498,7 @@ body.dark-mode footer {
     margin: 20px 0 0 0;
     font-family: math;
     opacity: 0.9;
+font-family: Georgia, "Times New Roman", Garamond, serif !important;
 }
 
 .welcome-hint {
