@@ -40,6 +40,9 @@ window.LicenseManager = {
     },
 
     show() {
+        if (!window.history.state?.license) {
+            window.history.pushState({ license: true }, "");
+        }
         const modal = document.getElementById('licenseModal');
         const dimmer = document.getElementById('microDimmer');
         if (modal && dimmer) {
@@ -54,7 +57,7 @@ window.LicenseManager = {
         }
     },
 
-    hide() {
+    hide(isHistoryNav = false) {
         const modal = document.getElementById('licenseModal');
         const dimmer = document.getElementById('microDimmer');
         if (modal && dimmer) {
@@ -62,6 +65,11 @@ window.LicenseManager = {
             dimmer.style.display = 'none';
             dimmer.style.zIndex = '';
             document.body.classList.remove('modal-open');
+        }
+        if (!isHistoryNav) {
+            if (window.history.state?.license || window.history.state?.privacy) {
+                window.history.back();
+            }
         }
     }
 };
@@ -86,6 +94,9 @@ window.PrivacyManager = {
     },
 
     show() {
+        if (!window.history.state?.privacy) {
+            window.history.pushState({ privacy: true }, "");
+        }
         const modal = document.getElementById('licenseModal');
         const dimmer = document.getElementById('microDimmer');
         if (modal && dimmer) {
@@ -100,8 +111,8 @@ window.PrivacyManager = {
         }
     },
 
-    hide() {
-        LicenseManager.hide();
+    hide(isHistoryNav = false) {
+        LicenseManager.hide(isHistoryNav);
     }
 };
 

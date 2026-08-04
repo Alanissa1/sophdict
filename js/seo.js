@@ -118,7 +118,7 @@
                         const pathname = window.location.pathname;
                         const isAlreadyInModal = pathname.includes('/modal/');
 
-                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/llistname/') || pathname.startsWith('/formal-')) {
+                        if (pathname.startsWith('/570academic') || pathname.startsWith('/listname/') || pathname.startsWith('/llistname/') || pathname.startsWith('/formal-') || pathname.startsWith('/statistics_page')) {
                             const base = pathname.split('/modal/')[0];
                             if (isAlreadyInModal) {
                                 window.history.replaceState({ modal: true, word }, "", `${base}/modal/${encodeURIComponent(word)}`);
@@ -179,7 +179,7 @@
         const path = window.location.pathname.substring(1);
         if (!path || path === "index.html") return;
 
-        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame') || path.startsWith('statistics_page')) return;
 
         if (window.AppClearSearch) window.AppClearSearch(true);
 
@@ -218,7 +218,7 @@
     window.addEventListener('popstate', (e) => {
         const path = window.location.pathname.substring(1);
 
-        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame')) return;
+        if (path.startsWith('570academic') || path.startsWith('listname/') || path.startsWith('llistname/') || path === 'feedbackandsupport' || path.includes('/cardsgame') || path.startsWith('statistics_page')) return;
 
         const modalPattern = /^([^/]+)\/modal\/([^/]+?)\/?$/;
         const modalMatch = path.match(modalPattern);
@@ -274,6 +274,9 @@
         if (window.StatsManager) window.StatsManager.hide(true);
         if (window.TextScaler && document.getElementById('text-scale-control')?.style.display === 'flex') {
             window.TextScaler.hide(true);
+        }
+        if (window.LicenseManager && document.getElementById('licenseModal')?.classList.contains('active')) {
+            window.LicenseManager.hide(true);
         }
     });
 
