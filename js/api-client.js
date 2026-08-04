@@ -69,8 +69,8 @@ window.APIClient = {
                             }
                         }
 
-                        // 2. If it's English (or same as En), translate to System Language
-                        if (target !== 'en' && wordsCount >= 2) {
+                        // 2. If it's English (or same as En), and Translation is enabled, translate to System Language
+                        if (isTransEnabled && target !== 'en' && wordsCount >= 2) {
                             const toTargetRes = await fetch(`/api/translate?lang=${target}&text=${encodeURIComponent(cleanWord)}`);
                             if (toTargetRes.ok) {
                                 const toTargetData = await toTargetRes.json();
@@ -133,15 +133,10 @@ window.APIClient = {
                     timestamp: Date.now()
                 };
 
-                if (navigator.onLine) {
-                    document.body.classList.remove('is-offline');
-                }
                 await DBManager.saveWord(cleanWord, data);
                 return data;
             } catch (error) {
                 console.error(`[API] Error:`, error);
-                document.body.classList.add('is-offline');
-                if (window.PreFetcher) window.PreFetcher.updatePageStatus();
                 return { error: 'Network error' };
             } finally {
                 this.pending.delete(cleanWord);

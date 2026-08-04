@@ -216,54 +216,26 @@ window.PreFetcher = {
 
     async updatePageStatus() {
         const statusEl = document.getElementById('page-fetch-status');
+        if (!statusEl) return;
 
-        const tagElements = document.querySelectorAll('.tag, .home-list-item');
+        const tagElements = document.querySelectorAll('.tag');
         const uniqueWords = new Set();
-        const getWordFromEl = (el) => {
-            if (el.dataset.word) return el.dataset.word.toLowerCase().trim();
-            const firstSpan = el.querySelector('span');
-            if (firstSpan) return firstSpan.innerText.toLowerCase().trim();
-            return (el.innerText || "").replace(/[\×\&\times\;]/g, '').toLowerCase().trim();
-        };
-
         tagElements.forEach(el => {
-            const w = getWordFromEl(el);
-            if (w) uniqueWords.add(w);
+            const w = el.dataset.word || el.innerText;
+            if (w) uniqueWords.add(w.toLowerCase().trim());
         });
 
-        const cachedSet = new Set();
+        if (uniqueWords.size === 0) {
+            statusEl.innerText = "";
+            return;
+        }
+
         let cachedCount = 0;
         for (const word of uniqueWords) {
             const exists = await DBManager.getWord(word);
-            if (exists) {
-                cachedCount++;
-                cachedSet.add(word);
-            }
+            if (exists) cachedCount++;
         }
 
-        tagElements.forEach(el => {
-            const w = getWordFromEl(el);
-            if (cachedSet.has(w)) {
-                el.classList.add('offline-available');
-            } else {
-                el.classList.remove('offline-available');
-            }
-        });
-
-        if (statusEl) {
-            const pageTags = document.querySelectorAll('.tag');
-            const pageWords = new Set();
-            pageTags.forEach(el => {
-                const w = el.dataset.word || el.innerText;
-                if (w) pageWords.add(w.toLowerCase().trim());
-            });
-            if (pageWords.size === 0) {
-                statusEl.innerText = "";
-            } else {
-                let pageCached = 0;
-                pageWords.forEach(w => { if (cachedSet.has(w)) pageCached++; });
-                statusEl.innerText = `${pageCached} / ${pageWords.size}`;
-            }
-        }
+        statusEl.innerText = `${cachedCount} / ${uniqueWords.size}`;
     }
 };
