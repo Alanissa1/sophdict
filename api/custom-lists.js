@@ -95,11 +95,25 @@ function sanitize(data) {
 }
 
 export default async function handler(req, res) {
-    // Basic protection against direct browser visits and cross-site requests
+    // --- Access Protection Logic ---
     const secFetchSite = req.headers['sec-fetch-site'];
-    if (req.headers['sec-fetch-mode'] === 'navigate' || (secFetchSite && !['same-origin', 'same-site'].includes(secFetchSite))) {
+    const secFetchMode = req.headers['sec-fetch-mode'];
+    const origin = req.headers['origin'];
+    const userAgent = req.headers['user-agent'] || '';
+
+    // 1. Allow if it's from your own website (same-origin/same-site)
+    const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
+
+    // 2. Allow if it's from ANY Android device running your app
+    // Android WebViews loading local assets send 'null' or no origin.
+    // They also always include "Android" in the User-Agent.
+    const isAndroidApp = (origin === 'null' || !origin) && userAgent.includes('Android');
+
+    // 3. Block only if it's a direct browser navigation or an unauthorized site
+    if (secFetchMode === 'navigate' || (!isSophDictSite && !isAndroidApp)) {
         return res.status(403).json({ error: 'Direct access not allowed' });
     }
+    // --- End of Access Protection ---
 
     if (!redis) {
         return res.status(503).json({ error: 'Database configuration missing. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel.' });
