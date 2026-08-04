@@ -1,7 +1,15 @@
 export default async function handler(req, res) {
-    // Basic protection against direct browser visits and cross-site requests
+    // UPDATED: Allow requests from the Android app
     const secFetchSite = req.headers['sec-fetch-site'];
-    if (req.headers['sec-fetch-mode'] === 'navigate' || (secFetchSite && !['same-origin', 'same-site'].includes(secFetchSite))) {
+    const secFetchMode = req.headers['sec-fetch-mode'];
+    const origin = req.headers['origin'];
+
+    // WebViews serve local files with origin 'null'
+    // We allow the request if it's same-site OR if it's the Android app (origin: null)
+    const isAppRequest = origin === 'null' || !secFetchSite;
+    const isSameSite = ['same-origin', 'same-site'].includes(secFetchSite);
+
+    if (secFetchMode === 'navigate' || (!isSameSite && !isAppRequest)) {
         return res.status(403).json({ error: 'Direct access not allowed' });
     }
 
@@ -35,11 +43,12 @@ export default async function handler(req, res) {
                     ])
                 });
                 const cacheData = await cacheRes.json();
-                // When using pipeline, Upstash returns an array of responses: [{result: ...}, {result: ...}]
                 if (Array.isArray(cacheData) && cacheData[0] && cacheData[0].result) {
                     res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
                     res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
                     res.setHeader('X-Robots-Tag', 'noindex');
+                    // Allow CORS for the app
+                    res.setHeader('Access-Control-Allow-Origin', '*'); 
                     return res.status(200).json(JSON.parse(cacheData[0].result));
                 }
             } catch (e) {
@@ -74,7 +83,6 @@ export default async function handler(req, res) {
 
         const isNotFound = !data || (Array.isArray(data) && (data.length === 0 || typeof data[0] === 'string'));
         if (isNotFound) {
-            // Short cache for not found results (1 hour)
             res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
         } else {
             res.setHeader('Cache-Control', 'public, s-maxage=31536000, stale-while-revalidate=604800, immutable');
@@ -82,6 +90,7 @@ export default async function handler(req, res) {
 
         res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
         res.setHeader('X-Robots-Tag', 'noindex');
+        res.setHeader('Access-Control-Allow-Origin', '*'); // Allow CORS for the app
         res.status(200).json(data);
     } catch (error) {
         console.error(error);
