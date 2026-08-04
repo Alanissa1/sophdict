@@ -22,7 +22,7 @@ window.UIRenderer = {
                                 <div style="display: flex; align-items: center; gap: 15px;">
                                     <div class="pron-row"></div>
                                     <div style="display: flex; flex-direction: column;">
-                                        <h1 class="word-title">${word}</h1>
+                                        <h1 class="word-title" style"font-family: Georgia, "Times New Roman", Garamond, serif;">${word}</h1>
                                         <span class="pronunciation">/${pronunciation}/</span>
                                     </div>
                                 </div>
