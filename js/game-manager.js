@@ -230,7 +230,7 @@ window.GameManager = {
         }
 
         try {
-            const res = await fetch(`/api/translate?lang=${lang}&text=${encodeURIComponent(text)}`);
+            const res = await fetch(`${CONFIG.TRANSLATE_API_URL}?lang=${lang}&text=${encodeURIComponent(text)}`);
             if (res.ok) {
                 const data = await res.json();
                 let translated = "";
@@ -253,10 +253,13 @@ window.GameManager = {
     splitText(text) {
         if (!text) return [];
         // DUOLINGO-STYLE: Preserve internal hyphens (cd-game) and apostrophes (don't)
+        // Also strips horizontal ellipsis (…) and ensures result is an actual word
         return text.split(/\s+/)
             .filter(w => w.length > 0)
             .map(w => w.replace(/^[.,!?;:"'()[\]{}]+|[.,!?;:"'()[\]{}]+$/g, '').trim())
             .filter(w => w.length > 0);
+            .map(w => w.replace(/^[.,!?;:"'()[\]{}\u2026]+|[.,!?;:"'()[\]{}\u2026]+$/g, '').trim())
+            .filter(w => w.length > 0 && /[a-zA-Z0-9\u00C0-\u017F]/.test(w));
     },
 
     shuffle(array) {
@@ -462,3 +465,4 @@ window.GameManager = {
 };
 
 window.GameManager.init();
+
