@@ -1,8 +1,29 @@
 export default async function handler(req, res) {
-    // Basic protection against direct browser visits and cross-site requests
     const secFetchSite = req.headers['sec-fetch-site'];
-    if (req.headers['sec-fetch-mode'] === 'navigate' || (secFetchSite && !['same-origin', 'same-site'].includes(secFetchSite))) {
+    const secFetchMode = req.headers['sec-fetch-mode'];
+    const origin = req.headers['origin'];
+    const userAgent = req.headers['user-agent'] || '';
+
+    // 1. Universal Security Logic
+    // Allow if from your website (same-origin/same-site) 
+    // OR if it's from ANY Android device running your app (null origin + Android UA)
+    const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
+    const isAndroidApp = (origin === 'null' || !origin) && userAgent.includes('Android');
+
+    // 2. Security Enforcement
+    // Block direct browser address bar visits or unauthorized external sites
+    if (secFetchMode === 'navigate' || (!isSophDictSite && !isAndroidApp)) {
         return res.status(403).json({ error: 'Direct access not allowed' });
+    }
+
+    // 3. CORS & Browser Headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('X-Robots-Tag', 'noindex');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
     }
 
     const { text, lang, from, cacheOnly } = req.query;
@@ -18,12 +39,12 @@ export default async function handler(req, res) {
         if (upstashUrl.endsWith('/')) upstashUrl = upstashUrl.slice(0, -1);
     }
 
-    // Use Hex encoding and limit length to ensure key is URL-safe and compatible with Redis
+    // Cache Key Logic
     const textHash = Buffer.from(text).toString('hex').substring(0, 120);
     const cacheKey = `trans:${lang}:${from || 'auto'}:${textHash}`;
 
     try {
-        // 1. Try Upstash Cache using POST for both read/write (more reliable for long keys)
+        // 4. Try Upstash Cache
         if (upstashUrl && upstashToken) {
             try {
                 const cacheRes = await fetch(upstashUrl, {
@@ -35,8 +56,6 @@ export default async function handler(req, res) {
                     const cacheData = await cacheRes.json();
                     if (cacheData && cacheData.result) {
                         res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
-                        res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
-                        res.setHeader('X-Robots-Tag', 'noindex');
                         return res.status(200).json(JSON.parse(cacheData.result));
                     }
                 }
@@ -45,23 +64,23 @@ export default async function handler(req, res) {
             }
         }
 
-        // If cacheOnly is requested and we reached here, it means it's not in cache
+        // If background prefetch (cacheOnly) didn't find a hit, stop here
         if (cacheOnly === 'true') {
             return res.status(404).json({ error: 'Not in cache' });
         }
 
+        // 5. Azure Translation
         const azureKey = process.env.AZURE_TRANSLATOR_KEY;
         const azureRegion = process.env.AZURE_TRANSLATOR_REGION || 'global';
         const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
 
         if (!azureKey) {
-            console.error('[Azure] Missing API Key in Environment Variables');
             return res.status(500).json({ error: 'Translation service not configured' });
         }
 
-        // IMPROVEMENT: Use 'from' if provided, otherwise allow Azure to auto-detect
         const sourceLang = from || '';
         const url = `${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0${sourceLang ? `&from=${sourceLang}` : ''}&to=${lang}&textType=plain`;
+        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -70,57 +89,34 @@ export default async function handler(req, res) {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify([{ text: text }])
-        }).catch(err => {
-            console.error('[Azure] Fetch network error:', err.message);
-            return null;
-        });
+        }).catch(() => null);
 
         if (!response || !response.ok) {
-            const status = response ? response.status : 'Network Error';
-            const errorBody = response ? await response.text() : 'No response from Azure';
-            console.error(`[Azure] API Error (${status}):`, errorBody);
-
-            // Provide a very clear error to the user
-            return res.status(status === 401 || status === 403 ? 401 : 502).json({
-                error: 'Translation API failed',
-                message: errorBody,
-                suggestion: 'Check your AZURE_TRANSLATOR_KEY and AZURE_TRANSLATOR_REGION'
-            });
+            return res.status(502).json({ error: 'Translation API failed' });
         }
 
         const azureData = await response.json();
-
-        // Safety check for Azure response structure
         const translatedText = azureData?.[0]?.translations?.[0]?.text;
+
         if (!translatedText) {
-            console.error('[Azure] Invalid response structure:', azureData);
             return res.status(502).json({ error: 'Invalid response from Azure' });
         }
 
+        // Format to match Google-style response expected by app
         const data = [[[translatedText, text]]];
 
-        // 3. Save to Upstash Cache (1 year)
-        if (upstashUrl && upstashToken && data) {
-            try {
-                await fetch(upstashUrl, {
-                    method: 'POST',
-                    headers: { Authorization: `Bearer ${upstashToken}` },
-                    body: JSON.stringify(["SET", cacheKey, JSON.stringify(data), "EX", 31536000])
-                }).catch(() => null); // Silent fail for cache write
-            } catch (e) {
-                console.error('[Cache] Write error:', e.message);
-            }
+        // 6. Save to Cache
+        if (upstashUrl && upstashToken) {
+            fetch(upstashUrl, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${upstashToken}` },
+                body: JSON.stringify(["SET", cacheKey, JSON.stringify(data), "EX", 31536000])
+            }).catch(() => null);
         }
 
-        const isError = !translatedText;
-        if (isError) {
-            res.setHeader('Cache-Control', 'public, s-maxage=60'); // Don't cache errors for long
-        } else {
-            res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
-        }
-        res.setHeader('Vary', 'sec-fetch-site, sec-fetch-mode');
-        res.setHeader('X-Robots-Tag', 'noindex');
+        res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
         return res.status(200).json(data);
+
     } catch (error) {
         console.error('[Translate Error]:', error.message);
         return res.status(500).json({ error: 'Translation failed', message: error.message });
