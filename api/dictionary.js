@@ -1,17 +1,30 @@
 export default async function handler(req, res) {
-    // UPDATED: Allow requests from the Android app
     const secFetchSite = req.headers['sec-fetch-site'];
     const secFetchMode = req.headers['sec-fetch-mode'];
     const origin = req.headers['origin'];
+    const userAgent = req.headers['user-agent'] || '';
 
-    // WebViews serve local files with origin 'null'
-    // We allow the request if it's same-site OR if it's the Android app (origin: null)
-    const isAppRequest = origin === 'null' || !secFetchSite;
-    const isSameSite = ['same-origin', 'same-site'].includes(secFetchSite);
+    // 1. Allow if it's from your own website (same-origin/same-site)
+    const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
 
-    if (secFetchMode === 'navigate' || (!isSameSite && !isAppRequest)) {
+    // 2. Allow if it's from ANY Android device running your app
+    // Android WebViews loading local assets send 'null' or no origin.
+    // They also always include "Android" in the User-Agent.
+    const isAndroidApp = (origin === 'null' || !origin) && userAgent.includes('Android');
+
+    // 3. Block only if it's a direct browser navigation or an unauthorized site
+    if (secFetchMode === 'navigate' || (!isSophDictSite && !isAndroidApp)) {
         return res.status(403).json({ error: 'Direct access not allowed' });
     }
+
+    // IMPORTANT: Tell the browser/app that CORS is allowed for this request
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // ... rest of your code ...
+
+
 
     const { word } = req.query;
     const key = process.env.DICTIONARY_KEY;
