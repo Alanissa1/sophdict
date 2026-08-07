@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     res.setHeader('X-Robots-Tag', 'noindex');
 
-    const authKey = process.env.GEMINI_API_KEY;
+    const authKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : null;
     if (!authKey) {
         return res.status(500).json({ error: 'Gemini API key not configured' });
     }
@@ -40,13 +40,11 @@ export default async function handler(req, res) {
         let cacheKey = null;
 
         if (req.method === 'POST') {
-            const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+            const body = (req.body && typeof req.body === 'object') ? req.body : (typeof req.body === 'string' ? JSON.parse(req.body) : {});
 
-            // Map OpenAI-style messages to Gemini contents if needed, or accept Gemini format
             if (body.contents) {
                 contents = body.contents;
             } else if (body.messages) {
-                // Conversion from OpenAI format
                 body.messages.forEach(msg => {
                     if (msg.role === 'system') {
                         systemInstruction = { parts: [{ text: msg.content }] };
@@ -59,7 +57,9 @@ export default async function handler(req, res) {
                 });
             }
 
-            if (body.model) model = body.model;
+            if (body.model) {
+                model = body.model.replace('models/', '');
+            }
 
             if (contents.length > 0 && upstashUrl && upstashToken) {
                 const contentHash = Buffer.from(JSON.stringify({ contents, systemInstruction, model })).toString('hex').substring(0, 120);
@@ -106,16 +106,18 @@ export default async function handler(req, res) {
             geminiPayload.system_instruction = systemInstruction;
         }
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${authKey}`, {
+        const modelId = model.includes('/') ? model.split('/').pop() : model;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${authKey}`;
+
+        const response = await fetch(apiUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(geminiPayload)
         });
 
         if (!response.ok) {
             const error = await response.text();
+            console.error('[Gemini API Error]:', error, 'URL:', apiUrl.replace(authKey, 'HIDDEN'));
             return res.status(response.status).json({ error: 'Gemini API error', details: error });
         }
 
@@ -132,7 +134,7 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
 
     } catch (error) {
-        console.error('[Gemini Error]:', error.message);
+        console.error('[Internal Error]:', error.message);
         return res.status(500).json({ error: 'Internal server error', message: error.message });
     }
 }
