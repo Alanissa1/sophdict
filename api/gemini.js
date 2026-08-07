@@ -40,7 +40,7 @@ export default async function handler(req, res) {
         let cacheKey = null;
 
         if (req.method === 'POST') {
-            const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+            const body = (req.body && typeof req.body === 'object') ? req.body : (typeof req.body === 'string' ? JSON.parse(req.body) : {});
 
             // Map OpenAI-style messages to Gemini contents if needed, or accept Gemini format
             if (body.contents) {
@@ -59,7 +59,9 @@ export default async function handler(req, res) {
                 });
             }
 
-            if (body.model) model = body.model;
+            if (body.model) {
+                model = body.model.replace('models/', ''); // Ensure model ID doesn't have redundant prefix
+            }
 
             if (contents.length > 0 && upstashUrl && upstashToken) {
                 const contentHash = Buffer.from(JSON.stringify({ contents, systemInstruction, model })).toString('hex').substring(0, 120);
@@ -106,7 +108,7 @@ export default async function handler(req, res) {
             geminiPayload.system_instruction = systemInstruction;
         }
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${authKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${authKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
