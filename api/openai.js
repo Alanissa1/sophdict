@@ -3,18 +3,24 @@ export default async function handler(req, res) {
     const origin = req.headers['origin'];
     const userAgent = req.headers['user-agent'] || '';
 
+    // 1. ALLOW LIST: Include the new Android app origin
     const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
-    const isAndroidApp = (origin === 'null' || !origin) && userAgent.includes('Android');
+    const isAndroidApp = (
+        (origin === 'null' || !origin || origin === 'https://appassets.androidplatform.net') && 
+        userAgent.includes('Android')
+    );
 
     if (!isSophDictSite && !isAndroidApp) {
         return res.status(403).json({ error: 'Access denied' });
     }
 
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    // 2. CORS Headers: Dynamic origin to satisfy preflight checks
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('X-Robots-Tag', 'noindex');
 
+    // 3. Handle Preflight Options
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
