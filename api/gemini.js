@@ -3,7 +3,6 @@ export default async function handler(req, res) {
     const origin = req.headers['origin'] || req.headers['referer'];
     const userAgent = req.headers['user-agent'] || '';
 
-    // Allow requests from the SophDict site or the Android app
     const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
     const isAndroidApp = (
         (origin === 'null' || !origin || origin.includes('appassets.androidplatform.net')) &&
@@ -27,7 +26,6 @@ export default async function handler(req, res) {
 
     const authKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : null;
     if (!authKey) {
-        console.error('GEMINI_API_KEY is missing');
         return res.status(500).json({ error: 'Gemini API key not configured' });
     }
 
@@ -35,8 +33,7 @@ export default async function handler(req, res) {
     const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
     if (upstashUrl) {
         if (!upstashUrl.startsWith('http')) upstashUrl = `https://${upstashUrl}`;
-        // Remove trailing slash to avoid 404s from Upstash REST
-        upstashUrl = upstashUrl.replace(/\/$/, '');
+        upstashUrl = upstashUrl.split(/[?#]/)[0].replace(/\/$/, '');
     }
 
     try {
@@ -45,14 +42,11 @@ export default async function handler(req, res) {
         let model = "gemini-1.5-flash";
         let cacheKey = null;
 
-        // 1. Parse Request Body
         let body = {};
         if (req.method === 'POST') {
             try {
                 body = (req.body && typeof req.body === 'object') ? req.body : (typeof req.body === 'string' ? JSON.parse(req.body) : {});
-            } catch (e) {
-                console.error('Body Parse Error:', e);
-            }
+            } catch (e) { console.error('Body Parse Error:', e); }
 
             if (body.contents) {
                 contents = body.contents;
@@ -77,18 +71,15 @@ export default async function handler(req, res) {
             contents.push({ role: 'user', parts: [{ text: prompt }] });
         }
 
-        // 2. Caching (Safe-Failure)
         if (upstashUrl && upstashToken) {
             try {
                 const contentHash = Buffer.from(JSON.stringify({ contents, systemInstruction, model })).toString('hex').substring(0, 80);
                 cacheKey = `ai:gemini:${model}:${contentHash}`;
-
                 const cacheRes = await fetch(upstashUrl, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${upstashToken}` },
                     body: JSON.stringify(["GET", cacheKey])
                 }).catch(() => null);
-
                 if (cacheRes?.ok) {
                     const cacheData = await cacheRes.json();
                     if (cacheData?.result) {
@@ -96,44 +87,36 @@ export default async function handler(req, res) {
                         return res.status(200).json(JSON.parse(cacheData.result));
                     }
                 }
-            } catch (cacheErr) {
-                console.warn('Upstash error:', cacheErr.message);
-            }
+            } catch (e) {}
         }
 
-        if (contents.length === 0) {
-            return res.status(400).json({ error: 'No content provided' });
-        }
+        if (contents.length === 0) return res.status(400).json({ error: 'No content provided' });
 
-        // 3. Call Google API (v1beta + Query Param Key for max compatibility)
         const geminiPayload = { contents };
         if (systemInstruction) geminiPayload.system_instruction = systemInstruction;
 
         const modelId = model.includes('/') ? model.split('/').pop() : model;
-        // Use v1beta and pass key in URL as it is the most robust method for AI Studio keys
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${authKey}`;
+        // Exactly match the curl command structure
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`;
 
         const response = await fetch(apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': authKey
+            },
             body: JSON.stringify(geminiPayload)
         });
 
         if (!response.ok) {
             const errorText = await response.text();
             console.error('[Gemini API Error]:', errorText, 'Status:', response.status);
-            // If Google returns 404, it might mean the model name is wrong for this API version
-            return res.status(response.status).json({
-                error: 'Gemini API error',
-                details: errorText,
-                status: response.status
-            });
+            return res.status(response.status).json({ error: 'Gemini API error', details: errorText });
         }
 
         const data = await response.json();
 
-        // 4. Save to Cache (Background)
-        if (cacheKey && upstashUrl && upstashToken && data) {
+        if (cacheKey && upstashUrl && upstashToken) {
             fetch(upstashUrl, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${upstashToken}` },
@@ -142,9 +125,8 @@ export default async function handler(req, res) {
         }
 
         return res.status(200).json(data);
-
     } catch (error) {
-        console.error('[Function Internal Error]:', error.message);
+        console.error('[Internal Error]:', error.message);
         return res.status(500).json({ error: 'Internal server error', message: error.message });
     }
 }
