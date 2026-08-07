@@ -4,7 +4,6 @@ export default async function handler(req, res) {
     const userAgent = req.headers['user-agent'] || '';
 
     const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
-
     const isAndroidApp = (
         (origin === 'null' || !origin || origin.includes('appassets.androidplatform.net')) &&
         userAgent.includes('Android')
@@ -17,7 +16,7 @@ export default async function handler(req, res) {
 
     res.setHeader('Access-Control-Allow-Origin', origin && origin !== 'null' ? origin : '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-goog-api-key, x-sophdict-client');
 
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
@@ -39,8 +38,14 @@ export default async function handler(req, res) {
         let model = "gemini-1.5-flash";
         let cacheKey = null;
 
+        // 1. Parse Request Body
+        let body = {};
         if (req.method === 'POST') {
-            const body = (req.body && typeof req.body === 'object') ? req.body : (typeof req.body === 'string' ? JSON.parse(req.body) : {});
+            try {
+                body = (req.body && typeof req.body === 'object') ? req.body : (typeof req.body === 'string' ? JSON.parse(req.body) : {});
+            } catch (e) {
+                console.error('Body Parse Error:', e);
+            }
 
             if (body.contents) {
                 contents = body.contents;
@@ -56,44 +61,36 @@ export default async function handler(req, res) {
                     }
                 });
             }
-
-            if (body.model) {
-                model = body.model.replace('models/', '');
-            }
-
-            if (contents.length > 0 && upstashUrl && upstashToken) {
-                const contentHash = Buffer.from(JSON.stringify({ contents, systemInstruction, model })).toString('hex').substring(0, 120);
-                cacheKey = `ai:gemini:${model}:${contentHash}`;
-            }
+            if (body.model) model = body.model.replace('models/', '').trim();
         } else {
-            const { prompt, system } = req.query;
+            const { prompt, system, model: qModel } = req.query;
             if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
-
-            if (system) {
-                systemInstruction = { parts: [{ text: system }] };
-            }
+            if (system) systemInstruction = { parts: [{ text: system }] };
+            if (qModel) model = qModel.trim();
             contents.push({ role: 'user', parts: [{ text: prompt }] });
-
-            if (upstashUrl && upstashToken) {
-                const promptHash = Buffer.from(`${system || ''}:${prompt}`).toString('hex').substring(0, 120);
-                cacheKey = `ai:gemini:${model}:${promptHash}`;
-            }
         }
 
-        // Caching Logic
-        if (cacheKey && upstashUrl && upstashToken) {
-            const cacheRes = await fetch(upstashUrl.startsWith('http') ? upstashUrl : `https://${upstashUrl}`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${upstashToken}` },
-                body: JSON.stringify(["GET", cacheKey])
-            }).catch(() => null);
+        // 2. Caching (Safe-Failure)
+        if (upstashUrl && upstashToken) {
+            try {
+                const contentHash = Buffer.from(JSON.stringify({ contents, systemInstruction, model })).toString('hex').substring(0, 80);
+                cacheKey = `ai:gemini:${model}:${contentHash}`;
 
-            if (cacheRes?.ok) {
-                const cacheData = await cacheRes.json();
-                if (cacheData?.result) {
-                    res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
-                    return res.status(200).json(JSON.parse(cacheData.result));
+                const cacheRes = await fetch(upstashUrl.startsWith('http') ? upstashUrl : `https://${upstashUrl}`, {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${upstashToken}` },
+                    body: JSON.stringify(["GET", cacheKey])
+                }).catch(() => null);
+
+                if (cacheRes?.ok) {
+                    const cacheData = await cacheRes.json();
+                    if (cacheData?.result) {
+                        res.setHeader('Cache-Control', 'public, s-maxage=31536000, immutable');
+                        return res.status(200).json(JSON.parse(cacheData.result));
+                    }
                 }
+            } catch (cacheErr) {
+                console.warn('Upstash error:', cacheErr.message);
             }
         }
 
@@ -101,28 +98,35 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'No content provided' });
         }
 
+        // 3. Call Google API (v1 + Header Authentication)
         const geminiPayload = { contents };
-        if (systemInstruction) {
-            geminiPayload.system_instruction = systemInstruction;
-        }
+        if (systemInstruction) geminiPayload.system_instruction = systemInstruction;
 
         const modelId = model.includes('/') ? model.split('/').pop() : model;
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${authKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent`;
 
         const response = await fetch(apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'x-goog-api-key': authKey
+            },
             body: JSON.stringify(geminiPayload)
         });
 
         if (!response.ok) {
             const error = await response.text();
-            console.error('[Gemini API Error]:', error, 'URL:', apiUrl.replace(authKey, 'HIDDEN'));
-            return res.status(response.status).json({ error: 'Gemini API error', details: error });
+            console.error('[Gemini API Error]:', error, 'Status:', response.status);
+            return res.status(response.status).json({
+                error: 'Gemini API error',
+                details: error,
+                status: response.status
+            });
         }
 
         const data = await response.json();
 
+        // 4. Save to Cache (Background)
         if (cacheKey && upstashUrl && upstashToken && data) {
             fetch(upstashUrl.startsWith('http') ? upstashUrl : `https://${upstashUrl}`, {
                 method: 'POST',
@@ -134,7 +138,7 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
 
     } catch (error) {
-        console.error('[Internal Error]:', error.message);
+        console.error('[Function Internal Error]:', error.message);
         return res.status(500).json({ error: 'Internal server error', message: error.message });
     }
 }
