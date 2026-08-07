@@ -116,7 +116,7 @@ window.APIClient = {
                                     verifiedWords = sugData.filter(i => i.type === 'dictionary').map(i => i.word);
                                 }
                             } catch (e) {}
-                            return { word: cleanWord, isSentence: true, verifiedWords: verifiedWords, error: 'Word not found' };
+                            return { word: cleanWord, isSentence: true, sourceLang: 'en', verifiedWords: verifiedWords, error: 'Word not found' };
                         }
                     } catch (e) { console.error("Sentence search handler error:", e); }
 

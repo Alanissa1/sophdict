@@ -158,7 +158,11 @@ window.TranslationManager = {
             buttonEl._originalNextSibling = buttonEl.nextSibling;
         }
 
-        transDiv.innerText = translatedText;
+        if (this.targetLanguage === 'en') {
+            transDiv.innerHTML = window.UIUtils.tagSentence(translatedText);
+        } else {
+            transDiv.innerText = translatedText;
+        }
         transDiv.classList.add('show');
 
         // Add TTS button for the translated text

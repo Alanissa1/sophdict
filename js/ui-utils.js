@@ -12,15 +12,6 @@ window.UIUtils = {
             .replace(/""$/, '"');
     },
 
-    tagifySentence(sentence) {
-        if (!sentence) return "";
-        return sentence.split(/(\s+)/).map(part => {
-            if (part.trim().length === 0) return part;
-            const cleanWord = part.replace(/[^\w\s']|_/g, "").replace(/\s+/g, "");
-            return `<span class="tag syn-tag" data-word="${cleanWord.toLowerCase()}" tabindex="0">${part}</span>`;
-        }).join('');
-    },
-
     escapeJS(str) {
         if (!str) return "";
         return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
@@ -68,6 +59,20 @@ window.UIUtils = {
     stripTags(html) {
         if (!html) return "";
         return html.replace(/<\/?[^>]+(>|$)/g, "").trim();
+    },
+
+    tagSentence(text) {
+        if (!text) return "";
+        // Split by whitespace but keep punctuation attached to words for display,
+        // while using cleaned words for data-word.
+        return text.split(/(\s+)/).map(part => {
+            if (/^\s+$/.test(part)) return part;
+            const clean = part.replace(/[^a-zA-Z0-9']/g, '').toLowerCase();
+            if (clean) {
+                return `<span class="tag syn-tag" data-word="${clean}" tabindex="0">${part}</span>`;
+            }
+            return part;
+        }).join('');
     },
 
     attachInlineTTS(container) {

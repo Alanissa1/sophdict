@@ -15,7 +15,7 @@ window.UIEntry = {
                                     <div style="display: flex; align-items: center; ">
                                         <div class="pron-row"></div>
                                         <div style="display: flex; flex-direction: column;">
-                                            <h1 class="word-title">${UIUtils.tagifySentence(word)}</h1>
+                                            <h1 class="word-title">${word}</h1>
                                         </div>
                                     </div>
                                 </div>
@@ -65,7 +65,7 @@ window.UIEntry = {
                                 <div style="display: flex; align-items: center; ">
                                     <div class="pron-row"></div>
                                     <div style="display: flex; flex-direction: column;">
-                                        <h1 class="word-title">${UIUtils.tagifySentence(word)}</h1>
+                                        <h1 class="word-title">${word}</h1>
                                     </div>
                                 </div>
                             </div>
@@ -74,7 +74,7 @@ window.UIEntry = {
                     <div id="content-body">
                         <div class="context-card translation-card">
                             <div class="context-type">${langName} Translation</div>
-                            <div class="definition" style="font-size: 1.2em; font-weight: 500;">${UIUtils.tagifySentence(data.translation)}</div>
+                            <div class="definition" style="font-size: 1.2em; font-weight: 500;">${data.translation}</div>
                             <div class="pron-row-trans" style="margin-top:10px;"></div>
                         </div>
                         ${data.targetLang === 'en' && data.verifiedWords && data.verifiedWords.length > 0 ? `
@@ -124,7 +124,7 @@ window.UIEntry = {
                                     <div class="pron-row"></div>
                                     <div style="display: flex; flex-direction: column;">
                                         <div style="display: flex; align-items: center;">
-                                            <h1 class="word-title">${UIUtils.tagifySentence(word)}</h1>
+                                            <h1 class="word-title">${word}</h1>
                                             ${levelLabel ? `<span class="ielts-header-tag" style="background-color:${levelColor}; box-shadow: 0 2px 4px color-mix(in srgb, ${levelColor}, transparent 70%);">${levelLabel}</span>` : ''}
                                         </div>
                                         <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px;">
@@ -196,7 +196,7 @@ window.UIEntry = {
                         <div class="micro-pron-row" style="flex-shrink: 0; display: flex; align-items: center;"></div>
                         <div style="display: flex; flex-direction: column; min-width: 0; flex: 1; overflow-x: auto; overflow-y: hidden;">
                             <div style="display: flex; width: max-content;">
-                                <h2 class="micro-title" style="margin:0; line-height:1.2;">${UIUtils.tagifySentence(word)}</h2>
+                                <h2 class="micro-title" style="margin:0; line-height:1.2;">${word}</h2>
                                 ${this.renderStemsColumns(stems)}
                             </div>
                             <div style="display: flex; gap: 5px; font-size: 0.9em; width: max-content;">

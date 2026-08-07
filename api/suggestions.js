@@ -95,7 +95,12 @@ export default async function handler(req, res) {
                 .filter(w => w.length > 0)
                 .slice(0, 15);
 
-            if (upstashUrl && upstashToken && uniqueWords.length > 0) {
+            if (targetLang === 'en') {
+                // If English, return all words as dictionary type no matter what
+                uniqueWords.forEach(w => {
+                    dictionaryWords.push({ word: w, type: 'dictionary' });
+                });
+            } else if (upstashUrl && upstashToken && uniqueWords.length > 0) {
                 try {
                     const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
                     const cacheRes = await fetch(pipelineUrl, {
@@ -119,7 +124,15 @@ export default async function handler(req, res) {
                 const transWords = translatedToEn.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
                 const transUnique = [...new Set(transWords)].filter(w => !uniqueWords.includes(w));
 
-                if (upstashUrl && upstashToken && transUnique.length > 0) {
+                if (targetLang === 'en' || (translationInfo && translationInfo.translated === translatedToEn)) {
+                     // If target is English, we already added uniqueWords.
+                     // But if this is a translation TO English, we should add these words too.
+                     transUnique.forEach(w => {
+                         if (!dictionaryWords.some(dw => dw.word === w)) {
+                             dictionaryWords.push({ word: w, type: 'dictionary' });
+                         }
+                     });
+                } else if (upstashUrl && upstashToken && transUnique.length > 0) {
                     try {
                         const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
                         const cacheRes = await fetch(pipelineUrl, {
