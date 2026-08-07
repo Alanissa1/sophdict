@@ -25,7 +25,6 @@ export default async function handler(req, res) {
             const azureRegion = process.env.AZURE_TRANSLATOR_REGION || 'global';
             const azureEndpoint = process.env.AZURE_TRANSLATOR_ENDPOINT || 'https://api.cognitive.microsofttranslator.com';
 
-            // We request translation to BOTH English and the user's Target Language
             const transRes = await fetch(`${azureEndpoint.replace(/\/$/, '')}/translate?api-version=3.0&to=en&to=${targetLang}&textType=plain`, {
                 method: 'POST',
                 headers: {
@@ -44,13 +43,21 @@ export default async function handler(req, res) {
                     const toEn = result.translations.find(t => t.to === 'en')?.text;
                     const toTarget = result.translations.find(t => t.to === targetLang)?.text;
 
-                    if (targetLang === 'en') {
-                         // IF SYSTEM IS EN: Do not show translation suggestions
-                    } else if (detected === targetLang && toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
-                        translatedToEn = toEn;
-                        translationInfo = { original: cleanQ, translated: toEn, type: 'translation' };
-                    } else if (detected === 'en' && toTarget && toTarget.toLowerCase() !== cleanQ.toLowerCase() && words.length >= 2) {
-                        translationInfo = { original: cleanQ, translated: toTarget, type: 'translation' };
+                    if (detected === targetLang) {
+                        // Input is System Language -> Translate to English
+                        if (toEn && toEn.toLowerCase() !== cleanQ.toLowerCase()) {
+                            translatedToEn = toEn;
+                            translationInfo = { original: cleanQ, translated: toEn, type: 'translation' };
+                        }
+                    } else {
+                        // Input is NOT System Language (e.g. English or other) -> Translate to System Language
+                        if (toTarget && toTarget.toLowerCase() !== cleanQ.toLowerCase()) {
+                            translationInfo = { original: cleanQ, translated: toTarget, type: 'translation' };
+                        }
+                        // Always capture English translation for dictionary tagging if available
+                        if (toEn) {
+                            translatedToEn = toEn;
+                        }
                     }
                 }
             }
@@ -66,9 +73,7 @@ export default async function handler(req, res) {
             if (translationInfo) results.push(translationInfo);
             results.push(...suggestions);
 
-            // If it's a single non-English word, check if the translation is in MW
             if (translatedToEn && upstashUrl && upstashToken) {
-                // تم التعديل هنا للحفاظ على الفاصلة العليا
                 const transWord = translatedToEn.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '');
                 try {
                     const cacheRes = await fetch(`${upstashUrl}/pipeline`, {
@@ -79,6 +84,7 @@ export default async function handler(req, res) {
                     const cacheData = await cacheRes.json();
                     if (cacheData[0]?.result === 1) {
                         results.push({ word: translatedToEn, type: 'dictionary' });
+                        results.push({ word: translatedToEn, type: 'thesaurus' });
                     }
                 } catch (e) {}
             }
@@ -90,49 +96,21 @@ export default async function handler(req, res) {
             if (translationInfo) results.push(translationInfo);
             results.push({ word: cleanQ, type: 'sentence' });
 
-            // تم التعديل هنا للحفاظ على الفاصلة العليا
             const uniqueWords = [...new Set(words.map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')))]
-                .filter(w => w.length > 0)
-                .slice(0, 15);
+                .filter(w => w.length > 0);
 
-            if (targetLang === 'en') {
-                // If English, return all words as dictionary type no matter what
-                uniqueWords.forEach(w => {
-                    dictionaryWords.push({ word: w, type: 'dictionary' });
-                });
-            } else if (upstashUrl && upstashToken && uniqueWords.length > 0) {
-                try {
-                    const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
-                    const cacheRes = await fetch(pipelineUrl, {
-                        method: 'POST',
-                        headers: { Authorization: `Bearer ${upstashToken}` },
-                        body: JSON.stringify(uniqueWords.map(w => ["SISMEMBER", "all_words_index", w]))
-                    });
-                    const cacheData = await cacheRes.json();
+            // Add all original words as tags without dictionary check
+            uniqueWords.forEach(w => {
+                dictionaryWords.push({ word: w, type: 'dictionary' });
+                dictionaryWords.push({ word: w, type: 'thesaurus' });
+            });
 
-                    if (Array.isArray(cacheData)) {
-                        cacheData.forEach((r, idx) => {
-                            if (r.result === 1) dictionaryWords.push({ word: uniqueWords[idx], type: 'dictionary' });
-                        });
-                    }
-                } catch (e) {}
-            }
-
-            // If we have a translation to English, also check words from it
+            // For translated words, keep the Upstash check
             if (translatedToEn) {
-                // تم التعديل هنا للحفاظ على الفاصلة العليا
                 const transWords = translatedToEn.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
                 const transUnique = [...new Set(transWords)].filter(w => !uniqueWords.includes(w));
 
-                if (targetLang === 'en' || (translationInfo && translationInfo.translated === translatedToEn)) {
-                     // If target is English, we already added uniqueWords.
-                     // But if this is a translation TO English, we should add these words too.
-                     transUnique.forEach(w => {
-                         if (!dictionaryWords.some(dw => dw.word === w)) {
-                             dictionaryWords.push({ word: w, type: 'dictionary' });
-                         }
-                     });
-                } else if (upstashUrl && upstashToken && transUnique.length > 0) {
+                if (upstashUrl && upstashToken && transUnique.length > 0) {
                     try {
                         const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
                         const cacheRes = await fetch(pipelineUrl, {
@@ -143,7 +121,10 @@ export default async function handler(req, res) {
                         const cacheData = await cacheRes.json();
                         if (Array.isArray(cacheData)) {
                             cacheData.forEach((r, idx) => {
-                                if (r.result === 1) dictionaryWords.push({ word: transUnique[idx], type: 'dictionary' });
+                                if (r.result === 1) {
+                                    dictionaryWords.push({ word: transUnique[idx], type: 'dictionary' });
+                                    dictionaryWords.push({ word: transUnique[idx], type: 'thesaurus' });
+                                }
                             });
                         }
                     } catch (e) {}
