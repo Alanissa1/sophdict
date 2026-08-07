@@ -158,19 +158,19 @@ window.TranslationManager = {
             buttonEl._originalNextSibling = buttonEl.nextSibling;
         }
 
-        if (this.targetLanguage === 'en') {
-            transDiv.innerHTML = window.UIUtils.tagSentence(translatedText);
-        } else {
-            transDiv.innerText = translatedText;
-        }
+        const isExample = targetElement.classList.contains('example');
+        const textHtml = this.targetLanguage === 'en' ? window.UIUtils.tagSentence(translatedText) : translatedText;
+        const displayText = isExample ? `"${textHtml}"` : textHtml;
+        const escapedText = translatedText.replace(/"/g, '&quot;');
+
+        // Match example logic: Text then TTS button in a span
+        transDiv.innerHTML = `${displayText} <span class="tts-inline-target" data-text="${escapedText}" data-lang="${this.targetLanguage}"></span>`;
         transDiv.classList.add('show');
 
         // Add TTS button for the translated text
+        const ttsTarget = transDiv.querySelector('.tts-inline-target');
         const ttsBtn = window.TTSManager.createButton(translatedText, 'tts-btn', this.targetLanguage);
-        ttsBtn.style.marginLeft = '8px';
-        ttsBtn.style.display = 'inline-flex';
-        ttsBtn.style.verticalAlign = 'middle';
-        transDiv.appendChild(ttsBtn);
+        ttsTarget.appendChild(ttsBtn);
 
         transDiv.appendChild(buttonEl);
         buttonEl.focus();

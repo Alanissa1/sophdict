@@ -78,7 +78,8 @@ window.UIUtils = {
     attachInlineTTS(container) {
         container.querySelectorAll('.tts-inline-target').forEach(span => {
             const text = span.dataset.text;
-            span.appendChild(TTSManager.createButton(text));
+            const lang = span.dataset.lang || null;
+            span.appendChild(TTSManager.createButton(text, 'tts-btn', lang));
         });
         if (window.TranslationManager) {
             window.TranslationManager.attachInlineTranslation(container);

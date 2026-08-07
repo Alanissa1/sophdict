@@ -74,8 +74,10 @@ window.UIEntry = {
                     <div id="content-body">
                         <div class="context-card translation-card">
                             <div class="context-type">${langName} Translation</div>
-                            <div class="definition" style="font-size: 1.2em; font-weight: 500;">${data.translation}</div>
-                            <div class="pron-row-trans" style="margin-top:10px;"></div>
+                            <div class="definition" style="font-size: 1.2em; font-weight: 500;">
+                                ${data.translation}
+                                <span class="tts-inline-target" data-text="${data.translation.replace(/"/g, '&quot;')}" data-lang="${data.targetLang}"></span>
+                            </div>
                         </div>
                         ${data.verifiedWords && data.verifiedWords.length > 0 ? `
                         <div class="context-card suggestions-card">
@@ -90,8 +92,6 @@ window.UIEntry = {
                 `;
                 const pronRow = targetContainer.querySelector('.pron-row');
                 if (pronRow) pronRow.appendChild(TTSManager.createButton(word, "tts-btn", data.sourceLang));
-                const pronRowTrans = targetContainer.querySelector('.pron-row-trans');
-                if (pronRowTrans) pronRowTrans.appendChild(TTSManager.createButton(data.translation, "tts-btn", data.targetLang));
 
                 if (containerId === 'results-container') window.scrollTo({ top: 0, behavior: 'instant' });
                 UIUtils.attachInlineTTS(targetContainer);
