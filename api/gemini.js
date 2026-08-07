@@ -3,6 +3,7 @@ export default async function handler(req, res) {
     const origin = req.headers['origin'] || req.headers['referer'];
     const userAgent = req.headers['user-agent'] || '';
 
+    // Allow requests from the SophDict site or the Android app
     const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
     const isAndroidApp = (
         (origin === 'null' || !origin || origin.includes('appassets.androidplatform.net')) &&
@@ -26,11 +27,17 @@ export default async function handler(req, res) {
 
     const authKey = process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.trim() : null;
     if (!authKey) {
+        console.error('GEMINI_API_KEY is missing');
         return res.status(500).json({ error: 'Gemini API key not configured' });
     }
 
-    const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+    let upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
     const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (upstashUrl) {
+        if (!upstashUrl.startsWith('http')) upstashUrl = `https://${upstashUrl}`;
+        // Remove trailing slash to avoid 404s from Upstash REST
+        upstashUrl = upstashUrl.replace(/\/$/, '');
+    }
 
     try {
         let contents = [];
@@ -76,7 +83,7 @@ export default async function handler(req, res) {
                 const contentHash = Buffer.from(JSON.stringify({ contents, systemInstruction, model })).toString('hex').substring(0, 80);
                 cacheKey = `ai:gemini:${model}:${contentHash}`;
 
-                const cacheRes = await fetch(upstashUrl.startsWith('http') ? upstashUrl : `https://${upstashUrl}`, {
+                const cacheRes = await fetch(upstashUrl, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${upstashToken}` },
                     body: JSON.stringify(["GET", cacheKey])
@@ -98,28 +105,27 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'No content provided' });
         }
 
-        // 3. Call Google API (v1 + Header Authentication)
+        // 3. Call Google API (v1beta + Query Param Key for max compatibility)
         const geminiPayload = { contents };
         if (systemInstruction) geminiPayload.system_instruction = systemInstruction;
 
         const modelId = model.includes('/') ? model.split('/').pop() : model;
-        const apiUrl = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent`;
+        // Use v1beta and pass key in URL as it is the most robust method for AI Studio keys
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${authKey}`;
 
         const response = await fetch(apiUrl, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': authKey
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(geminiPayload)
         });
 
         if (!response.ok) {
-            const error = await response.text();
-            console.error('[Gemini API Error]:', error, 'Status:', response.status);
+            const errorText = await response.text();
+            console.error('[Gemini API Error]:', errorText, 'Status:', response.status);
+            // If Google returns 404, it might mean the model name is wrong for this API version
             return res.status(response.status).json({
                 error: 'Gemini API error',
-                details: error,
+                details: errorText,
                 status: response.status
             });
         }
@@ -128,7 +134,7 @@ export default async function handler(req, res) {
 
         // 4. Save to Cache (Background)
         if (cacheKey && upstashUrl && upstashToken && data) {
-            fetch(upstashUrl.startsWith('http') ? upstashUrl : `https://${upstashUrl}`, {
+            fetch(upstashUrl, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${upstashToken}` },
                 body: JSON.stringify(["SET", cacheKey, JSON.stringify(data), "EX", 31536000])
