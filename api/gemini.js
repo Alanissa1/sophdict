@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
     res.setHeader('Access-Control-Allow-Origin', origin && origin !== 'null' ? origin : '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-goog-api-key, x-sophdict-client');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-goog-api-key, x-sophdict-client');
 
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
@@ -33,7 +33,10 @@ export default async function handler(req, res) {
     const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
     if (upstashUrl) {
         if (!upstashUrl.startsWith('http')) upstashUrl = `https://${upstashUrl}`;
-        upstashUrl = upstashUrl.split(/[?#]/)[0].replace(/\/$/, '');
+        try {
+            const urlObj = new URL(upstashUrl);
+            upstashUrl = `${urlObj.protocol}//${urlObj.host}`;
+        } catch (e) { upstashUrl = upstashUrl.replace(/\/$/, ''); }
     }
 
     try {
@@ -49,7 +52,20 @@ export default async function handler(req, res) {
             } catch (e) { console.error('Body Parse Error:', e); }
 
             if (body.contents) {
-                contents = body.contents;
+                // SANITIZE: Remove thought/thought_signature and other unsupported internal fields
+                // that cause decoding errors when sent back as history.
+                contents = body.contents.map(c => ({
+                    role: c.role === 'assistant' ? 'model' : c.role,
+                    parts: (c.parts || []).map(p => {
+                        const sanitizedPart = {};
+                        if (p.text) sanitizedPart.text = p.text;
+                        if (p.inline_data) sanitizedPart.inline_data = p.inline_data;
+                        if (p.file_data) sanitizedPart.file_data = p.file_data;
+                        if (p.function_call) sanitizedPart.function_call = p.function_call;
+                        if (p.function_response) sanitizedPart.function_response = p.function_response;
+                        return sanitizedPart;
+                    }).filter(p => Object.keys(p).length > 0)
+                })).filter(c => c.parts.length > 0);
             } else if (body.messages) {
                 body.messages.forEach(msg => {
                     if (msg.role === 'system') {
@@ -71,7 +87,7 @@ export default async function handler(req, res) {
             contents.push({ role: 'user', parts: [{ text: prompt }] });
         }
 
-        if (upstashUrl && upstashToken) {
+        if (upstashUrl && upstashToken && contents.length > 0) {
             try {
                 const contentHash = Buffer.from(JSON.stringify({ contents, systemInstruction, model })).toString('hex').substring(0, 80);
                 cacheKey = `ai:gemini:${model}:${contentHash}`;
@@ -96,22 +112,21 @@ export default async function handler(req, res) {
         if (systemInstruction) geminiPayload.system_instruction = systemInstruction;
 
         const modelId = model.includes('/') ? model.split('/').pop() : model;
-        // Exactly match the curl command structure
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`;
 
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'x-goog-api-key': authKey
+                'X-goog-api-key': authKey
             },
             body: JSON.stringify(geminiPayload)
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('[Gemini API Error]:', errorText, 'Status:', response.status);
-            return res.status(response.status).json({ error: 'Gemini API error', details: errorText });
+            const errorData = await response.json().catch(() => ({ error: 'Unknown API error' }));
+            console.error('[Gemini API Error]:', JSON.stringify(errorData), 'Status:', response.status);
+            return res.status(response.status).json(errorData);
         }
 
         const data = await response.json();
