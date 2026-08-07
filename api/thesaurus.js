@@ -1,4 +1,30 @@
 export default async function handler(req, res) {
+    const secFetchSite = req.headers['sec-fetch-site'];
+    const origin = req.headers['origin'] || req.headers['referer']; // Check both for maximum compatibility
+    const userAgent = req.headers['user-agent'] || '';
+
+    const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
+
+    // UPDATE: Include the new Android origin 'https://appassets.androidplatform.net/'
+    const isAndroidApp = (
+        (origin === 'null' || !origin || origin.includes('appassets.androidplatform.net')) &&
+        userAgent.includes('Android')
+    );
+
+    if (!isSophDictSite && !isAndroidApp) {
+        console.warn(`Access Denied. Origin: ${origin}`);
+        return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Set CORS headers to allow the Android app to read the response
+    res.setHeader('Access-Control-Allow-Origin', origin && origin !== 'null' ? origin : '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     const { word } = req.query;
     const key = process.env.THESAURUS_KEY;
     const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;

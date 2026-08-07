@@ -1,29 +1,31 @@
 export default async function handler(req, res) {
     const secFetchSite = req.headers['sec-fetch-site'];
-    const origin = req.headers['origin'];
+    const origin = req.headers['origin'] || req.headers['referer']; // Check both for maximum compatibility
     const userAgent = req.headers['user-agent'] || '';
 
-    // 1. ALLOW LIST: Include the new Android app origin
     const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
+
+    // UPDATE: Include the new Android origin 'https://appassets.androidplatform.net/'
     const isAndroidApp = (
-        (origin === 'null' || !origin || origin === 'https://appassets.androidplatform.net') && 
+        (origin === 'null' || !origin || origin.includes('appassets.androidplatform.net')) &&
         userAgent.includes('Android')
     );
 
     if (!isSophDictSite && !isAndroidApp) {
+        console.warn(`Access Denied. Origin: ${origin}`);
         return res.status(403).json({ error: 'Access denied' });
     }
 
-    // 2. CORS Headers: Dynamic origin to satisfy preflight checks
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    // Set CORS headers to allow the Android app to read the response
+    res.setHeader('Access-Control-Allow-Origin', origin && origin !== 'null' ? origin : '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('X-Robots-Tag', 'noindex');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // 3. Handle Preflight Options
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
+
+    res.setHeader('X-Robots-Tag', 'noindex');
 
     const authKey = process.env.OPENAI_API_KEY;
     if (!authKey) {

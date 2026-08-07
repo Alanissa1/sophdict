@@ -95,25 +95,31 @@ function sanitize(data) {
 }
 
 export default async function handler(req, res) {
-    // --- Access Protection Logic ---
     const secFetchSite = req.headers['sec-fetch-site'];
-    const secFetchMode = req.headers['sec-fetch-mode'];
-    const origin = req.headers['origin'];
+    const origin = req.headers['origin'] || req.headers['referer']; // Check both for maximum compatibility
     const userAgent = req.headers['user-agent'] || '';
 
-    // 1. Allow if it's from your own website (same-origin/same-site)
     const isSophDictSite = ['same-origin', 'same-site'].includes(secFetchSite);
 
-    // 2. Allow if it's from ANY Android device running your app
-    // Android WebViews loading local assets send 'null' or no origin.
-    // They also always include "Android" in the User-Agent.
-    const isAndroidApp = (origin === 'null' || !origin) && userAgent.includes('Android');
+    // UPDATE: Include the new Android origin 'https://appassets.androidplatform.net/'
+    const isAndroidApp = (
+        (origin === 'null' || !origin || origin.includes('appassets.androidplatform.net')) &&
+        userAgent.includes('Android')
+    );
 
-    // 3. Block only if it's a direct browser navigation or an unauthorized site
-    if (secFetchMode === 'navigate' || (!isSophDictSite && !isAndroidApp)) {
-        return res.status(403).json({ error: 'Direct access not allowed' });
+    if (!isSophDictSite && !isAndroidApp) {
+        console.warn(`Access Denied. Origin: ${origin}`);
+        return res.status(403).json({ error: 'Access denied' });
     }
-    // --- End of Access Protection ---
+
+    // Set CORS headers to allow the Android app to read the response
+    res.setHeader('Access-Control-Allow-Origin', origin && origin !== 'null' ? origin : '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
 
     if (!redis) {
         return res.status(503).json({ error: 'Database configuration missing. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel.' });
