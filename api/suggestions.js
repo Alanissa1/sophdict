@@ -73,66 +73,86 @@ export default async function handler(req, res) {
             if (translationInfo) results.push(translationInfo);
             results.push(...suggestions);
 
-            if (translatedToEn && upstashUrl && upstashToken) {
-                const transWord = translatedToEn.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '');
+            // ONLY show English dictionary/thesaurus suggestions
+            // If the input word is English (detected en) or translated to English
+            const enWord = (translatedToEn || cleanQ).toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '');
+
+            if (upstashUrl && upstashToken && enWord) {
                 try {
                     const cacheRes = await fetch(`${upstashUrl}/pipeline`, {
                         method: 'POST',
                         headers: { Authorization: `Bearer ${upstashToken}` },
-                        body: JSON.stringify([["SISMEMBER", "all_words_index", transWord]])
+                        body: JSON.stringify([["SISMEMBER", "all_words_index", enWord]])
                     });
                     const cacheData = await cacheRes.json();
                     if (cacheData[0]?.result === 1) {
-                        results.push({ word: translatedToEn, type: 'dictionary' });
-                        results.push({ word: translatedToEn, type: 'thesaurus' });
+                        const wordToAdd = translatedToEn || cleanQ;
+                        // Avoid duplicates
+                        if (!results.some(r => r.word.toLowerCase() === wordToAdd.toLowerCase() && r.type === 'dictionary')) {
+                            results.push({ word: wordToAdd, type: 'dictionary' });
+                            results.push({ word: wordToAdd, type: 'thesaurus' });
+                        }
                     }
                 } catch (e) {}
             }
 
-            return res.status(200).json(results);
+            // Final de-duplication
+            const seen = new Set();
+            const finalResults = results.filter(item => {
+                const word = item.word || item.translated || item.original;
+                const key = `${word.toLowerCase()}-${item.type}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+
+            return res.status(200).json(finalResults);
         } else {
             // Multi-word: Sentence analysis
             const results = [];
             if (translationInfo) results.push(translationInfo);
             results.push({ word: cleanQ, type: 'sentence' });
 
-            const uniqueWords = [...new Set(words.map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')))]
+            // Only generate word tags from the English version
+            const englishSentence = translatedToEn || cleanQ;
+            const enWords = englishSentence.split(/\s+/)
+                .map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, ''))
                 .filter(w => w.length > 0);
 
-            // Add all original words as tags without dictionary check
-            uniqueWords.forEach(w => {
-                dictionaryWords.push({ word: w, type: 'dictionary' });
-                dictionaryWords.push({ word: w, type: 'thesaurus' });
-            });
+            const uniqueEnWords = [...new Set(enWords)];
 
-            // For translated words, keep the Upstash check
-            if (translatedToEn) {
-                const transWords = translatedToEn.split(/\s+/).map(w => w.toLowerCase().replace(/[^a-z0-9']/g, '').replace(/^'|'$/g, '')).filter(w => w.length > 0);
-                const transUnique = [...new Set(transWords)].filter(w => !uniqueWords.includes(w));
-
-                if (upstashUrl && upstashToken && transUnique.length > 0) {
-                    try {
-                        const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
-                        const cacheRes = await fetch(pipelineUrl, {
-                            method: 'POST',
-                            headers: { Authorization: `Bearer ${upstashToken}` },
-                            body: JSON.stringify(transUnique.map(w => ["SISMEMBER", "all_words_index", w]))
+            if (upstashUrl && upstashToken && uniqueEnWords.length > 0) {
+                try {
+                    const pipelineUrl = upstashUrl.endsWith('/pipeline') ? upstashUrl : `${upstashUrl}/pipeline`;
+                    const cacheRes = await fetch(pipelineUrl, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${upstashToken}` },
+                        body: JSON.stringify(uniqueEnWords.map(w => ["SISMEMBER", "all_words_index", w]))
+                    });
+                    const cacheData = await cacheRes.json();
+                    if (Array.isArray(cacheData)) {
+                        cacheData.forEach((r, idx) => {
+                            if (r.result === 1) {
+                                dictionaryWords.push({ word: uniqueEnWords[idx], type: 'dictionary' });
+                                dictionaryWords.push({ word: uniqueEnWords[idx], type: 'thesaurus' });
+                            }
                         });
-                        const cacheData = await cacheRes.json();
-                        if (Array.isArray(cacheData)) {
-                            cacheData.forEach((r, idx) => {
-                                if (r.result === 1) {
-                                    dictionaryWords.push({ word: transUnique[idx], type: 'dictionary' });
-                                    dictionaryWords.push({ word: transUnique[idx], type: 'thesaurus' });
-                                }
-                            });
-                        }
-                    } catch (e) {}
-                }
+                    }
+                } catch (e) {}
             }
 
             results.push(...dictionaryWords);
-            return res.status(200).json(results);
+
+            // Final de-duplication
+            const seen = new Set();
+            const finalResults = results.filter(item => {
+                const key = `${item.word.toLowerCase()}-${item.type}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+
+            return res.status(200).json(finalResults);
         }
     } catch (error) {
         console.error('[Suggestions] Error:', error);
