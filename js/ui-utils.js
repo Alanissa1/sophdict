@@ -12,6 +12,15 @@ window.UIUtils = {
             .replace(/""$/, '"');
     },
 
+    tagifySentence(sentence) {
+        if (!sentence) return "";
+        return sentence.split(/(\s+)/).map(part => {
+            if (part.trim().length === 0) return part;
+            const cleanWord = part.replace(/[^\w\s']|_/g, "").replace(/\s+/g, "");
+            return `<span class="tag syn-tag" data-word="${cleanWord.toLowerCase()}" tabindex="0">${part}</span>`;
+        }).join('');
+    },
+
     escapeJS(str) {
         if (!str) return "";
         return str.replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
